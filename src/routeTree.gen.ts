@@ -20,6 +20,7 @@ import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as AuthenticatedReunioesRouteImport } from './routes/_authenticated/reunioes'
+import { Route as AuthenticatedJovensRouteImport } from './routes/_authenticated/jovens'
 import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
@@ -82,6 +83,11 @@ const AuthenticatedReunioesRoute = AuthenticatedReunioesRouteImport.update({
   path: '/reunioes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJovensRoute = AuthenticatedJovensRouteImport.update({
+  id: '/jovens',
+  path: '/jovens',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedIndicadoresRoute =
   AuthenticatedIndicadoresRouteImport.update({
     id: '/indicadores',
@@ -105,20 +111,20 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
 } as any)
 const AuthenticatedJovensIndexRoute =
   AuthenticatedJovensIndexRouteImport.update({
-    id: '/jovens/',
-    path: '/jovens/',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedJovensRoute,
   } as any)
 const AuthenticatedJovensInscricoesRoute =
   AuthenticatedJovensInscricoesRouteImport.update({
-    id: '/jovens/inscricoes',
-    path: '/jovens/inscricoes',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/inscricoes',
+    path: '/inscricoes',
+    getParentRoute: () => AuthenticatedJovensRoute,
   } as any)
 const AuthenticatedJovensIdRoute = AuthenticatedJovensIdRouteImport.update({
-  id: '/jovens/$id',
-  path: '/jovens/$id',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedJovensRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/reunioes': typeof AuthenticatedReunioesRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -171,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -192,6 +200,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/dashboard'
     | '/indicadores'
+    | '/jovens'
     | '/reunioes'
     | '/servicos'
     | '/settings'
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm'
     | '/_authenticated/dashboard'
     | '/_authenticated/indicadores'
+    | '/_authenticated/jovens'
     | '/_authenticated/reunioes'
     | '/_authenticated/servicos'
     | '/_authenticated/settings'
@@ -329,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReunioesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jovens': {
+      id: '/_authenticated/jovens'
+      path: '/jovens'
+      fullPath: '/jovens'
+      preLoaderRoute: typeof AuthenticatedJovensRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/indicadores': {
       id: '/_authenticated/indicadores'
       path: '/indicadores'
@@ -359,41 +376,54 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/jovens/': {
       id: '/_authenticated/jovens/'
-      path: '/jovens'
+      path: '/'
       fullPath: '/jovens/'
       preLoaderRoute: typeof AuthenticatedJovensIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedJovensRoute
     }
     '/_authenticated/jovens/inscricoes': {
       id: '/_authenticated/jovens/inscricoes'
-      path: '/jovens/inscricoes'
+      path: '/inscricoes'
       fullPath: '/jovens/inscricoes'
       preLoaderRoute: typeof AuthenticatedJovensInscricoesRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedJovensRoute
     }
     '/_authenticated/jovens/$id': {
       id: '/_authenticated/jovens/$id'
-      path: '/jovens/$id'
+      path: '/$id'
       fullPath: '/jovens/$id'
       preLoaderRoute: typeof AuthenticatedJovensIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedJovensRoute
     }
   }
 }
+
+interface AuthenticatedJovensRouteChildren {
+  AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
+  AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
+  AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
+}
+
+const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
+  AuthenticatedJovensIdRoute: AuthenticatedJovensIdRoute,
+  AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
+  AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
+}
+
+const AuthenticatedJovensRouteWithChildren =
+  AuthenticatedJovensRoute._addFileChildren(AuthenticatedJovensRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
+  AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
-  AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
-  AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
-  AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -401,14 +431,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
+  AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
-  AuthenticatedJovensIdRoute: AuthenticatedJovensIdRoute,
-  AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
-  AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
