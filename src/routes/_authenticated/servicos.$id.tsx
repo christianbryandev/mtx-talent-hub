@@ -302,6 +302,23 @@ function ServicoDetailPage() {
       </div>
 
       <ServiceFormDialog open={editOpen} onOpenChange={setEditOpen} service={service} />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir serviço"
+        description={
+          <>
+            Esta ação remove o serviço <strong>{service.name}</strong> e desvincula contratos
+            de clientes e jovens associados. Tarefas vinculadas serão desvinculadas. Não pode
+            ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir serviço"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }
