@@ -156,9 +156,21 @@ function ServicoDetailPage() {
             <p className="text-sm text-muted-foreground mt-1">{service.category}</p>
           )}
         </div>
-        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-          <Pencil className="h-4 w-4 mr-1" /> Editar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Editar
+          </Button>
+          {isSuperAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Excluir
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
