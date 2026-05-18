@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Check, X } from "lucide-react";
@@ -21,16 +21,6 @@ import {
 
 export const Route = createFileRoute("/_authenticated/jovens/inscricoes")({
   head: () => ({ meta: [{ title: "Inscrições — MTX Hub" }] }),
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.session.user.id);
-    const isAdmin = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
-    if (!isAdmin) throw redirect({ to: "/dashboard" });
-  },
   component: InscricoesPage,
 });
 
