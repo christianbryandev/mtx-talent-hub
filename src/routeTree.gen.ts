@@ -34,9 +34,6 @@ import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
-import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
-import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
-import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -165,6 +162,21 @@ const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedClientesRoute,
+} as any)
+const AuthenticatedCrmIndexRoute = AuthenticatedCrmIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedCrmRoute,
+} as any)
+const AuthenticatedCrmListaRoute = AuthenticatedCrmListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
+  getParentRoute: () => AuthenticatedCrmRoute,
+} as any)
+const AuthenticatedCrmIdRoute = AuthenticatedCrmIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedCrmRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
