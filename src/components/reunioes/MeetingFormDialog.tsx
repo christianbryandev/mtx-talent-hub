@@ -49,7 +49,7 @@ const schema = z.object({
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   location: z.string().optional(),
-  is_recurring: z.boolean().default(false),
+  is_recurring: z.boolean(),
   recurrence_rule: z.string().optional(),
   agenda: z.string().optional(),
   objectives: z.string().optional(),
