@@ -367,6 +367,128 @@ export type Database = {
           },
         ]
       }
+      opportunities: {
+        Row: {
+          closing_probability: number | null
+          commercial_responsible: string | null
+          company_name: string
+          company_size: string | null
+          contact_name: string | null
+          converted_client_id: string | null
+          created_at: string
+          email: string | null
+          estimated_value: number | null
+          funnel_stage: string
+          id: string
+          last_contact_date: string | null
+          lead_origin: string | null
+          loss_reason: string | null
+          main_pain: string | null
+          next_followup_date: string | null
+          niche: string | null
+          notes: string | null
+          offered_service: string | null
+          phone: string | null
+          priority: string
+          status: string
+          suggested_solution: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          closing_probability?: number | null
+          commercial_responsible?: string | null
+          company_name: string
+          company_size?: string | null
+          contact_name?: string | null
+          converted_client_id?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          funnel_stage?: string
+          id?: string
+          last_contact_date?: string | null
+          lead_origin?: string | null
+          loss_reason?: string | null
+          main_pain?: string | null
+          next_followup_date?: string | null
+          niche?: string | null
+          notes?: string | null
+          offered_service?: string | null
+          phone?: string | null
+          priority?: string
+          status?: string
+          suggested_solution?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          closing_probability?: number | null
+          commercial_responsible?: string | null
+          company_name?: string
+          company_size?: string | null
+          contact_name?: string | null
+          converted_client_id?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          funnel_stage?: string
+          id?: string
+          last_contact_date?: string | null
+          lead_origin?: string | null
+          loss_reason?: string | null
+          main_pain?: string | null
+          next_followup_date?: string | null
+          niche?: string | null
+          notes?: string | null
+          offered_service?: string | null
+          phone?: string | null
+          priority?: string
+          status?: string
+          suggested_solution?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      opportunity_interactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          next_action: string | null
+          opportunity_id: string
+          recorded_by: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          next_action?: string | null
+          opportunity_id: string
+          recorded_by?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          next_action?: string | null
+          opportunity_id?: string
+          recorded_by?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_interactions_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -399,6 +521,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      proposals: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          notes: string | null
+          opportunity_id: string
+          responded_at: string | null
+          sent_at: string | null
+          status: string
+          title: string | null
+          value: number | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          opportunity_id: string
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string | null
+          value?: number | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          opportunity_id?: string
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
