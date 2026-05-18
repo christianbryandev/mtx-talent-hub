@@ -349,6 +349,23 @@ function ClientDetailPage() {
           <DocumentsTab clientId={id} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir cliente"
+        description={
+          <>
+            Esta ação remove o cliente <strong>{client.company_name}</strong>, seu briefing,
+            histórico, serviços contratados e propostas. Tarefas e oportunidades vinculadas
+            serão desvinculadas. Não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir cliente"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }
