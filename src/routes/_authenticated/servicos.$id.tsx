@@ -13,6 +13,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ServiceFormDialog } from "@/components/servicos/ServiceFormDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { deleteServiceCascade } from "@/lib/cascade-delete";
+import { usePermissions } from "@/hooks/usePermissions";
 import { BILLING_MODELS, type Service } from "@/types/tasks";
 
 export const Route = createFileRoute("/_authenticated/servicos/$id")({
