@@ -40,7 +40,6 @@ import {
 } from "@/components/ui/select";
 import {
   FUNNEL_STAGES,
-  FUNNEL_STAGE_LABELS,
   INTERACTION_TYPES,
   PROPOSAL_STATUS_LABELS,
   type FunnelStage,
