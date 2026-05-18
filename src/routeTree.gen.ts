@@ -26,6 +26,7 @@ import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedServicosIndexRouteImport } from './routes/_authenticated/servicos.index'
 import { Route as AuthenticatedJovensIndexRouteImport } from './routes/_authenticated/jovens.index'
 import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
@@ -120,6 +121,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedServicosIndexRoute =
+  AuthenticatedServicosIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedServicosRoute,
+  } as any)
 const AuthenticatedJovensIndexRoute =
   AuthenticatedJovensIndexRouteImport.update({
     id: '/',
@@ -176,7 +183,7 @@ export interface FileRoutesByFullPath {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/reunioes': typeof AuthenticatedReunioesRoute
-  '/servicos': typeof AuthenticatedServicosRoute
+  '/servicos': typeof AuthenticatedServicosRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
   '/jovens/': typeof AuthenticatedJovensIndexRoute
+  '/servicos/': typeof AuthenticatedServicosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -199,7 +207,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/reunioes': typeof AuthenticatedReunioesRoute
-  '/servicos': typeof AuthenticatedServicosRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
   '/jovens': typeof AuthenticatedJovensIndexRoute
+  '/servicos': typeof AuthenticatedServicosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -227,7 +235,7 @@ export interface FileRoutesById {
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
   '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRoute
-  '/_authenticated/servicos': typeof AuthenticatedServicosRoute
+  '/_authenticated/servicos': typeof AuthenticatedServicosRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
   '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
+  '/_authenticated/servicos/': typeof AuthenticatedServicosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/crm/'
     | '/jovens/'
+    | '/servicos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -278,7 +288,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/indicadores'
     | '/reunioes'
-    | '/servicos'
     | '/settings'
     | '/tarefas'
     | '/users'
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/crm'
     | '/jovens'
+    | '/servicos'
   id:
     | '__root__'
     | '/'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes/'
     | '/_authenticated/crm/'
     | '/_authenticated/jovens/'
+    | '/_authenticated/servicos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -451,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/servicos/': {
+      id: '/_authenticated/servicos/'
+      path: '/'
+      fullPath: '/servicos/'
+      preLoaderRoute: typeof AuthenticatedServicosIndexRouteImport
+      parentRoute: typeof AuthenticatedServicosRoute
+    }
     '/_authenticated/jovens/': {
       id: '/_authenticated/jovens/'
       path: '/'
@@ -555,6 +573,19 @@ const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
 const AuthenticatedJovensRouteWithChildren =
   AuthenticatedJovensRoute._addFileChildren(AuthenticatedJovensRouteChildren)
 
+interface AuthenticatedServicosRouteChildren {
+  AuthenticatedServicosIndexRoute: typeof AuthenticatedServicosIndexRoute
+}
+
+const AuthenticatedServicosRouteChildren: AuthenticatedServicosRouteChildren = {
+  AuthenticatedServicosIndexRoute: AuthenticatedServicosIndexRoute,
+}
+
+const AuthenticatedServicosRouteWithChildren =
+  AuthenticatedServicosRoute._addFileChildren(
+    AuthenticatedServicosRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRouteWithChildren
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
@@ -562,7 +593,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
   AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRoute
-  AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
+  AuthenticatedServicosRoute: typeof AuthenticatedServicosRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
@@ -575,7 +606,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
   AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRoute,
-  AuthenticatedServicosRoute: AuthenticatedServicosRoute,
+  AuthenticatedServicosRoute: AuthenticatedServicosRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
@@ -597,3 +628,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
