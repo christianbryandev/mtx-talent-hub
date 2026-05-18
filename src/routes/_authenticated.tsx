@@ -1,23 +1,37 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async ({ location }) => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw redirect({
-        to: "/login",
-        search: { redirect: location.href },
-      });
-    }
-  },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate({
+        to: "/login",
+        search: { redirect: window.location.pathname + window.location.search },
+        replace: true,
+      });
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
