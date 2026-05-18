@@ -309,6 +309,22 @@ function JovensListPage() {
       </Card>
 
       <YoungFormDialog open={openForm} onOpenChange={setOpenForm} />
+      <InscricaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        title="Excluir jovem"
+        description={
+          <>
+            Tem certeza que deseja excluir <strong>{toDelete?.full_name}</strong>?
+            Essa ação não pode ser desfeita e todos os dados relacionados serão removidos.
+          </>
+        }
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => toDelete && deleteMutation.mutate(toDelete)}
+      />
     </div>
   );
 }
