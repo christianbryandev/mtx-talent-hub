@@ -10,8 +10,11 @@ import {
   FileText,
   Loader2,
   Plus,
+  Trash2,
   Upload,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { deleteClientCascade } from "@/lib/cascade-delete";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -59,8 +62,19 @@ function ClientDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { isAdmin, isComercial } = usePermissions();
+  const { isAdmin, isComercial, isSuperAdmin } = usePermissions();
   const canEdit = isAdmin || isComercial;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteClientCascade(id),
+    onSuccess: () => {
+      toast.success("Cliente excluído");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      navigate({ to: "/clientes" });
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),
+  });
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
@@ -162,6 +176,16 @@ function ClientDetailPage() {
             )}
           </div>
         </div>
+        {isSuperAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Excluir
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="overview">
@@ -325,6 +349,23 @@ function ClientDetailPage() {
           <DocumentsTab clientId={id} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir cliente"
+        description={
+          <>
+            Esta ação remove o cliente <strong>{client.company_name}</strong>, seu briefing,
+            histórico, serviços contratados e propostas. Tarefas e oportunidades vinculadas
+            serão desvinculadas. Não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir cliente"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }

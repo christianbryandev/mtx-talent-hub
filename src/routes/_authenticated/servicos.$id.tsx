@@ -13,6 +13,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ServiceFormDialog } from "@/components/servicos/ServiceFormDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { deleteServiceCascade } from "@/lib/cascade-delete";
+import { usePermissions } from "@/hooks/usePermissions";
 import { BILLING_MODELS, type Service } from "@/types/tasks";
 
 export const Route = createFileRoute("/_authenticated/servicos/$id")({
@@ -29,6 +32,18 @@ function ServicoDetailPage() {
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [addYoungId, setAddYoungId] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { isSuperAdmin } = usePermissions();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteServiceCascade(id),
+    onSuccess: () => {
+      toast.success("Serviço excluído");
+      qc.invalidateQueries({ queryKey: ["services"] });
+      navigate({ to: "/servicos" });
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),
+  });
 
   const { data: service, isLoading } = useQuery({
     queryKey: ["service", id],
@@ -141,9 +156,21 @@ function ServicoDetailPage() {
             <p className="text-sm text-muted-foreground mt-1">{service.category}</p>
           )}
         </div>
-        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-          <Pencil className="h-4 w-4 mr-1" /> Editar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Editar
+          </Button>
+          {isSuperAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Excluir
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -275,6 +302,23 @@ function ServicoDetailPage() {
       </div>
 
       <ServiceFormDialog open={editOpen} onOpenChange={setEditOpen} service={service} />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Excluir serviço"
+        description={
+          <>
+            Esta ação remove o serviço <strong>{service.name}</strong> e desvincula contratos
+            de clientes e jovens associados. Tarefas vinculadas serão desvinculadas. Não pode
+            ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir serviço"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }

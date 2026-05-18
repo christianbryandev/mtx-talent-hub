@@ -1,14 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Shield } from "lucide-react";
+import { Mail, Shield, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -24,8 +29,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ROLE_LABELS, type AppRole, ROLE_PRECEDENCE } from "@/types";
+import {
+  deleteAuthUser,
+  inviteUser,
+  setUserActive,
+} from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Usuários — MTX Hub" }] }),
@@ -36,12 +53,25 @@ function UsersPage() {
   const { isAdmin, isSuperAdmin, loading: permLoading } = usePermissions();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+
+  const inviteFn = useServerFn(inviteUser);
+  const deleteFn = useServerFn(deleteAuthUser);
+  const activeFn = useServerFn(setUserActive);
+
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     fullName: string;
     currentRole: AppRole | null;
     newRole: AppRole;
   } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    userId: string;
+    fullName: string;
+  } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState<AppRole>("colaborador");
 
   const { data, isLoading } = useQuery({
     queryKey: ["all-users"],
@@ -69,18 +99,15 @@ function UsersPage() {
 
   const changeRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: AppRole }) => {
-      // Remove all existing roles, then add the new one (single-role model)
       const { error: delErr } = await supabase
         .from("user_roles")
         .delete()
         .eq("user_id", userId);
       if (delErr) throw delErr;
-
       const { error: insErr } = await supabase
         .from("user_roles")
         .insert({ user_id: userId, role: newRole });
       if (insErr) throw insErr;
-
       await supabase.from("activity_logs").insert({
         user_id: currentUser?.id ?? null,
         action: "role_changed",
@@ -90,7 +117,7 @@ function UsersPage() {
       });
     },
     onSuccess: () => {
-      toast.success("Permissão atualizada com sucesso");
+      toast.success("Permissão atualizada");
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
       setPendingChange(null);
     },
@@ -98,6 +125,49 @@ function UsersPage() {
       toast.error(err.message || "Erro ao alterar permissão");
       setPendingChange(null);
     },
+  });
+
+  const toggleActive = useMutation({
+    mutationFn: (args: { userId: string; active: boolean }) =>
+      activeFn({ data: args }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.active ? "Usuário ativado" : "Usuário desativado");
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao atualizar status"),
+  });
+
+  const removeUser = useMutation({
+    mutationFn: (userId: string) => deleteFn({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Usuário excluído");
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      setPendingDelete(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erro ao excluir");
+      setPendingDelete(null);
+    },
+  });
+
+  const sendInvite = useMutation({
+    mutationFn: () =>
+      inviteFn({
+        data: {
+          email: inviteEmail.trim(),
+          fullName: inviteName.trim() || undefined,
+          role: inviteRole,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Convite enviado");
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      setInviteOpen(false);
+      setInviteEmail("");
+      setInviteName("");
+      setInviteRole("colaborador");
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao enviar convite"),
   });
 
   if (permLoading) return null;
@@ -114,16 +184,23 @@ function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/15 text-primary">
-          <Shield className="h-5 w-5" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/15 text-primary">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Usuários e Permissões</h2>
+            <p className="text-sm text-muted-foreground">
+              Gestão de acessos do MTX Hub
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Usuários e Permissões</h2>
-          <p className="text-sm text-muted-foreground">
-            Gestão de acessos do MTX Hub
-          </p>
-        </div>
+        {isSuperAdmin && (
+          <Button onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" /> Convidar usuário
+          </Button>
+        )}
       </div>
 
       <Card className="border-border/60 bg-card/70">
@@ -136,19 +213,20 @@ function UsersPage() {
                 <TableHead>Perfil</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Último acesso</TableHead>
+                {isSuperAdmin && <TableHead className="text-right">Ações</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && (data?.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
                     Nenhum usuário cadastrado ainda.
                   </TableCell>
                 </TableRow>
@@ -192,7 +270,20 @@ function UsersPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {u.is_active ? (
+                      {canEdit ? (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={u.is_active}
+                            onCheckedChange={(checked) =>
+                              toggleActive.mutate({ userId: u.id, active: checked })
+                            }
+                            disabled={toggleActive.isPending}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {u.is_active ? "Ativo" : "Inativo"}
+                          </span>
+                        </div>
+                      ) : u.is_active ? (
                         <Badge className="bg-success/15 text-success hover:bg-success/20">Ativo</Badge>
                       ) : (
                         <Badge variant="secondary">Inativo</Badge>
@@ -203,6 +294,25 @@ function UsersPage() {
                         ? new Date(u.last_sign_in_at).toLocaleString("pt-BR")
                         : "—"}
                     </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell className="text-right">
+                        {!isSelf && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() =>
+                              setPendingDelete({
+                                userId: u.id,
+                                fullName: u.full_name ?? u.email ?? "usuário",
+                              })
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
@@ -211,12 +321,7 @@ function UsersPage() {
         </CardContent>
       </Card>
 
-      {isSuperAdmin && (
-        <p className="text-xs text-muted-foreground">
-          Clique no perfil de um usuário para alterar a permissão. A mudança é aplicada imediatamente.
-        </p>
-      )}
-
+      {/* Confirm role change */}
       <ConfirmDialog
         open={!!pendingChange}
         onOpenChange={(open) => !open && setPendingChange(null)}
@@ -240,6 +345,86 @@ function UsersPage() {
           })
         }
       />
+
+      {/* Confirm delete user */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Excluir usuário"
+        description={
+          pendingDelete ? (
+            <>
+              Esta ação remove <strong>{pendingDelete.fullName}</strong> do sistema, incluindo
+              acesso, perfil e permissões. Não pode ser desfeita.
+            </>
+          ) : null
+        }
+        confirmLabel="Excluir usuário"
+        variant="destructive"
+        loading={removeUser.isPending}
+        onConfirm={() => pendingDelete && removeUser.mutate(pendingDelete.userId)}
+      />
+
+      {/* Invite user */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" /> Convidar usuário
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="invite-email">E-mail</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="pessoa@empresa.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-name">Nome (opcional)</Label>
+              <Input
+                id="invite-name"
+                placeholder="Nome completo"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Permissão inicial</Label>
+              <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_PRECEDENCE.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O usuário receberá um e-mail com link para definir a senha e acessar o MTX Hub.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setInviteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => sendInvite.mutate()}
+              disabled={!inviteEmail.trim() || sendInvite.isPending}
+            >
+              Enviar convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
