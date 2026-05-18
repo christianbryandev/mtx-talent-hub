@@ -116,7 +116,10 @@ function AuthSync() {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        return;
+      }
       router.invalidate();
       queryClient.invalidateQueries();
     });
