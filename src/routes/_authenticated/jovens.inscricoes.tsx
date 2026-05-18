@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Check, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,9 +34,21 @@ const STATUS_VARIANTS: Record<ApplicationStatus, string> = {
 
 function InscricoesPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin, loading: permissionsLoading } = usePermissions();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [detail, setDetail] = useState<YoungApplication | null>(null);
+
+  useEffect(() => {
+    if (!permissionsLoading && !isAdmin) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [isAdmin, navigate, permissionsLoading]);
+
+  if (permissionsLoading || !isAdmin) {
+    return <div className="h-24 animate-pulse rounded-md bg-primary/5" />;
+  }
 
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ["young_applications"],
