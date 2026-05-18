@@ -11,14 +11,7 @@ const APP_ROLES = [
   "cliente",
 ] as const;
 
-async function assertSuperAdmin(
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth>> extends never
-    ? never
-    : Parameters<typeof requireSupabaseAuth>[0] extends never
-      ? never
-      : any,
-  callerId: string,
-) {
+async function assertSuperAdmin(supabase: any, callerId: string) {
   const { data: rows, error } = await supabase
     .from("user_roles")
     .select("role")
