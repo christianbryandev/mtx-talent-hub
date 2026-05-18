@@ -11,6 +11,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -129,9 +130,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthSync />
-      <Outlet />
-      <Toaster position="top-right" richColors />
+      <AuthProvider>
+        <AuthSync />
+        <Outlet />
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
