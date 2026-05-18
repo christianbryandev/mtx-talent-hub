@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Inbox } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, Inbox, Link2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { InscricaoLinkDialog } from "@/components/jovens/InscricaoLinkDialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
 import { YoungFormDialog } from "@/components/jovens/YoungFormDialog";
@@ -33,13 +37,39 @@ export const Route = createFileRoute("/_authenticated/jovens/")({
 const PAGE_SIZE = 10;
 
 function JovensListPage() {
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isSuperAdmin } = usePermissions();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
   const [areaFilter, setAreaFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [openForm, setOpenForm] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<YoungPerson | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (y: YoungPerson) => {
+      await supabase.from("young_evolution").delete().eq("young_id", y.id);
+      await supabase.from("young_attendance").delete().eq("young_id", y.id);
+      const { error } = await supabase.from("young_people").delete().eq("id", y.id);
+      if (error) throw error;
+      await supabase.from("activity_logs").insert({
+        user_id: user?.id ?? null,
+        action: "young_deleted",
+        entity_type: "young_people",
+        entity_id: y.id,
+        description: `Jovem ${y.full_name} excluído`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Jovem excluído");
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      setToDelete(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: jovens = [], isLoading } = useQuery({
     queryKey: ["young_people"],
@@ -123,6 +153,11 @@ function JovensListPage() {
               </Link>
             </Button>
           )}
+          {isSuperAdmin && (
+            <Button variant="outline" onClick={() => setLinkOpen(true)}>
+              <Link2 className="mr-2 h-4 w-4" /> Gerar link de inscrição
+            </Button>
+          )}
           {isAdmin && (
             <Button onClick={() => setOpenForm(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo jovem
@@ -198,18 +233,19 @@ function JovensListPage() {
               <TableHead>Status</TableHead>
               <TableHead>Mentor</TableHead>
               <TableHead>Entrada</TableHead>
+              {isSuperAdmin && <TableHead className="w-12"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell>
+                  <TableCell colSpan={isSuperAdmin ? 8 : 7}><Skeleton className="h-10 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
                   Nenhum jovem encontrado
                 </TableCell>
               </TableRow>
@@ -237,6 +273,18 @@ function JovensListPage() {
                   <TableCell className="text-sm text-muted-foreground">
                     {y.entry_date ? new Date(y.entry_date).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
+                  {isSuperAdmin && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setToDelete(y); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
@@ -261,6 +309,22 @@ function JovensListPage() {
       </Card>
 
       <YoungFormDialog open={openForm} onOpenChange={setOpenForm} />
+      <InscricaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        title="Excluir jovem"
+        description={
+          <>
+            Tem certeza que deseja excluir <strong>{toDelete?.full_name}</strong>?
+            Essa ação não pode ser desfeita e todos os dados relacionados serão removidos.
+          </>
+        }
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => toDelete && deleteMutation.mutate(toDelete)}
+      />
     </div>
   );
 }

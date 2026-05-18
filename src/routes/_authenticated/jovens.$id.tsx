@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, MessageSquarePlus } from "lucide-react";
+import { ArrowLeft, Pencil, MessageSquarePlus, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,12 +47,14 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function JovemDetailPage() {
   const { id } = useParams({ from: "/_authenticated/jovens/$id" });
   const { user } = useAuth();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isSuperAdmin } = usePermissions();
+  const navigate = useNavigate();
   const qc = useQueryClient();
 
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<YoungStatus | "">("");
   const [newPhase, setNewPhase] = useState<TrailPhase | "">("");
   const [note, setNote] = useState("");
@@ -173,6 +176,29 @@ function JovemDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!y) return;
+      await supabase.from("young_evolution").delete().eq("young_id", id);
+      await supabase.from("young_attendance").delete().eq("young_id", id);
+      const { error } = await supabase.from("young_people").delete().eq("id", id);
+      if (error) throw error;
+      await supabase.from("activity_logs").insert({
+        user_id: user?.id ?? null,
+        action: "young_deleted",
+        entity_type: "young_people",
+        entity_id: id,
+        description: `Jovem ${y.full_name} excluído`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Jovem excluído");
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      navigate({ to: "/jovens" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />;
   }
@@ -218,6 +244,11 @@ function JovemDetailPage() {
             <Button size="sm" onClick={() => setNoteModalOpen(true)}>
               <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Observação
             </Button>
+            {isSuperAdmin && (
+              <Button variant="outline" size="sm" className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Excluir jovem
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -465,6 +496,17 @@ function JovemDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Excluir jovem"
+        description={<>Tem certeza que deseja excluir <strong>{y.full_name}</strong>? Essa ação não pode ser desfeita e todos os dados relacionados serão removidos.</>}
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }
