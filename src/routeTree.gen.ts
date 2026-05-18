@@ -30,6 +30,7 @@ import { Route as AuthenticatedServicosIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedJovensIndexRouteImport } from './routes/_authenticated/jovens.index'
 import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
+import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos.$id'
 import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
@@ -144,6 +145,11 @@ const AuthenticatedClientesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedClientesRoute,
   } as any)
+const AuthenticatedServicosIdRoute = AuthenticatedServicosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedServicosRoute,
+} as any)
 const AuthenticatedJovensInscricoesRoute =
   AuthenticatedJovensInscricoesRouteImport.update({
     id: '/inscricoes',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/crm/': typeof AuthenticatedCrmIndexRoute
   '/jovens/': typeof AuthenticatedJovensIndexRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
   '/crm': typeof AuthenticatedCrmIndexRoute
   '/jovens': typeof AuthenticatedJovensIndexRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/_authenticated/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/crm/': typeof AuthenticatedCrmIndexRoute
   '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/servicos/$id'
     | '/clientes/'
     | '/crm/'
     | '/jovens/'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/servicos/$id'
     | '/clientes'
     | '/crm'
     | '/jovens'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm/lista'
     | '/_authenticated/jovens/$id'
     | '/_authenticated/jovens/inscricoes'
+    | '/_authenticated/servicos/$id'
     | '/_authenticated/clientes/'
     | '/_authenticated/crm/'
     | '/_authenticated/jovens/'
@@ -490,6 +502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesIndexRouteImport
       parentRoute: typeof AuthenticatedClientesRoute
     }
+    '/_authenticated/servicos/$id': {
+      id: '/_authenticated/servicos/$id'
+      path: '/$id'
+      fullPath: '/servicos/$id'
+      preLoaderRoute: typeof AuthenticatedServicosIdRouteImport
+      parentRoute: typeof AuthenticatedServicosRoute
+    }
     '/_authenticated/jovens/inscricoes': {
       id: '/_authenticated/jovens/inscricoes'
       path: '/inscricoes'
@@ -574,10 +593,12 @@ const AuthenticatedJovensRouteWithChildren =
   AuthenticatedJovensRoute._addFileChildren(AuthenticatedJovensRouteChildren)
 
 interface AuthenticatedServicosRouteChildren {
+  AuthenticatedServicosIdRoute: typeof AuthenticatedServicosIdRoute
   AuthenticatedServicosIndexRoute: typeof AuthenticatedServicosIndexRoute
 }
 
 const AuthenticatedServicosRouteChildren: AuthenticatedServicosRouteChildren = {
+  AuthenticatedServicosIdRoute: AuthenticatedServicosIdRoute,
   AuthenticatedServicosIndexRoute: AuthenticatedServicosIndexRoute,
 }
 
