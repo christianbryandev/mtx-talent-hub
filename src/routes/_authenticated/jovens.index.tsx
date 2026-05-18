@@ -37,13 +37,39 @@ export const Route = createFileRoute("/_authenticated/jovens/")({
 const PAGE_SIZE = 10;
 
 function JovensListPage() {
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isSuperAdmin } = usePermissions();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
   const [areaFilter, setAreaFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [openForm, setOpenForm] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<YoungPerson | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (y: YoungPerson) => {
+      await supabase.from("young_evolution").delete().eq("young_id", y.id);
+      await supabase.from("young_attendance").delete().eq("young_id", y.id);
+      const { error } = await supabase.from("young_people").delete().eq("id", y.id);
+      if (error) throw error;
+      await supabase.from("activity_logs").insert({
+        user_id: user?.id ?? null,
+        action: "young_deleted",
+        entity_type: "young_people",
+        entity_id: y.id,
+        description: `Jovem ${y.full_name} excluído`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Jovem excluído");
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      setToDelete(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: jovens = [], isLoading } = useQuery({
     queryKey: ["young_people"],
