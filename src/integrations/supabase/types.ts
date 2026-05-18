@@ -541,6 +541,53 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          message: string | null
+          read: boolean
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           closing_probability: number | null
