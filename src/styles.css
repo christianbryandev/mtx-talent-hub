@@ -224,6 +224,84 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   }
+
+  /* ----- MTX reusable design tokens ----- */
+
+  /* Premium gradient button with glow + animated sheen on hover */
+  .mtx-button {
+    position: relative;
+    background-image: var(--gradient-mtx);
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-glow);
+    transition:
+      background-position 600ms ease,
+      box-shadow 300ms ease,
+      transform 200ms ease,
+      filter 200ms ease;
+  }
+  .mtx-button:hover {
+    background-position: 100% 50%;
+    box-shadow:
+      0 10px 36px -10px rgba(236, 72, 153, 0.55),
+      0 6px 20px -6px rgba(249, 115, 22, 0.4);
+    filter: brightness(1.05);
+  }
+  .mtx-button:active {
+    transform: translateY(1px);
+  }
+
+  /* Premium gradient badge — used for "ativo" / success-emphasis states */
+  .mtx-badge {
+    background-image: var(--gradient-mtx);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 14px -6px rgba(192, 38, 211, 0.45);
+  }
+
+  /* Glass card with subtle backdrop blur and hover lift */
+  .mtx-card {
+    position: relative;
+    background-color: color-mix(in oklab, var(--card) 92%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    transition:
+      transform 250ms ease,
+      border-color 250ms ease,
+      box-shadow 300ms ease;
+  }
+  .mtx-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Standalone glow halo */
+  .mtx-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Gradient border via mask trick — works on any element */
+  .mtx-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .mtx-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--gradient-mtx);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 /* Ambient page glow used on auth + dashboard backdrops */
