@@ -367,6 +367,180 @@ export type Database = {
           },
         ]
       }
+      meeting_agenda_items: {
+        Row: {
+          completed: boolean
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          meeting_id: string
+          position: number
+          responsible_id: string | null
+          title: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_id: string
+          position?: number
+          responsible_id?: string | null
+          title: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          meeting_id?: string
+          position?: number
+          responsible_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_agenda_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_participants: {
+        Row: {
+          created_at: string
+          id: string
+          justification: string | null
+          meeting_id: string
+          present: boolean | null
+          profile_id: string | null
+          young_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          justification?: string | null
+          meeting_id: string
+          present?: boolean | null
+          profile_id?: string | null
+          young_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          justification?: string | null
+          meeting_id?: string
+          present?: boolean | null
+          profile_id?: string | null
+          young_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_participants_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_tasks: {
+        Row: {
+          created_at: string
+          id: string
+          meeting_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meeting_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_tasks_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          agenda: string | null
+          created_at: string
+          date: string
+          decisions: string | null
+          end_time: string | null
+          id: string
+          is_recurring: boolean | null
+          location: string | null
+          next_steps: string | null
+          objectives: string | null
+          observations: string | null
+          recurrence_rule: string | null
+          responsible_id: string | null
+          start_time: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          created_at?: string
+          date: string
+          decisions?: string | null
+          end_time?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          location?: string | null
+          next_steps?: string | null
+          objectives?: string | null
+          observations?: string | null
+          recurrence_rule?: string | null
+          responsible_id?: string | null
+          start_time?: string | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          created_at?: string
+          date?: string
+          decisions?: string | null
+          end_time?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          location?: string | null
+          next_steps?: string | null
+          objectives?: string | null
+          observations?: string | null
+          recurrence_rule?: string | null
+          responsible_id?: string | null
+          start_time?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           closing_probability: number | null
