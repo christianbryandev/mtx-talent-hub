@@ -53,6 +53,18 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
 
+  const { data: pendingApps = 0 } = useQuery({
+    queryKey: ["pending-applications-count"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("young_applications")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pendente");
+      return count ?? 0;
+    },
+  });
+
   const isActive = (url: string) => pathname === url || pathname.startsWith(url + "/");
 
   const initials = (user?.email ?? "?")
