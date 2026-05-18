@@ -34,7 +34,7 @@ function AuthenticatedLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="mtx-ambient flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <AppTopbar />
