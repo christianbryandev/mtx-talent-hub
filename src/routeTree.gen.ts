@@ -163,21 +163,6 @@ const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedClientesRoute,
 } as any)
-const AuthenticatedCrmIndexRoute = AuthenticatedCrmIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedCrmRoute,
-} as any)
-const AuthenticatedCrmListaRoute = AuthenticatedCrmListaRouteImport.update({
-  id: '/lista',
-  path: '/lista',
-  getParentRoute: () => AuthenticatedCrmRoute,
-} as any)
-const AuthenticatedCrmIdRoute = AuthenticatedCrmIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedCrmRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
