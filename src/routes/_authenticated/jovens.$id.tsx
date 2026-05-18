@@ -47,12 +47,14 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function JovemDetailPage() {
   const { id } = useParams({ from: "/_authenticated/jovens/$id" });
   const { user } = useAuth();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isSuperAdmin } = usePermissions();
+  const navigate = useNavigate();
   const qc = useQueryClient();
 
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<YoungStatus | "">("");
   const [newPhase, setNewPhase] = useState<TrailPhase | "">("");
   const [note, setNote] = useState("");
