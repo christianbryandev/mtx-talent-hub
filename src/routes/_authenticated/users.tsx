@@ -1,11 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Shield } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -14,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ROLE_LABELS, type AppRole, ROLE_PRECEDENCE } from "@/types";
 
 export const Route = createFileRoute("/_authenticated/users")({
@@ -22,7 +33,15 @@ export const Route = createFileRoute("/_authenticated/users")({
 });
 
 function UsersPage() {
-  const { isAdmin, loading: permLoading } = usePermissions();
+  const { isAdmin, isSuperAdmin, loading: permLoading } = usePermissions();
+  const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [pendingChange, setPendingChange] = useState<{
+    userId: string;
+    fullName: string;
+    currentRole: AppRole | null;
+    newRole: AppRole;
+  } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["all-users"],
@@ -45,6 +64,39 @@ function UsersPage() {
         const primary = ROLE_PRECEDENCE.find((r) => userRoles.includes(r)) ?? null;
         return { ...p, role: primary };
       });
+    },
+  });
+
+  const changeRole = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: AppRole }) => {
+      // Remove all existing roles, then add the new one (single-role model)
+      const { error: delErr } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+      if (delErr) throw delErr;
+
+      const { error: insErr } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: newRole });
+      if (insErr) throw insErr;
+
+      await supabase.from("activity_logs").insert({
+        user_id: currentUser?.id ?? null,
+        action: "role_changed",
+        entity_type: "user",
+        entity_id: userId,
+        description: `Permissão alterada para ${ROLE_LABELS[newRole]}`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Permissão atualizada com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      setPendingChange(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erro ao alterar permissão");
+      setPendingChange(null);
     },
   });
 
@@ -101,37 +153,93 @@ function UsersPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {data?.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.full_name ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="border-primary/40 text-primary">
-                      {u.role ? ROLE_LABELS[u.role] : "Sem papel"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {u.is_active ? (
-                      <Badge className="bg-success/15 text-success hover:bg-success/20">Ativo</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inativo</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {u.last_sign_in_at
-                      ? new Date(u.last_sign_in_at).toLocaleString("pt-BR")
-                      : "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {data?.map((u) => {
+                const isSelf = u.id === currentUser?.id;
+                const canEdit = isSuperAdmin && !isSelf;
+                return (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.full_name ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                    <TableCell>
+                      {canEdit ? (
+                        <Select
+                          value={u.role ?? ""}
+                          onValueChange={(value) =>
+                            setPendingChange({
+                              userId: u.id,
+                              fullName: u.full_name ?? u.email ?? "usuário",
+                              currentRole: u.role,
+                              newRole: value as AppRole,
+                            })
+                          }
+                          disabled={changeRole.isPending}
+                        >
+                          <SelectTrigger className="h-8 w-[170px] border-primary/40 text-primary">
+                            <SelectValue placeholder="Sem papel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ROLE_PRECEDENCE.map((r) => (
+                              <SelectItem key={r} value={r}>
+                                {ROLE_LABELS[r]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge variant="outline" className="border-primary/40 text-primary">
+                          {u.role ? ROLE_LABELS[u.role] : "Sem papel"}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {u.is_active ? (
+                        <Badge className="bg-success/15 text-success hover:bg-success/20">Ativo</Badge>
+                      ) : (
+                        <Badge variant="secondary">Inativo</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {u.last_sign_in_at
+                        ? new Date(u.last_sign_in_at).toLocaleString("pt-BR")
+                        : "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Convite de novos usuários, alteração de papel e ativação serão implementados no próximo prompt.
-      </p>
+      {isSuperAdmin && (
+        <p className="text-xs text-muted-foreground">
+          Clique no perfil de um usuário para alterar a permissão. A mudança é aplicada imediatamente.
+        </p>
+      )}
+
+      <ConfirmDialog
+        open={!!pendingChange}
+        onOpenChange={(open) => !open && setPendingChange(null)}
+        title="Alterar permissão"
+        description={
+          pendingChange ? (
+            <>
+              Confirma alterar a permissão de <strong>{pendingChange.fullName}</strong> de{" "}
+              <strong>{pendingChange.currentRole ? ROLE_LABELS[pendingChange.currentRole] : "Sem papel"}</strong>{" "}
+              para <strong>{ROLE_LABELS[pendingChange.newRole]}</strong>?
+            </>
+          ) : null
+        }
+        confirmLabel="Alterar permissão"
+        loading={changeRole.isPending}
+        onConfirm={() =>
+          pendingChange &&
+          changeRole.mutate({
+            userId: pendingChange.userId,
+            newRole: pendingChange.newRole,
+          })
+        }
+      />
     </div>
   );
 }
