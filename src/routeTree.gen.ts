@@ -15,6 +15,7 @@ import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BriefingClientIdRouteImport } from './routes/briefing.$clientId'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -29,6 +30,7 @@ import { Route as AuthenticatedJovensIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
+import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -57,6 +59,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BriefingClientIdRoute = BriefingClientIdRouteImport.update({
+  id: '/briefing/$clientId',
+  path: '/briefing/$clientId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -133,6 +140,11 @@ const AuthenticatedJovensIdRoute = AuthenticatedJovensIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedJovensRoute,
 } as any)
+const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedClientesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -150,6 +162,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -169,6 +183,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
@@ -192,6 +208,8 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -215,6 +233,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tarefas'
     | '/users'
+    | '/briefing/$clientId'
+    | '/clientes/$id'
     | '/jovens/$id'
     | '/jovens/inscricoes'
     | '/clientes/'
@@ -234,6 +254,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tarefas'
     | '/users'
+    | '/briefing/$clientId'
+    | '/clientes/$id'
     | '/jovens/$id'
     | '/jovens/inscricoes'
     | '/clientes'
@@ -256,6 +278,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tarefas'
     | '/_authenticated/users'
+    | '/briefing/$clientId'
+    | '/_authenticated/clientes/$id'
     | '/_authenticated/jovens/$id'
     | '/_authenticated/jovens/inscricoes'
     | '/_authenticated/clientes/'
@@ -269,6 +293,7 @@ export interface RootRouteChildren {
   InscricaoRoute: typeof InscricaoRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  BriefingClientIdRoute: typeof BriefingClientIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -313,6 +338,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/briefing/$clientId': {
+      id: '/briefing/$clientId'
+      path: '/briefing/$clientId'
+      fullPath: '/briefing/$clientId'
+      preLoaderRoute: typeof BriefingClientIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
@@ -413,14 +445,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJovensIdRouteImport
       parentRoute: typeof AuthenticatedJovensRoute
     }
+    '/_authenticated/clientes/$id': {
+      id: '/_authenticated/clientes/$id'
+      path: '/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof AuthenticatedClientesIdRouteImport
+      parentRoute: typeof AuthenticatedClientesRoute
+    }
   }
 }
 
 interface AuthenticatedClientesRouteChildren {
+  AuthenticatedClientesIdRoute: typeof AuthenticatedClientesIdRoute
   AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
 }
 
 const AuthenticatedClientesRouteChildren: AuthenticatedClientesRouteChildren = {
+  AuthenticatedClientesIdRoute: AuthenticatedClientesIdRoute,
   AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
 }
 
@@ -481,7 +522,18 @@ const rootRouteChildren: RootRouteChildren = {
   InscricaoRoute: InscricaoRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  BriefingClientIdRoute: BriefingClientIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
