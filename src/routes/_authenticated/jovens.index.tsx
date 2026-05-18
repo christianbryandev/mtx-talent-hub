@@ -25,7 +25,7 @@ import {
   type YoungStatus,
 } from "@/types";
 
-export const Route = createFileRoute("/_authenticated/jovens")({
+export const Route = createFileRoute("/_authenticated/jovens/")({
   head: () => ({ meta: [{ title: "Jovens — MTX Hub" }] }),
   component: JovensListPage,
 });
