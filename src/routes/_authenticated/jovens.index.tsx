@@ -153,6 +153,11 @@ function JovensListPage() {
               </Link>
             </Button>
           )}
+          {isSuperAdmin && (
+            <Button variant="outline" onClick={() => setLinkOpen(true)}>
+              <Link2 className="mr-2 h-4 w-4" /> Gerar link de inscrição
+            </Button>
+          )}
           {isAdmin && (
             <Button onClick={() => setOpenForm(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo jovem
