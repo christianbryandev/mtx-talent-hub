@@ -34,6 +34,9 @@ import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
+import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
+import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticated/crm.index'
+import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
