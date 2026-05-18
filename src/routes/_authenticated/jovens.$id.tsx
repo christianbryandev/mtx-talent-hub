@@ -176,6 +176,29 @@ function JovemDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!y) return;
+      await supabase.from("young_evolution").delete().eq("young_id", id);
+      await supabase.from("young_attendance").delete().eq("young_id", id);
+      const { error } = await supabase.from("young_people").delete().eq("id", id);
+      if (error) throw error;
+      await supabase.from("activity_logs").insert({
+        user_id: user?.id ?? null,
+        action: "young_deleted",
+        entity_type: "young_people",
+        entity_id: id,
+        description: `Jovem ${y.full_name} excluído`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Jovem excluído");
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      navigate({ to: "/jovens" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />;
   }
