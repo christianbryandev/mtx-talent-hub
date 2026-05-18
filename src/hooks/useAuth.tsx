@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -6,8 +14,10 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  status: "loading" | "authenticated" | "unauthenticated";
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<Session | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -16,46 +26,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const applySession = useCallback((nextSession: Session | null) => {
+    setSession(nextSession);
+    setLoading(false);
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    setLoading(true);
+
+    const { data: current, error: currentError } = await supabase.auth.getSession();
+    if (currentError) {
+      console.error(currentError);
+      applySession(null);
+      return null;
+    }
+
+    if (current.session) {
+      applySession(current.session);
+      return current.session;
+    }
+
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error(error);
+      applySession(null);
+      return null;
+    }
+
+    applySession(data.session ?? null);
+    return data.session ?? null;
+  }, [applySession]);
+
   useEffect(() => {
     let mounted = true;
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mounted) return;
-      // Ignore transient null sessions during token refresh attempts —
-      // only TOKEN_REFRESHED/SIGNED_IN/SIGNED_OUT/INITIAL_SESSION are meaningful.
-      if (event === "TOKEN_REFRESHED" && !newSession) return;
-      setSession(newSession);
-      setLoading(false);
+
+      if (newSession) {
+        applySession(newSession);
+        return;
+      }
+
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        applySession(null);
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        return;
+      }
+
+      await refreshSession();
     });
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (!mounted) return;
-      setSession(currentSession);
-      setLoading(false);
+      applySession(currentSession);
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
+  }, [applySession, refreshSession]);
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      user: session?.user ?? null,
+      loading,
+      status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
+      isAuthenticated: !!session,
+      signOut,
+      refreshSession,
+    }),
+    [loading, refreshSession, session, signOut],
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user: session?.user ?? null,
-        loading,
-        isAuthenticated: !!session,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
