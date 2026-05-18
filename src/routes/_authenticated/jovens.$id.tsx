@@ -244,6 +244,11 @@ function JovemDetailPage() {
             <Button size="sm" onClick={() => setNoteModalOpen(true)}>
               <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Observação
             </Button>
+            {isSuperAdmin && (
+              <Button variant="outline" size="sm" className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Excluir jovem
+              </Button>
+            )}
           </div>
         )}
       </div>
