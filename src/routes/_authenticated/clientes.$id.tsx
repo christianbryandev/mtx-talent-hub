@@ -176,6 +176,16 @@ function ClientDetailPage() {
             )}
           </div>
         </div>
+        {isSuperAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Excluir
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="overview">
