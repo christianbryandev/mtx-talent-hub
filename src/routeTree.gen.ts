@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,9 @@ import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedJovensIndexRouteImport } from './routes/_authenticated/jovens.index'
+import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
+import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -33,6 +37,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InscricaoRoute = InscricaoRouteImport.update({
+  id: '/inscricao',
+  path: '/inscricao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -100,62 +109,91 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJovensIndexRoute =
+  AuthenticatedJovensIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedJovensRoute,
+  } as any)
+const AuthenticatedJovensInscricoesRoute =
+  AuthenticatedJovensInscricoesRouteImport.update({
+    id: '/inscricoes',
+    path: '/inscricoes',
+    getParentRoute: () => AuthenticatedJovensRoute,
+  } as any)
+const AuthenticatedJovensIdRoute = AuthenticatedJovensIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedJovensRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/jovens': typeof AuthenticatedJovensRoute
+  '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/reunioes': typeof AuthenticatedReunioesRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens/': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/jovens': typeof AuthenticatedJovensRoute
   '/reunioes': typeof AuthenticatedReunioesRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/_authenticated/jovens': typeof AuthenticatedJovensRoute
+  '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/forgot-password'
+    | '/inscricao'
     | '/login'
     | '/reset-password'
     | '/clientes'
@@ -168,27 +206,34 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tarefas'
     | '/users'
+    | '/jovens/$id'
+    | '/jovens/inscricoes'
+    | '/jovens/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
+    | '/inscricao'
     | '/login'
     | '/reset-password'
     | '/clientes'
     | '/crm'
     | '/dashboard'
     | '/indicadores'
-    | '/jovens'
     | '/reunioes'
     | '/servicos'
     | '/settings'
     | '/tarefas'
     | '/users'
+    | '/jovens/$id'
+    | '/jovens/inscricoes'
+    | '/jovens'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/forgot-password'
+    | '/inscricao'
     | '/login'
     | '/reset-password'
     | '/_authenticated/clientes'
@@ -201,12 +246,16 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tarefas'
     | '/_authenticated/users'
+    | '/_authenticated/jovens/$id'
+    | '/_authenticated/jovens/inscricoes'
+    | '/_authenticated/jovens/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  InscricaoRoute: typeof InscricaoRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
@@ -225,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inscricao': {
+      id: '/inscricao'
+      path: '/inscricao'
+      fullPath: '/inscricao'
+      preLoaderRoute: typeof InscricaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -318,15 +374,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jovens/': {
+      id: '/_authenticated/jovens/'
+      path: '/'
+      fullPath: '/jovens/'
+      preLoaderRoute: typeof AuthenticatedJovensIndexRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
+    '/_authenticated/jovens/inscricoes': {
+      id: '/_authenticated/jovens/inscricoes'
+      path: '/inscricoes'
+      fullPath: '/jovens/inscricoes'
+      preLoaderRoute: typeof AuthenticatedJovensInscricoesRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
+    '/_authenticated/jovens/$id': {
+      id: '/_authenticated/jovens/$id'
+      path: '/$id'
+      fullPath: '/jovens/$id'
+      preLoaderRoute: typeof AuthenticatedJovensIdRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
   }
 }
+
+interface AuthenticatedJovensRouteChildren {
+  AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
+  AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
+  AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
+}
+
+const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
+  AuthenticatedJovensIdRoute: AuthenticatedJovensIdRoute,
+  AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
+  AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
+}
+
+const AuthenticatedJovensRouteWithChildren =
+  AuthenticatedJovensRoute._addFileChildren(AuthenticatedJovensRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
-  AuthenticatedJovensRoute: typeof AuthenticatedJovensRoute
+  AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -339,7 +431,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
-  AuthenticatedJovensRoute: AuthenticatedJovensRoute,
+  AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -355,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  InscricaoRoute: InscricaoRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
 }
