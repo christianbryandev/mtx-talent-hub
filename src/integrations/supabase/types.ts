@@ -1484,6 +1484,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      daily_notifications_job: { Args: never; Returns: undefined }
       get_primary_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1494,6 +1495,27 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      notify_admins: {
+        Args: {
+          _entity_id: string
+          _entity_type: string
+          _message: string
+          _title: string
+          _type: string
+        }
+        Returns: undefined
+      }
+      notify_roles: {
+        Args: {
+          _entity_id: string
+          _entity_type: string
+          _message: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _title: string
+          _type: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
