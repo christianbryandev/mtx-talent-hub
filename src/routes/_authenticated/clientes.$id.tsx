@@ -10,8 +10,11 @@ import {
   FileText,
   Loader2,
   Plus,
+  Trash2,
   Upload,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { deleteClientCascade } from "@/lib/cascade-delete";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
