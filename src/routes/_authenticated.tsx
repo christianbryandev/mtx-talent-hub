@@ -11,26 +11,28 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, status } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (status === "unauthenticated") {
       navigate({
         to: "/login",
         search: { redirect: window.location.pathname + window.location.search },
         replace: true,
       });
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [navigate, status]);
 
-  if (loading || !isAuthenticated) {
+  if (loading || status === "loading") {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  if (!isAuthenticated) return null;
 
   return (
     <SidebarProvider>
