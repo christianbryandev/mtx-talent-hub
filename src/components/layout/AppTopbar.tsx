@@ -1,5 +1,6 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
