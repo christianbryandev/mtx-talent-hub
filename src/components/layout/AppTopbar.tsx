@@ -46,14 +46,7 @@ export function AppTopbar() {
             className="h-9 w-64 rounded-full border-white/10 bg-white/[0.03] pl-8 focus-visible:ring-primary/40"
           />
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gradient-mtx shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
-        </Button>
+        <NotificationBell />
         <Avatar className="h-8 w-8 border border-white/10">
           <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
             {initials}
