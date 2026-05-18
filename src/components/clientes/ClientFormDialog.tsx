@@ -57,7 +57,7 @@ const schema = z.object({
   commercial_responsible: z.string().optional().or(z.literal("")),
   // Etapa 3
   status: z.string(),
-  active_contract: z.boolean().default(false),
+  active_contract: z.boolean(),
   contract_start: z.string().optional().or(z.literal("")),
   contract_end: z.string().optional().or(z.literal("")),
   monthly_value: z.string().optional().or(z.literal("")),
