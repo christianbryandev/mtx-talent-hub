@@ -496,6 +496,17 @@ function JovemDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Excluir jovem"
+        description={<>Tem certeza que deseja excluir <strong>{y.full_name}</strong>? Essa ação não pode ser desfeita e todos os dados relacionados serão removidos.</>}
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </div>
   );
 }
