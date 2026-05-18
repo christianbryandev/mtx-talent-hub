@@ -26,6 +26,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedJovensIndexRouteImport } from './routes/_authenticated/jovens.index'
+import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 
@@ -115,6 +116,12 @@ const AuthenticatedJovensIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedJovensRoute,
   } as any)
+const AuthenticatedClientesIndexRoute =
+  AuthenticatedClientesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClientesRoute,
+  } as any)
 const AuthenticatedJovensInscricoesRoute =
   AuthenticatedJovensInscricoesRouteImport.update({
     id: '/inscricoes',
@@ -133,7 +140,7 @@ export interface FileRoutesByFullPath {
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/clientes': typeof AuthenticatedClientesRoute
+  '/clientes': typeof AuthenticatedClientesRouteWithChildren
   '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/jovens/': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRoutesByTo {
@@ -153,7 +161,6 @@ export interface FileRoutesByTo {
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/clientes': typeof AuthenticatedClientesRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/clientes': typeof AuthenticatedClientesIndexRoute
   '/jovens': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRoutesById {
@@ -174,7 +182,7 @@ export interface FileRoutesById {
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/clientes': typeof AuthenticatedClientesRouteWithChildren
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
 }
 export interface FileRouteTypes {
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/clientes/'
     | '/jovens/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -216,7 +226,6 @@ export interface FileRouteTypes {
     | '/inscricao'
     | '/login'
     | '/reset-password'
-    | '/clientes'
     | '/crm'
     | '/dashboard'
     | '/indicadores'
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/clientes'
     | '/jovens'
   id:
     | '__root__'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/_authenticated/jovens/$id'
     | '/_authenticated/jovens/inscricoes'
+    | '/_authenticated/clientes/'
     | '/_authenticated/jovens/'
   fileRoutesById: FileRoutesById
 }
@@ -381,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJovensIndexRouteImport
       parentRoute: typeof AuthenticatedJovensRoute
     }
+    '/_authenticated/clientes/': {
+      id: '/_authenticated/clientes/'
+      path: '/'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof AuthenticatedClientesIndexRouteImport
+      parentRoute: typeof AuthenticatedClientesRoute
+    }
     '/_authenticated/jovens/inscricoes': {
       id: '/_authenticated/jovens/inscricoes'
       path: '/inscricoes'
@@ -398,6 +416,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedClientesRouteChildren {
+  AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
+}
+
+const AuthenticatedClientesRouteChildren: AuthenticatedClientesRouteChildren = {
+  AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
+}
+
+const AuthenticatedClientesRouteWithChildren =
+  AuthenticatedClientesRoute._addFileChildren(
+    AuthenticatedClientesRouteChildren,
+  )
+
 interface AuthenticatedJovensRouteChildren {
   AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
   AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
@@ -414,7 +445,7 @@ const AuthenticatedJovensRouteWithChildren =
   AuthenticatedJovensRoute._addFileChildren(AuthenticatedJovensRouteChildren)
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRouteWithChildren
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
@@ -427,7 +458,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedClientesRoute: AuthenticatedClientesRouteWithChildren,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
@@ -454,3 +485,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
