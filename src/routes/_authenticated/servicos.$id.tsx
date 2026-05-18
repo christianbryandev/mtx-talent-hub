@@ -32,6 +32,18 @@ function ServicoDetailPage() {
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [addYoungId, setAddYoungId] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { isSuperAdmin } = usePermissions();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteServiceCascade(id),
+    onSuccess: () => {
+      toast.success("Serviço excluído");
+      qc.invalidateQueries({ queryKey: ["services"] });
+      navigate({ to: "/servicos" });
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),
+  });
 
   const { data: service, isLoading } = useQuery({
     queryKey: ["service", id],
