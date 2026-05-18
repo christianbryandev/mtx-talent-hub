@@ -245,7 +245,7 @@ function JovensListPage() {
               ))
             ) : paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
                   Nenhum jovem encontrado
                 </TableCell>
               </TableRow>
