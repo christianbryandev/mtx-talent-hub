@@ -133,9 +133,9 @@ function ClientesListPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Total de clientes" value={kpis.total} icon={<Building2 className="h-4 w-4" />} />
-        <KpiCard label="Clientes ativos" value={kpis.active} />
-        <KpiCard label="Receita recorrente" value={fmtBRL(kpis.recurring)} />
-        <KpiCard label="Novos este mês" value={kpis.newThisMonth} />
+        <KpiCard label="Clientes ativos" value={kpis.active} icon={<CheckCircle2 className="h-4 w-4" />} />
+        <KpiCard label="Receita recorrente" value={fmtBRL(kpis.recurring)} icon={<DollarSign className="h-4 w-4" />} />
+        <KpiCard label="Novos este mês" value={kpis.newThisMonth} icon={<Sparkles className="h-4 w-4" />} />
       </div>
 
       <div className="flex flex-wrap gap-2">
