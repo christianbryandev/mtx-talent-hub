@@ -62,8 +62,19 @@ function ClientDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { isAdmin, isComercial } = usePermissions();
+  const { isAdmin, isComercial, isSuperAdmin } = usePermissions();
   const canEdit = isAdmin || isComercial;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteClientCascade(id),
+    onSuccess: () => {
+      toast.success("Cliente excluído");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      navigate({ to: "/clientes" });
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),
+  });
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
