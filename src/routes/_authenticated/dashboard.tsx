@@ -197,11 +197,11 @@ function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats!.trailData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.32 0.018 270)" />
-                  <XAxis dataKey="fase" stroke="oklch(0.72 0.015 270)" fontSize={11} />
-                  <YAxis stroke="oklch(0.72 0.015 270)" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "oklch(0.21 0.02 270)", border: "1px solid oklch(0.32 0.018 270)", borderRadius: 8, color: "white" }} />
-                  <Bar dataKey="total" fill="oklch(0.78 0.14 80)" radius={[6, 6, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                  <XAxis dataKey="fase" stroke="#A1A1AA" fontSize={11} />
+                  <YAxis stroke="#A1A1AA" fontSize={11} />
+                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                  <Bar dataKey="total" fill="#EC4899" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -218,11 +218,11 @@ function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats!.clientsByMonth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.32 0.018 270)" />
-                  <XAxis dataKey="mes" stroke="oklch(0.72 0.015 270)" fontSize={11} />
-                  <YAxis stroke="oklch(0.72 0.015 270)" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "oklch(0.21 0.02 270)", border: "1px solid oklch(0.32 0.018 270)", borderRadius: 8, color: "white" }} />
-                  <Line type="monotone" dataKey="clientes" stroke="oklch(0.78 0.14 80)" strokeWidth={2.5} dot={{ fill: "oklch(0.78 0.14 80)", r: 4 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                  <XAxis dataKey="mes" stroke="#A1A1AA" fontSize={11} />
+                  <YAxis stroke="#A1A1AA" fontSize={11} />
+                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                  <Line type="monotone" dataKey="clientes" stroke="#EC4899" strokeWidth={2.5} dot={{ fill: "#EC4899", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
