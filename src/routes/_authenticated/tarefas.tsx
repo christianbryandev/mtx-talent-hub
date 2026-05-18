@@ -60,7 +60,7 @@ function TarefasKanbanPage() {
         .select(`*,
           clients(company_name),
           services(name),
-          young_people!tasks_young_responsible_fkey(full_name, photo_url)
+          young_people:young_responsible(full_name, photo_url)
         `)
         .order("position");
       if (error) throw error;
