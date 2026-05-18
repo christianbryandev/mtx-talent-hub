@@ -31,7 +31,7 @@ export function AppTopbar() {
   const initials = (user?.email ?? "?").split("@")[0].slice(0, 2).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/5 bg-background/60 px-4 backdrop-blur-xl lg:px-6">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
       <div className="hidden md:block">
         <h1 className="text-sm font-semibold tracking-tight text-foreground">{title}</h1>
@@ -42,15 +42,19 @@ export function AppTopbar() {
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar..."
-            className="h-9 w-64 pl-8 bg-card/60"
+            className="h-9 w-64 rounded-full border-white/10 bg-white/[0.03] pl-8 focus-visible:ring-primary/40"
           />
         </div>
-        <Button variant="ghost" size="icon" className="relative text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5"
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gradient-mtx shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
         </Button>
-        <Avatar className="h-8 w-8 border border-border">
-          <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
+        <Avatar className="h-8 w-8 border border-white/10">
+          <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
             {initials}
           </AvatarFallback>
         </Avatar>

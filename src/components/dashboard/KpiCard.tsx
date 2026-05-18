@@ -11,19 +11,23 @@ interface KpiCardProps {
   accent?: "primary" | "info" | "success" | "warning";
 }
 
-const ACCENTS = {
-  primary: "text-primary bg-primary/15",
-  info: "text-info bg-info/15",
-  success: "text-success bg-success/15",
-  warning: "text-warning bg-warning/15",
+const ACCENTS: Record<NonNullable<KpiCardProps["accent"]>, string> = {
+  primary: "bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-mtx-glow",
+  info: "bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-mtx-glow",
+  success: "bg-gradient-to-br from-emerald-500 to-teal-500 text-white",
+  warning: "bg-gradient-to-br from-orange-500 to-pink-500 text-white shadow-mtx-glow-orange",
 };
 
 export function KpiCard({ label, value, hint, icon, trend, accent = "primary" }: KpiCardProps) {
   return (
-    <Card className="border-border/60 bg-card/70 backdrop-blur-sm">
+    <Card className="group relative overflow-hidden border-white/5 bg-card/70 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:shadow-mtx-glow">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-60"
+        style={{ background: "var(--gradient-mtx)" }}
+      />
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
-          <div className={cn("grid h-10 w-10 place-items-center rounded-lg", ACCENTS[accent])}>
+          <div className={cn("grid h-10 w-10 place-items-center rounded-xl", ACCENTS[accent])}>
             {icon}
           </div>
           {trend && (
