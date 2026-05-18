@@ -12,8 +12,8 @@ import {
   Shield,
   Settings as SettingsIcon,
   LogOut,
-  Sparkles,
 } from "lucide-react";
+import mtxLogo from "@/assets/mtx-hub-logo.png";
 
 import {
   Sidebar,
@@ -76,16 +76,17 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" strokeWidth={2.5} />
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-bold tracking-tight">MTX Hub</span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Multiplicando Talentos
-              </span>
+          {collapsed ? (
+            <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-gradient-mtx shadow-mtx-glow">
+              <span className="text-sm font-black text-white">X</span>
             </div>
+          ) : (
+            <img
+              src={mtxLogo}
+              alt="MTX Hub"
+              className="h-9 w-auto select-none drop-shadow-[0_0_12px_rgba(192,38,211,0.35)]"
+              draggable={false}
+            />
           )}
         </div>
       </SidebarHeader>
@@ -108,7 +109,7 @@ export function AppSidebar() {
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
                         {showBadge && !collapsed && (
-                          <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                          <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-[10px] font-bold text-white shadow-mtx-glow">
                             {pendingApps}
                           </span>
                         )}
@@ -161,7 +162,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8 border border-border">
-            <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
+            <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
               {initials}
             </AvatarFallback>
           </Avatar>
