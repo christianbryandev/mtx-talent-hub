@@ -233,13 +233,14 @@ function JovensListPage() {
               <TableHead>Status</TableHead>
               <TableHead>Mentor</TableHead>
               <TableHead>Entrada</TableHead>
+              {isSuperAdmin && <TableHead className="w-12"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell>
+                  <TableCell colSpan={isSuperAdmin ? 8 : 7}><Skeleton className="h-10 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : paged.length === 0 ? (
