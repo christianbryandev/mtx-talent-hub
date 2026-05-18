@@ -44,6 +44,329 @@ export type Database = {
         }
         Relationships: []
       }
+      client_briefings: {
+        Row: {
+          additional_notes: string | null
+          biggest_challenge: string | null
+          client_id: string | null
+          commercial_goals: string | null
+          communication_tone: string | null
+          company_name: string | null
+          competitors: string | null
+          contact_name: string | null
+          created_at: string
+          current_channels: string | null
+          current_website: string | null
+          differentials: string | null
+          estimated_budget: string | null
+          existing_materials: string | null
+          expected_deadline: string | null
+          goals_with_mtx: string | null
+          has_commercial_team: boolean | null
+          id: string
+          invests_in_marketing: boolean | null
+          main_pains: string | null
+          main_products: string | null
+          marketing_goals: string | null
+          segment: string | null
+          social_media: string | null
+          submitted_at: string
+          target_audience: string | null
+          tools_access: string | null
+          urgency: string | null
+          uses_crm: boolean | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          biggest_challenge?: string | null
+          client_id?: string | null
+          commercial_goals?: string | null
+          communication_tone?: string | null
+          company_name?: string | null
+          competitors?: string | null
+          contact_name?: string | null
+          created_at?: string
+          current_channels?: string | null
+          current_website?: string | null
+          differentials?: string | null
+          estimated_budget?: string | null
+          existing_materials?: string | null
+          expected_deadline?: string | null
+          goals_with_mtx?: string | null
+          has_commercial_team?: boolean | null
+          id?: string
+          invests_in_marketing?: boolean | null
+          main_pains?: string | null
+          main_products?: string | null
+          marketing_goals?: string | null
+          segment?: string | null
+          social_media?: string | null
+          submitted_at?: string
+          target_audience?: string | null
+          tools_access?: string | null
+          urgency?: string | null
+          uses_crm?: boolean | null
+        }
+        Update: {
+          additional_notes?: string | null
+          biggest_challenge?: string | null
+          client_id?: string | null
+          commercial_goals?: string | null
+          communication_tone?: string | null
+          company_name?: string | null
+          competitors?: string | null
+          contact_name?: string | null
+          created_at?: string
+          current_channels?: string | null
+          current_website?: string | null
+          differentials?: string | null
+          estimated_budget?: string | null
+          existing_materials?: string | null
+          expected_deadline?: string | null
+          goals_with_mtx?: string | null
+          has_commercial_team?: boolean | null
+          id?: string
+          invests_in_marketing?: boolean | null
+          main_pains?: string | null
+          main_products?: string | null
+          marketing_goals?: string | null
+          segment?: string | null
+          social_media?: string | null
+          submitted_at?: string
+          target_audience?: string | null
+          tools_access?: string | null
+          urgency?: string | null
+          uses_crm?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_briefings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_history: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          recorded_by: string | null
+          type: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recorded_by?: string | null
+          type?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recorded_by?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_history_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_services: {
+        Row: {
+          client_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          monthly_value: number | null
+          notes: string | null
+          service_id: string | null
+          service_name: string | null
+          start_date: string | null
+          status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_value?: number | null
+          notes?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          start_date?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_value?: number | null
+          notes?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          start_date?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_services_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          active_contract: boolean | null
+          address: string | null
+          city: string | null
+          cnpj: string | null
+          commercial_responsible: string | null
+          company_name: string
+          company_size: string | null
+          contact_name: string | null
+          contact_role: string | null
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string
+          email: string | null
+          entry_date: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          lead_origin: string | null
+          linkedin: string | null
+          logo_url: string | null
+          monthly_value: number | null
+          niche: string | null
+          observations: string | null
+          phone: string | null
+          segment: string | null
+          setup_value: number | null
+          state: string | null
+          status: string
+          trade_name: string | null
+          updated_at: string
+          website: string | null
+          whatsapp: string | null
+          young_responsible: string | null
+        }
+        Insert: {
+          active_contract?: boolean | null
+          address?: string | null
+          city?: string | null
+          cnpj?: string | null
+          commercial_responsible?: string | null
+          company_name: string
+          company_size?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          email?: string | null
+          entry_date?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lead_origin?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          monthly_value?: number | null
+          niche?: string | null
+          observations?: string | null
+          phone?: string | null
+          segment?: string | null
+          setup_value?: number | null
+          state?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+          young_responsible?: string | null
+        }
+        Update: {
+          active_contract?: boolean | null
+          address?: string | null
+          city?: string | null
+          cnpj?: string | null
+          commercial_responsible?: string | null
+          company_name?: string
+          company_size?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          email?: string | null
+          entry_date?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lead_origin?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          monthly_value?: number | null
+          niche?: string | null
+          observations?: string | null
+          phone?: string | null
+          segment?: string | null
+          setup_value?: number | null
+          state?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+          young_responsible?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_commercial_responsible_fkey"
+            columns: ["commercial_responsible"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_young_responsible_fkey"
+            columns: ["young_responsible"]
+            isOneToOne: false
+            referencedRelation: "young_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -73,6 +396,36 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_sign_in_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          base_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
           updated_at?: string
         }
         Relationships: []
