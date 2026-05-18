@@ -273,6 +273,18 @@ function JovensListPage() {
                   <TableCell className="text-sm text-muted-foreground">
                     {y.entry_date ? new Date(y.entry_date).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
+                  {isSuperAdmin && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setToDelete(y); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
