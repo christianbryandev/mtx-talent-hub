@@ -78,13 +78,30 @@ function MeetingDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("meeting_participants")
-        .select("*, young:young_id(full_name), profile:profile_id(full_name, email)")
+        .select("*")
         .eq("meeting_id", id);
       if (error) throw error;
-      return (data ?? []) as (MeetingParticipant & {
-        young?: { full_name: string } | null;
-        profile?: { full_name: string | null; email: string | null } | null;
-      })[];
+      const rows = (data ?? []) as MeetingParticipant[];
+      const youngIds = rows.map((r) => r.young_id).filter(Boolean) as string[];
+      const profileIds = rows.map((r) => r.profile_id).filter(Boolean) as string[];
+      const [youngsRes, profilesRes] = await Promise.all([
+        youngIds.length
+          ? supabase.from("young_people").select("id, full_name").in("id", youngIds)
+          : Promise.resolve({ data: [] as { id: string; full_name: string }[], error: null }),
+        profileIds.length
+          ? supabase.from("profiles").select("id, full_name, email").in("id", profileIds)
+          : Promise.resolve({
+              data: [] as { id: string; full_name: string | null; email: string | null }[],
+              error: null,
+            }),
+      ]);
+      const youngMap = new Map((youngsRes.data ?? []).map((y) => [y.id, y]));
+      const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+      return rows.map((r) => ({
+        ...r,
+        young: r.young_id ? youngMap.get(r.young_id) ?? null : null,
+        profile: r.profile_id ? profileMap.get(r.profile_id) ?? null : null,
+      }));
     },
   });
 
