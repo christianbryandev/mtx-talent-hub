@@ -24,6 +24,7 @@ import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -101,6 +102,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJovensInscricoesRoute =
+  AuthenticatedJovensInscricoesRouteImport.update({
+    id: '/inscricoes',
+    path: '/inscricoes',
+    getParentRoute: () => AuthenticatedJovensRoute,
+  } as any)
 const AuthenticatedJovensIdRoute = AuthenticatedJovensIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/users'
     | '/jovens/$id'
+    | '/jovens/inscricoes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/users'
     | '/jovens/$id'
+    | '/jovens/inscricoes'
   id:
     | '__root__'
     | '/'
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas'
     | '/_authenticated/users'
     | '/_authenticated/jovens/$id'
+    | '/_authenticated/jovens/inscricoes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/jovens/inscricoes': {
+      id: '/_authenticated/jovens/inscricoes'
+      path: '/inscricoes'
+      fullPath: '/jovens/inscricoes'
+      preLoaderRoute: typeof AuthenticatedJovensInscricoesRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
     '/_authenticated/jovens/$id': {
       id: '/_authenticated/jovens/$id'
       path: '/$id'
@@ -342,10 +362,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedJovensRouteChildren {
   AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
+  AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
 }
 
 const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
   AuthenticatedJovensIdRoute: AuthenticatedJovensIdRoute,
+  AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
 }
 
 const AuthenticatedJovensRouteWithChildren =
