@@ -34,12 +34,32 @@ function LoginPage() {
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword(values);
-    setLoading(false);
+    const { data, error } = await supabase.auth.signInWithPassword(values);
     if (error) {
+      setLoading(false);
       toast.error("Não foi possível entrar", { description: error.message });
       return;
     }
+
+    // Block inactive users
+    const userId = data.user?.id;
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", userId)
+        .maybeSingle();
+      if (profile && profile.is_active === false) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        toast.error("Acesso bloqueado", {
+          description: "Sua conta está desativada. Procure um administrador.",
+        });
+        return;
+      }
+    }
+
+    setLoading(false);
     toast.success("Bem-vindo de volta!");
     navigate({ to: "/dashboard" });
   };
