@@ -36,14 +36,14 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { ROLE_LABELS } from "@/types";
 
 const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Jovens", url: "/jovens", icon: Users },
-  { title: "Clientes", url: "/clientes", icon: Building2 },
-  { title: "CRM Comercial", url: "/crm", icon: Target },
-  { title: "Serviços", url: "/servicos", icon: Briefcase },
-  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks },
-  { title: "Reuniões", url: "/reunioes", icon: CalendarDays },
-  { title: "Indicadores", url: "/indicadores", icon: BarChart3 },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tour: "nav-dashboard" },
+  { title: "Jovens", url: "/jovens", icon: Users, tour: "nav-jovens" },
+  { title: "Clientes", url: "/clientes", icon: Building2, tour: "nav-clientes" },
+  { title: "CRM Comercial", url: "/crm", icon: Target, tour: "nav-crm" },
+  { title: "Serviços", url: "/servicos", icon: Briefcase, tour: "nav-servicos" },
+  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, tour: "nav-tarefas" },
+  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, tour: "nav-reunioes" },
+  { title: "Indicadores", url: "/indicadores", icon: BarChart3, tour: "nav-indicadores" },
 ] as const;
 
 export function AppSidebar() {
@@ -73,7 +73,7 @@ export function AppSidebar() {
     .toUpperCase();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" data-tour="sidebar">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2">
           {collapsed ? (
@@ -99,7 +99,7 @@ export function AppSidebar() {
               {mainItems.map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={item.tour}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive(item.url)}
@@ -127,7 +127,7 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
+                <SidebarMenuItem data-tour="nav-users">
                   <SidebarMenuButton
                     asChild
                     isActive={isActive("/users")}

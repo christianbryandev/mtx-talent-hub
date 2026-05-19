@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -44,6 +45,7 @@ function AuthenticatedLayout() {
             <Outlet />
           </main>
         </div>
+        <OnboardingProvider />
       </div>
     </SidebarProvider>
   );
