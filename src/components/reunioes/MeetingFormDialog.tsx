@@ -52,7 +52,7 @@ const schema = z.object({
   recurrence_rule: z.string().optional(),
   agenda: z.string().optional(),
   objectives: z.string().optional(),
-  link_kind: z.enum(["none", "opportunity", "client"]).default("none"),
+  link_kind: z.enum(["none", "opportunity", "client"]),
   link_opportunity_id: z.string().optional(),
   link_client_id: z.string().optional(),
 });
