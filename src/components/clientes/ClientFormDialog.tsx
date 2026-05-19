@@ -27,6 +27,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  ProfileSearchSelect,
+} from "@/components/shared/RelationalSelects";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import {
   CLIENT_STATUS_LABELS,
   CLIENT_STATUS_LIST,
   COMPANY_SIZES,
