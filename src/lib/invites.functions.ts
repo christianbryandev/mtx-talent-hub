@@ -228,5 +228,19 @@ export const acceptInvite = createServerFn({ method: "POST" })
       description: `Conta criada a partir de convite (${invite.email})`,
     });
 
+    // Notificação especial para colaboradores completarem o perfil
+    if (invite.role === "colaborador") {
+      await supabaseAdmin.from("notifications").insert({
+        user_id: newUserId,
+        title: "Complete seu perfil na MTX!",
+        message:
+          "Clique aqui para preencher suas informações na área de Jovens. Quanto mais completo seu perfil, melhor sua equipe te conhece!",
+        type: "geral",
+        entity_type: "self_profile",
+        entity_id: null,
+        read: false,
+      });
+    }
+
     return { ok: true, email: invite.email };
   });

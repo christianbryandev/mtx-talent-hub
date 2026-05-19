@@ -64,6 +64,7 @@ export const ENTITY_ROUTES: Record<string, (id: string) => string> = {
   clients: (id) => `/clientes/${id}`,
   opportunities: (id) => `/crm/${id}`,
   meetings: (id) => `/reunioes/${id}`,
+  self_profile: () => `/meu-perfil`,
 };
 
 export function getNotificationRoute(n: Pick<NotificationRow, "entity_type" | "entity_id">): string | null {
