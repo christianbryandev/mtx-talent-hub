@@ -15,6 +15,7 @@ import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as BriefingClientIdRouteImport } from './routes/briefing.$clientId'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
@@ -67,6 +68,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteTokenRoute = ConviteTokenRouteImport.update({
+  id: '/convite/$token',
+  path: '/convite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BriefingClientIdRoute = BriefingClientIdRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/users'
     | '/briefing/$clientId'
+    | '/convite/$token'
     | '/clientes/$id'
     | '/crm/$id'
     | '/crm/lista'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/users'
     | '/briefing/$clientId'
+    | '/convite/$token'
     | '/clientes/$id'
     | '/crm/$id'
     | '/crm/lista'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas'
     | '/_authenticated/users'
     | '/briefing/$clientId'
+    | '/convite/$token'
     | '/_authenticated/clientes/$id'
     | '/_authenticated/crm/$id'
     | '/_authenticated/crm/lista'
@@ -387,6 +399,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   BriefingClientIdRoute: typeof BriefingClientIdRoute
+  ConviteTokenRoute: typeof ConviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite/$token': {
+      id: '/convite/$token'
+      path: '/convite/$token'
+      fullPath: '/convite/$token'
+      preLoaderRoute: typeof ConviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/briefing/$clientId': {
@@ -719,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   BriefingClientIdRoute: BriefingClientIdRoute,
+  ConviteTokenRoute: ConviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
