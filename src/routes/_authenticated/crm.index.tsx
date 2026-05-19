@@ -70,6 +70,8 @@ const brl = (v: number | null) =>
 function CrmKanbanPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { isAdmin, isComercial } = usePermissions();
+  const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
