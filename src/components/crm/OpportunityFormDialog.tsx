@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_STAGES, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
+import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
 const schema = z.object({
   company_name: z.string().min(2, "Empresa obrigatória").max(200),
