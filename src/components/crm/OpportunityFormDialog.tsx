@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_STAGES, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
+import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
 const schema = z.object({
   company_name: z.string().min(2, "Empresa obrigatória").max(200),
@@ -71,18 +72,8 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
     },
   });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles-min"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
+
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -249,22 +240,10 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div className="md:col-span-2">
               <Label>Responsável comercial</Label>
-              <Select
-                value={form.watch("commercial_responsible") || "_none"}
-                onValueChange={(v) =>
-                  form.setValue("commercial_responsible", v === "_none" ? "" : v)
-                }
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {profiles.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.full_name || p.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ProfileSearchSelect
+                value={form.watch("commercial_responsible") || null}
+                onChange={(v) => form.setValue("commercial_responsible", v ?? "")}
+              />
             </div>
             <div className="md:col-span-2">
               <Label>Notas</Label>

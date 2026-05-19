@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ProfileSearchSelect,
+} from "@/components/shared/RelationalSelects";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import {
   CLIENT_STATUS_LABELS,
   CLIENT_STATUS_LIST,
@@ -87,31 +91,8 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
     },
   });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles-commercial"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
 
-  const { data: youngs = [] } = useQuery({
-    queryKey: ["young-list-min"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("young_people")
-        .select("id, full_name")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -293,22 +274,10 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
               </div>
               <div>
                 <Label>Responsável comercial</Label>
-                <Select
-                  onValueChange={(v) =>
-                    form.setValue("commercial_responsible", v === "_none" ? "" : v)
-                  }
-                  value={form.watch("commercial_responsible") || "_none"}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">— Nenhum —</SelectItem>
-                    {profiles.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name || p.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ProfileSearchSelect
+                  value={form.watch("commercial_responsible") || null}
+                  onChange={(v) => form.setValue("commercial_responsible", v ?? "")}
+                />
               </div>
             </div>
           )}
@@ -358,20 +327,10 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
               </div>
               <div className="md:col-span-2">
                 <Label>Jovem responsável</Label>
-                <Select
-                  onValueChange={(v) =>
-                    form.setValue("young_responsible", v === "_none" ? "" : v)
-                  }
-                  value={form.watch("young_responsible") || "_none"}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">— Nenhum —</SelectItem>
-                    {youngs.map((y) => (
-                      <SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <YoungSearchSelect
+                  value={form.watch("young_responsible") || null}
+                  onChange={(v) => form.setValue("young_responsible", v ?? "")}
+                />
               </div>
               <div className="md:col-span-2">
                 <Label>Observações</Label>
