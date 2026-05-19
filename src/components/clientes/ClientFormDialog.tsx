@@ -350,20 +350,10 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
               </div>
               <div className="md:col-span-2">
                 <Label>Jovem responsável</Label>
-                <Select
-                  onValueChange={(v) =>
-                    form.setValue("young_responsible", v === "_none" ? "" : v)
-                  }
-                  value={form.watch("young_responsible") || "_none"}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">— Nenhum —</SelectItem>
-                    {youngs.map((y) => (
-                      <SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <YoungSearchSelect
+                  value={form.watch("young_responsible") || null}
+                  onChange={(v) => form.setValue("young_responsible", v ?? "")}
+                />
               </div>
               <div className="md:col-span-2">
                 <Label>Observações</Label>
