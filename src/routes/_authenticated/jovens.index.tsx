@@ -383,3 +383,51 @@ function JovensListPage() {
     </div>
   );
 }
+
+function StuckBadge({ lastProgressAt }: { lastProgressAt: string | null | undefined }) {
+  if (!lastProgressAt) return null;
+  const days = Math.floor((Date.now() - new Date(lastProgressAt).getTime()) / 86_400_000);
+  if (days >= 14)
+    return (
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+        🔴 Inativo ({days}d)
+      </span>
+    );
+  if (days >= 7)
+    return (
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+        ⚠️ Travado ({days}d)
+      </span>
+    );
+  return null;
+}
+
+function ProgressMini({ youngId, phase }: { youngId: string; phase: string | null }) {
+  const { data } = useQuery({
+    queryKey: ["young-progress-mini", youngId, phase],
+    enabled: !!phase,
+    queryFn: async () => {
+      const [{ data: row }, { count: openCount }, { data: passed }] = await Promise.all([
+        supabase.from("journey_phases").select("checklist").eq("young_id", youngId).eq("phase", phase!).maybeSingle(),
+        supabase.from("tasks").select("id", { count: "exact", head: true })
+          .eq("young_responsible", youngId).not("status", "in", "(concluida,cancelada)"),
+        supabase.from("young_quiz_attempts").select("id").eq("young_id", youngId).eq("phase", phase!).eq("passed", true).limit(1),
+      ]);
+      const checklist = ((row?.checklist ?? []) as Array<{ done?: boolean }>);
+      const lessonsDone = checklist.length > 0 && checklist.every((c) => c.done);
+      const tasksDone = (openCount ?? 0) === 0;
+      const quizDone = (passed ?? []).length > 0;
+      return Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
+    },
+  });
+  const pct = data ?? 0;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-20 rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[10px] text-muted-foreground">{pct}%</span>
+    </div>
+  );
+}
+
