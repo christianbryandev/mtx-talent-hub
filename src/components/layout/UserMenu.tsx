@@ -45,7 +45,7 @@ export function UserMenu() {
           aria-label="Menu do usuário"
         >
           <Avatar className="h-9 w-9 border border-white/10">
-            <AvatarImage src={profile?.avatar_url ?? undefined} />
+            <AvatarImage src={avatarUrl ?? undefined} />
             <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
               {initials}
             </AvatarFallback>
@@ -55,7 +55,7 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-64">
         <div className="flex items-center gap-3 p-2">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={profile?.avatar_url ?? undefined} />
+            <AvatarImage src={avatarUrl ?? undefined} />
             <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
               {initials}
             </AvatarFallback>
