@@ -48,6 +48,9 @@ function InscricoesPage() {
   const { isAdmin, loading: permissionsLoading } = usePermissions();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [detail, setDetail] = useState<YoungApplication | null>(null);
+  const [complement, setComplement] = useState<{ youngId: string; app: YoungApplication } | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const createInviteFn = useServerFn(createInvite);
 
   useEffect(() => {
     if (!permissionsLoading && !isAdmin) {
@@ -88,6 +91,7 @@ function InscricoesPage() {
 
   const approve = useMutation({
     mutationFn: async (app: YoungApplication) => {
+      const today = new Date().toISOString().split("T")[0];
       const { data: created, error } = await supabase
         .from("young_people")
         .insert({
@@ -109,6 +113,8 @@ function InscricoesPage() {
           has_phone: !!app.has_phone,
           has_internet: !!app.has_internet,
           status: "aprovado",
+          trail_phase: "fase_1",
+          entry_date: today,
         })
         .select()
         .single();
@@ -128,13 +134,15 @@ function InscricoesPage() {
         entity_id: app.id,
         description: `Inscrição aprovada: ${app.full_name}`,
       });
+      return { created, app };
     },
-    onSuccess: () => {
-      toast.success("Inscrição aprovada — perfil criado");
+    onSuccess: ({ created, app }) => {
+      toast.success(`${app.full_name} foi aprovado(a) e já tem perfil criado!`);
       qc.invalidateQueries({ queryKey: ["young_applications"] });
       qc.invalidateQueries({ queryKey: ["young_people"] });
       qc.invalidateQueries({ queryKey: ["pending-applications-count"] });
       setDetail(null);
+      setComplement({ youngId: created.id, app });
     },
     onError: (e: Error) => toast.error(e.message),
   });
