@@ -141,6 +141,8 @@ export function ColaboradorDashboard() {
         </p>
       </div>
 
+      <TodayMeetingBanner />
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard icon={<CheckSquare className="h-5 w-5" />} label="Tarefas abertas" value={data.openCount.toString()} />
         <KpiCard
