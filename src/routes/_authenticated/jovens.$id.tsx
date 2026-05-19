@@ -99,6 +99,40 @@ function JovemDetailPage() {
     },
   });
 
+  const { data: youngTasks = [] } = useQuery({
+    queryKey: ["young_tasks", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("id, title, status, kanban_column, priority, due_date, area")
+        .eq("young_responsible", id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: youngMeetings = [] } = useQuery({
+    queryKey: ["young_meetings", id],
+    queryFn: async () => {
+      const { data: parts } = await supabase
+        .from("meeting_participants")
+        .select("meeting_id")
+        .eq("young_id", id);
+      const ids = (parts ?? []).map((p) => p.meeting_id);
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase
+        .from("meetings")
+        .select("id, title, type, date, start_time, status")
+        .in("id", ids)
+        .order("date", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const updateStatus = useMutation({
     mutationFn: async () => {
       if (!newStatus || !y) return;
