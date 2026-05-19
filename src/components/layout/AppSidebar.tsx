@@ -66,6 +66,19 @@ export function AppSidebar() {
     },
   });
 
+  const { data: hasYoungProfile = true } = useQuery({
+    queryKey: ["has-young-profile", user?.id],
+    enabled: !!user && role === "colaborador",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("young_people")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      return !!data;
+    },
+  });
+
   const isActive = (url: string) => pathname === url || pathname.startsWith(url + "/");
 
   const initials = (user?.email ?? "?")
@@ -137,6 +150,21 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
+              {role === "colaborador" && !hasYoungProfile && !collapsed && (
+                <div className="mx-2 mt-2 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                    <UserCircle className="h-4 w-4" />
+                    Seu perfil está incompleto
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="mt-2 h-7 w-full bg-gradient-mtx text-[11px] font-semibold text-white"
+                  >
+                    <Link to="/meu-perfil">Criar meu perfil</Link>
+                  </Button>
+                </div>
+              )}
             </SidebarGroupContent>
           </SidebarGroup>
         )}
