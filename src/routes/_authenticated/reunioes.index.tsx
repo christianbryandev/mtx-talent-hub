@@ -67,11 +67,64 @@ export const Route = createFileRoute("/_authenticated/reunioes/")({
 });
 
 function ReunioesPage() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [open, setOpen] = useState(false);
+  const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const renderActions = (m: Meeting) => (
+    <RowActionsMenu
+      label={m.title}
+      onView={() => navigate({ to: "/reunioes/$id", params: { id: m.id } })}
+      onEdit={isAdmin ? () => setEditMeeting(m) : undefined}
+      onDuplicate={
+        isAdmin
+          ? async () => {
+              try {
+                const copy = await duplicateRow<{ id: string }>("meetings", m.id, {
+                  labelField: "title",
+                  overrides: { status: "agendada" },
+                });
+                await logActivity({
+                  action: "meeting_duplicated",
+                  entity_type: "meeting",
+                  entity_id: copy.id,
+                  description: `Reunião "${m.title}" duplicada`,
+                });
+                toast.success("Reunião duplicada");
+                qc.invalidateQueries({ queryKey: ["meetings"] });
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }
+          : undefined
+      }
+      onDelete={
+        isAdmin
+          ? async () => {
+              try {
+                await deleteMeetingCascade(m.id);
+                await logActivity({
+                  action: "meeting_deleted",
+                  entity_type: "meeting",
+                  entity_id: m.id,
+                  description: `Reunião "${m.title}" excluída`,
+                });
+                toast.success("Reunião excluída");
+                qc.invalidateQueries({ queryKey: ["meetings"] });
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }
+          : undefined
+      }
+    />
+  );
 
   const { data: meetings = [], isLoading } = useQuery({
     queryKey: ["meetings"],
