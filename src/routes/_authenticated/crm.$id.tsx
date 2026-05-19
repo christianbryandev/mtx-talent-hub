@@ -43,8 +43,12 @@ import {
   FUNNEL_STAGES,
   INTERACTION_TYPES,
   PROPOSAL_STATUS_LABELS,
+  PROPOSAL_STATUS_FORM_LABELS,
+  LEAD_ORIGIN_OPTIONS,
   type FunnelStage,
   type Opportunity,
+  type OpportunityTemperature,
+  type ProposalStatus,
 } from "@/types/crm";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
