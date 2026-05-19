@@ -197,12 +197,22 @@ function OpportunityDetailPage() {
 
   const today = new Date().toISOString().slice(0, 10);
   const isLate = opp.next_followup_date && opp.next_followup_date < today;
+  const isClosed = opp.status !== "aberta";
+  const canEdit = !isClosed || isAdmin || hasActiveApproval;
 
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link to="/crm"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link>
       </Button>
+
+      <EditRequestBanner
+        entityType="opportunity"
+        entityId={id}
+        entityLabel={`oportunidade "${opp.company_name}"`}
+        locked={isClosed}
+      />
+
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
@@ -217,7 +227,7 @@ function OpportunityDetailPage() {
             <Select
               value={opp.funnel_stage}
               onValueChange={(v) => updateMutation.mutate({ funnel_stage: v as FunnelStage })}
-              disabled={opp.status !== "aberta"}
+              disabled={!canEdit}
             >
               <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
