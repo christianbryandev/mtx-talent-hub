@@ -293,42 +293,24 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
             </div>
             <div>
               <Label className="text-xs">Cliente</Label>
-              <Select
-                value={task.client_id ?? "_none"}
-                onValueChange={(v) => updateTask.mutate({ client_id: v === "_none" ? null : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {clients.map((c) => (<SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <ClientSearchSelect
+                value={task.client_id ?? null}
+                onChange={(v) => updateTask.mutate({ client_id: v })}
+              />
             </div>
             <div>
               <Label className="text-xs">Serviço</Label>
-              <Select
-                value={task.service_id ?? "_none"}
-                onValueChange={(v) => updateTask.mutate({ service_id: v === "_none" ? null : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <ServiceSearchSelect
+                value={task.service_id ?? null}
+                onChange={(v) => updateTask.mutate({ service_id: v })}
+              />
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Jovem responsável</Label>
-              <Select
-                value={task.young_responsible ?? "_none"}
-                onValueChange={(v) => updateTask.mutate({ young_responsible: v === "_none" ? null : v })}
-              >
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {youngs.map((y) => (<SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <YoungSearchSelect
+                value={task.young_responsible ?? null}
+                onChange={(v) => updateTask.mutate({ young_responsible: v })}
+              />
             </div>
           </div>
 
