@@ -45,6 +45,12 @@ import {
   type FunnelStage,
   type Opportunity,
 } from "@/types/crm";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  EditRequestBanner,
+  useEditRequestState,
+} from "@/components/crm/EditRequestBanner";
+import { ServiceMultiSelect } from "@/components/crm/ServiceMultiSelect";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
   head: () => ({ meta: [{ title: "Oportunidade — MTX Hub" }] }),
@@ -58,6 +64,7 @@ function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
 
   const [showLoss, setShowLoss] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
