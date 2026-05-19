@@ -65,34 +65,8 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
     if (defaultColumn) form.setValue("kanban_column", defaultColumn);
   }, [defaultColumn, form]);
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ["clients-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("clients").select("id, company_name").order("company_name");
-      return data ?? [];
-    },
-  });
-  const { data: services = [] } = useQuery({
-    queryKey: ["services-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("services").select("id, name").order("name");
-      return data ?? [];
-    },
-  });
-  const { data: youngs = [] } = useQuery({
-    queryKey: ["youngs-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("young_people").select("id, full_name").order("full_name");
-      return data ?? [];
-    },
-  });
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, full_name, email").order("full_name");
-      return data ?? [];
-    },
-  });
+
+
 
   const mutation = useMutation({
     mutationFn: async (v: FormValues) => {
