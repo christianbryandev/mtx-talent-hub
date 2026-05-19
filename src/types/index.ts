@@ -162,6 +162,7 @@ export interface YoungPerson {
   profile_id: string | null;
   created_at: string;
   updated_at: string;
+  last_progress_at: string;
 }
 
 export interface YoungApplication {
