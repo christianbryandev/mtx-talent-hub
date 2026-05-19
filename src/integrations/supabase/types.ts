@@ -719,6 +719,8 @@ export type Database = {
           id: string
           is_active: boolean
           last_sign_in_at: string | null
+          onboarding_completed: boolean
+          onboarding_completed_at: string | null
           updated_at: string
         }
         Insert: {
@@ -729,6 +731,8 @@ export type Database = {
           id: string
           is_active?: boolean
           last_sign_in_at?: string | null
+          onboarding_completed?: boolean
+          onboarding_completed_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -739,6 +743,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_sign_in_at?: string | null
+          onboarding_completed?: boolean
+          onboarding_completed_at?: string | null
           updated_at?: string
         }
         Relationships: []
