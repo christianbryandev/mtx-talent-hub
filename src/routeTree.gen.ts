@@ -22,6 +22,7 @@ import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as AuthenticatedReunioesRouteImport } from './routes/_authenticated/reunioes'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedJovensRouteImport } from './routes/_authenticated/jovens'
@@ -104,6 +105,11 @@ const AuthenticatedServicosRoute = AuthenticatedServicosRouteImport.update({
 const AuthenticatedReunioesRoute = AuthenticatedReunioesRouteImport.update({
   id: '/reunioes',
   path: '/reunioes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedNotificacoesRoute =
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/reunioes': typeof AuthenticatedReunioesRouteWithChildren
   '/servicos': typeof AuthenticatedServicosRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRouteWithChildren
   '/_authenticated/servicos': typeof AuthenticatedServicosRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/jovens'
     | '/meu-perfil'
     | '/notificacoes'
+    | '/perfil'
     | '/reunioes'
     | '/servicos'
     | '/settings'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/meu-perfil'
     | '/notificacoes'
+    | '/perfil'
     | '/settings'
     | '/tarefas'
     | '/users'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jovens'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/notificacoes'
+    | '/_authenticated/perfil'
     | '/_authenticated/reunioes'
     | '/_authenticated/servicos'
     | '/_authenticated/settings'
@@ -505,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/reunioes'
       fullPath: '/reunioes'
       preLoaderRoute: typeof AuthenticatedReunioesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notificacoes': {
@@ -726,6 +745,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRouteWithChildren
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -741,6 +761,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRouteWithChildren,
   AuthenticatedServicosRoute: AuthenticatedServicosRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

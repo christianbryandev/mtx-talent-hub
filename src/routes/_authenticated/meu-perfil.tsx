@@ -184,15 +184,9 @@ function MeuPerfilPage() {
   }
 
   if (!young) {
-    return (
-      <Card className="p-8 text-center">
-        <h2 className="text-lg font-semibold">Perfil de jovem não encontrado</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Sua conta ainda não está vinculada a um cadastro de jovem da MTX. Entre em contato com a coordenação.
-        </p>
-      </Card>
-    );
+    return <CreateMyProfile />;
   }
+
 
   const initials = (young.full_name ?? "?").split(" ").slice(0, 2).map((s) => s[0]).join("").toUpperCase();
   const currentPhaseIdx = young.trail_phase ? TRAIL_PHASE_LIST.indexOf(young.trail_phase) : -1;
@@ -556,6 +550,85 @@ function Achievement({ icon, label, value }: { icon: React.ReactNode; label: str
     <div className="rounded-lg border border-border bg-muted/30 p-4">
       <div className="mb-2 flex items-center gap-2 text-primary">{icon}<span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span></div>
       <div className="text-lg font-bold">{value}</div>
+    </div>
+  );
+}
+
+function CreateMyProfile() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async () => {
+    if (!user) return;
+    setCreating(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .single();
+
+      const { data: created, error } = await supabase
+        .from("young_people")
+        .insert({
+          full_name: profile?.full_name ?? user.email ?? "Sem nome",
+          email: profile?.email ?? user.email ?? null,
+          status: "em_formacao",
+          trail_phase: "fase_1",
+          entry_date: new Date().toISOString().split("T")[0],
+          profile_id: user.id,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "young_self_created",
+        entity_type: "young_people",
+        entity_id: created.id,
+        description: "Colaborador criou o próprio perfil",
+      });
+
+      // Marca notificação de boas-vindas como lida
+      await supabase
+        .from("notifications")
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .eq("entity_type", "self_profile");
+
+      toast.success("Perfil criado com sucesso! Você já aparece na área de Jovens.");
+      qc.invalidateQueries({ queryKey: ["my-young-profile"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <Card className="p-8 text-center">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gradient-mtx text-white">
+          <Trophy className="h-8 w-8" />
+        </div>
+        <h2 className="mt-4 text-2xl font-bold">Bem-vindo(a) à MTX 🎉</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Crie seu perfil na área de Jovens para que sua equipe te conheça melhor.
+          Você poderá preencher seus dados depois — começamos com o básico.
+        </p>
+        <Button
+          size="lg"
+          onClick={handleCreate}
+          disabled={creating}
+          className="mt-6 bg-gradient-mtx text-white"
+        >
+          {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Criar meu perfil agora
+        </Button>
+      </Card>
     </div>
   );
 }
