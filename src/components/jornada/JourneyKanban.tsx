@@ -97,10 +97,11 @@ export interface JourneyCard {
 interface Props {
   youngId: string;
   canEdit: boolean;
+  canReassign?: boolean;
   title?: string;
 }
 
-export function JourneyKanban({ youngId, canEdit, title }: Props) {
+export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: Props) {
   const qc = useQueryClient();
   const [activeCard, setActiveCard] = useState<JourneyCard | null>(null);
   const [openCardId, setOpenCardId] = useState<string | null>(null);
