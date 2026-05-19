@@ -489,19 +489,17 @@ function UsersPage() {
                             <RefreshCw className="h-4 w-4" />
                           </Button>
                         )}
-                        {!inv.used && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() =>
-                              setPendingRevoke({ id: inv.id, email: inv.email })
-                            }
-                            title="Excluir convite"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={() =>
+                            setPendingRevoke({ id: inv.id, email: inv.email })
+                          }
+                          title="Excluir convite"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
