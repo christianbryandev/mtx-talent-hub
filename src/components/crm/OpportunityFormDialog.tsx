@@ -171,7 +171,11 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
               <Input {...form.register("contact_name")} />
             </div>
             <div>
-              <Label>Nicho</Label>
+              <Label>Cidade</Label>
+              <Input {...form.register("city")} />
+            </div>
+            <div>
+              <Label>Segmento</Label>
               <Input {...form.register("niche")} />
             </div>
             <div>
@@ -188,7 +192,49 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div>
               <Label>Origem do lead</Label>
-              <Input {...form.register("lead_origin")} />
+              <Select
+                value={form.watch("lead_origin") || ""}
+                onValueChange={(v) => form.setValue("lead_origin", v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {LEAD_ORIGIN_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o}>{o}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Temperatura</Label>
+              <Select
+                value={form.watch("temperature") || ""}
+                onValueChange={(v) => form.setValue("temperature", v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="frio">🔵 Frio</SelectItem>
+                  <SelectItem value="morno">🟡 Morno</SelectItem>
+                  <SelectItem value="quente">🔴 Quente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2 flex flex-wrap gap-4 items-center text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.watch("is_icp") ?? false}
+                  onChange={(e) => form.setValue("is_icp", e.target.checked)}
+                />
+                ICP (Ideal Customer Profile)
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.watch("segment_validated") ?? false}
+                  onChange={(e) => form.setValue("segment_validated", e.target.checked)}
+                />
+                Segmento validado
+              </label>
             </div>
             <div className="md:col-span-2">
               <Label>Dor principal</Label>
