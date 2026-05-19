@@ -164,6 +164,26 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteTask = useMutation({
+    mutationFn: async () => {
+      if (!taskId) return;
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+      if (error) throw error;
+      await logActivity({
+        action: "task_deleted",
+        entity_type: "task",
+        entity_id: taskId,
+        description: `Tarefa "${task?.title ?? ""}" excluída`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Tarefa excluída");
+      onOpenChange(false);
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!task) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
