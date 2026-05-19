@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,8 @@ function InvitePage() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -131,25 +133,49 @@ function InvitePage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Senha (mínimo 8 caracteres)</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirmar senha</Label>
-          <Input
-            id="confirm"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="confirm"
+              type={showConfirm ? "text" : "password"}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
