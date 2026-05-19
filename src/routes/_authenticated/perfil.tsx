@@ -109,6 +109,8 @@ function PerfilPage() {
         .eq("id", user.id);
       if (updErr) throw updErr;
 
+      updateAvatar(url);
+
       // Sincroniza com young_people se existir
       if (young?.id) {
         await supabase.from("young_people").update({ photo_url: url }).eq("id", young.id);
