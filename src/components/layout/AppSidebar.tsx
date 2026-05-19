@@ -127,7 +127,7 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
+                <SidebarMenuItem data-tour="nav-users">
                   <SidebarMenuButton
                     asChild
                     isActive={isActive("/users")}
