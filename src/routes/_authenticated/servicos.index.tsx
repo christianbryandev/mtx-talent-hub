@@ -200,17 +200,6 @@ function ServicosListPage() {
                     <span className="text-muted-foreground">{bm?.label ?? "—"}</span>
                     <span className="font-medium">{brl(s.default_value ?? s.base_price)}</span>
                   </div>
-                </Link>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-                  <div className="mt-3 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{bm?.label ?? "—"}</span>
-                    <span className="font-medium">{brl(s.default_value ?? s.base_price)}</span>
-                  </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
                     {usageCounts[s.id] ?? 0} cliente(s) em uso
                   </div>
@@ -220,6 +209,7 @@ function ServicosListPage() {
           })}
         </div>
       )}
+
 
       <ServiceFormDialog open={openNew} onOpenChange={setOpenNew} />
       <ServiceFormDialog
