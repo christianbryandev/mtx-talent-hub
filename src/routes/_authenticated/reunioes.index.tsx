@@ -52,6 +52,14 @@ import {
   type Meeting,
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteMeetingCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reunioes/")({
   head: () => ({ meta: [{ title: "Reuniões — MTX Hub" }] }),
