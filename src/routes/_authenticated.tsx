@@ -45,6 +45,7 @@ function AuthenticatedLayout() {
             <Outlet />
           </main>
         </div>
+        <OnboardingProvider />
       </div>
     </SidebarProvider>
   );
