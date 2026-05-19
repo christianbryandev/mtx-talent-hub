@@ -357,6 +357,94 @@ function OpportunityDetailPage() {
         </Card>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Classificação</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <ToggleField label="ICP — Ideal Customer Profile" value={opp.is_icp} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ is_icp: v })} />
+            <ToggleField label="Segmento validado" value={opp.segment_validated} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ segment_validated: v })} />
+            <div>
+              <Label className="text-xs">Origem do lead</Label>
+              <Select value={opp.lead_origin ?? ""} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ lead_origin: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {LEAD_ORIGIN_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Qualificação</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <ToggleField label="Tem demanda clara?" value={opp.has_demand} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_demand: v })} />
+            <ToggleField label="Tem orçamento disponível?" value={opp.has_budget} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_budget: v })} />
+            <ToggleField label="Tem urgência?" value={opp.has_urgency} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_urgency: v })} />
+            <div>
+              <Label className="text-xs">Nota de qualificação: {opp.qualification_score ?? 0}/10</Label>
+              <Slider value={[opp.qualification_score ?? 0]} max={10} step={1} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ qualification_score: v[0] })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader><CardTitle className="text-base">Diagnóstico</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3 text-sm">
+            <div>
+              <Label className="text-xs">Problema identificado</Label>
+              <Textarea rows={3} defaultValue={opp.problem_identified ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ problem_identified: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">O que precisa melhorar</Label>
+              <Textarea rows={3} defaultValue={opp.improvement_needed ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ improvement_needed: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Oportunidade de solução</Label>
+              <Textarea rows={3} defaultValue={opp.solution_opportunity ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ solution_opportunity: e.target.value || null })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader><CardTitle className="text-base">Proposta</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3 text-sm">
+            <div>
+              <Label className="text-xs">Valor da proposta (R$)</Label>
+              <Input type="number" step="0.01" defaultValue={opp.proposal_value ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ proposal_value: e.target.value ? Number(e.target.value) : null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Data de envio</Label>
+              <Input type="date" defaultValue={opp.proposal_sent_date ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ proposal_sent_date: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Status</Label>
+              <Select value={opp.proposal_status ?? ""} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ proposal_status: v as ProposalStatus })}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(PROPOSAL_STATUS_FORM_LABELS) as ProposalStatus[]).map((k) => (
+                    <SelectItem key={k} value={k}>{PROPOSAL_STATUS_FORM_LABELS[k]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Histórico de interações</CardTitle>
