@@ -129,6 +129,7 @@ function PerfilPage() {
   async function handleRemoveAvatar() {
     if (!user) return;
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+    updateAvatar(null);
     if (young?.id) {
       await supabase.from("young_people").update({ photo_url: null }).eq("id", young.id);
       qc.invalidateQueries({ queryKey: ["my-young-profile"] });
