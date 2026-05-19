@@ -490,7 +490,6 @@ function CardDrawer({
   };
 
   const remove = async () => {
-    if (!confirm("Excluir este card?")) return;
     setDeleting(true);
     try {
       const { error } = await supabase
@@ -511,6 +510,7 @@ function CardDrawer({
       toast.error((e as Error).message);
     } finally {
       setDeleting(false);
+      setConfirmOpen(false);
     }
   };
 
