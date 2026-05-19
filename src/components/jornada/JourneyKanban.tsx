@@ -60,6 +60,8 @@ import {
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 import { logActivity } from "@/lib/activity-log";
 import { cn } from "@/lib/utils";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type CardStatus = "pendente" | "em_andamento" | "concluida";
 
@@ -95,10 +97,11 @@ export interface JourneyCard {
 interface Props {
   youngId: string;
   canEdit: boolean;
+  canReassign?: boolean;
   title?: string;
 }
 
-export function JourneyKanban({ youngId, canEdit, title }: Props) {
+export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: Props) {
   const qc = useQueryClient();
   const [activeCard, setActiveCard] = useState<JourneyCard | null>(null);
   const [openCardId, setOpenCardId] = useState<string | null>(null);
@@ -278,6 +281,7 @@ export function JourneyKanban({ youngId, canEdit, title }: Props) {
         <CardDrawer
           card={openCard}
           canEdit={canEdit}
+          canReassign={canReassign}
           onClose={() => setOpenCardId(null)}
           onUpdated={() =>
             qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
@@ -428,11 +432,13 @@ function CardPreview({ card }: { card: JourneyCard }) {
 function CardDrawer({
   card,
   canEdit,
+  canReassign,
   onClose,
   onUpdated,
 }: {
   card: JourneyCard;
   canEdit: boolean;
+  canReassign: boolean;
   onClose: () => void;
   onUpdated: () => void;
 }) {
@@ -441,24 +447,30 @@ function CardDrawer({
   const [status, setStatus] = useState<CardStatus>(card.status);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist);
   const [links, setLinks] = useState<TrainingLink[]>(card.training_links);
+  const [assignedYoungId, setAssignedYoungId] = useState<string | null>(card.young_id);
   const [newItem, setNewItem] = useState("");
   const [newLinkLabel, setNewLinkLabel] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const save = async () => {
     setSaving(true);
     try {
+      const payload: Record<string, unknown> = {
+        title,
+        description: description || null,
+        status,
+        checklist,
+        training_links: links,
+      };
+      if (canReassign && assignedYoungId && assignedYoungId !== card.young_id) {
+        payload.young_id = assignedYoungId;
+      }
       const { error } = await supabase
         .from("journey_phases")
-        .update({
-          title,
-          description: description || null,
-          status,
-          checklist,
-          training_links: links,
-        } as never)
+        .update(payload as never)
         .eq("id", card.id);
       if (error) throw error;
       await logActivity({
@@ -478,7 +490,6 @@ function CardDrawer({
   };
 
   const remove = async () => {
-    if (!confirm("Excluir este card?")) return;
     setDeleting(true);
     try {
       const { error } = await supabase
@@ -499,6 +510,7 @@ function CardDrawer({
       toast.error((e as Error).message);
     } finally {
       setDeleting(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -541,6 +553,22 @@ function CardDrawer({
               </SelectContent>
             </Select>
           </div>
+
+          {canReassign && (
+            <div>
+              <Label>Atribuir a outro jovem</Label>
+              <YoungSearchSelect
+                value={assignedYoungId}
+                onChange={setAssignedYoungId}
+                placeholder="Selecionar jovem responsável"
+              />
+              {assignedYoungId && assignedYoungId !== card.young_id && (
+                <p className="text-[11px] text-amber-500 mt-1">
+                  Ao salvar, este card será movido para outro jovem.
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <Label className="mb-2 block">Checklist</Label>
@@ -666,8 +694,13 @@ function CardDrawer({
 
           {canEdit && (
             <div className="flex gap-2 pt-4 border-t">
-              <Button variant="destructive" size="sm" onClick={remove} disabled={deleting}>
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmOpen(true)}
+                disabled={deleting}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
                 Excluir
               </Button>
               <div className="flex-1" />
@@ -679,6 +712,16 @@ function CardDrawer({
             </div>
           )}
         </div>
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Excluir card da jornada?"
+          description={`O card "${card.title}" será removido permanentemente.`}
+          confirmLabel="Excluir"
+          variant="destructive"
+          loading={deleting}
+          onConfirm={remove}
+        />
       </SheetContent>
     </Sheet>
   );
