@@ -600,19 +600,18 @@ function CardDrawer({
 
           {canReassign && (
             <div>
-              <Label>Atribuir a outro jovem</Label>
-              <YoungSearchSelect
-                value={assignedYoungId}
-                onChange={setAssignedYoungId}
-                placeholder="Selecionar jovem responsável"
+              <Label>Jovens atribuídos</Label>
+              <MultiYoungSearchSelect
+                value={assignedIds}
+                onChange={setAssignedIds}
+                placeholder="Selecionar um ou mais jovens"
               />
-              {assignedYoungId && assignedYoungId !== card.young_id && (
-                <p className="text-[11px] text-amber-500 mt-1">
-                  Ao salvar, este card será movido para outro jovem.
-                </p>
-              )}
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Cada jovem selecionado verá este card em "Minha Jornada".
+              </p>
             </div>
           )}
+
 
           <div>
             <Label className="mb-2 block">Checklist</Label>
