@@ -36,14 +36,14 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { ROLE_LABELS } from "@/types";
 
 const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Jovens", url: "/jovens", icon: Users },
-  { title: "Clientes", url: "/clientes", icon: Building2 },
-  { title: "CRM Comercial", url: "/crm", icon: Target },
-  { title: "Serviços", url: "/servicos", icon: Briefcase },
-  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks },
-  { title: "Reuniões", url: "/reunioes", icon: CalendarDays },
-  { title: "Indicadores", url: "/indicadores", icon: BarChart3 },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tour: "nav-dashboard" },
+  { title: "Jovens", url: "/jovens", icon: Users, tour: "nav-jovens" },
+  { title: "Clientes", url: "/clientes", icon: Building2, tour: "nav-clientes" },
+  { title: "CRM Comercial", url: "/crm", icon: Target, tour: "nav-crm" },
+  { title: "Serviços", url: "/servicos", icon: Briefcase, tour: "nav-servicos" },
+  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, tour: "nav-tarefas" },
+  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, tour: "nav-reunioes" },
+  { title: "Indicadores", url: "/indicadores", icon: BarChart3, tour: "nav-indicadores" },
 ] as const;
 
 export function AppSidebar() {
