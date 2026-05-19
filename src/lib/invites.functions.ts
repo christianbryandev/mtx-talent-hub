@@ -148,9 +148,8 @@ export const revokeInvite = createServerFn({ method: "POST" })
 
     const { data: invite, error } = await supabaseAdmin
       .from("user_invites")
-      .update({ used: true, used_at: new Date().toISOString() })
+      .delete()
       .eq("id", data.inviteId)
-      .eq("used", false)
       .select("id, email")
       .single();
     if (error) throw error;
