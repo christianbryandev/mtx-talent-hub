@@ -99,7 +99,7 @@ export function AppSidebar() {
               {mainItems.map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={item.tour}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive(item.url)}
