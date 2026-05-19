@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/minha-jornada")({
 
 function MyJourneyPage() {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
 
   const { data: young, isLoading } = useQuery({
     queryKey: ["my-young", user?.id],
