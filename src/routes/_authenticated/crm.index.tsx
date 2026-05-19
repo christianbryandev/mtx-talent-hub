@@ -238,15 +238,20 @@ function CrmKanbanPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
-        <KpiCard label="Oportunidades abertas" value={totalOpen} icon={<Target className="h-4 w-4" />} />
-        <KpiCard label="Pipeline (R$)" value={brl(pipelineValue)} icon={<DollarSign className="h-4 w-4" />} />
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <KpiCard label="Oport. abertas" value={totalOpen} icon={<Target className="h-4 w-4" />} />
         <KpiCard label="Ganhas no mês" value={wonThisMonth} icon={<CheckCircle2 className="h-4 w-4" />} />
-        <KpiCard label="Conversão do mês" value={`${conversion}%`} icon={<Target className="h-4 w-4" />} />
         <KpiCard
           label="Follow-ups atrasados"
           value={lateFollowups}
           icon={<AlertTriangle className="h-4 w-4" />}
+        />
+        <KpiCard label="Conversão" value={`${conversion}%`} icon={<Target className="h-4 w-4" />} />
+        <KpiCard label="Ticket médio" value={brl(avgTicket)} icon={<DollarSign className="h-4 w-4" />} />
+        <KpiCard
+          label="Tempo médio fech."
+          value={`${Math.round(avgClosingDays)}d`}
+          icon={<Target className="h-4 w-4" />}
         />
       </div>
 
@@ -269,24 +274,36 @@ function CrmKanbanPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+        <Select value={temperatureFilter} onValueChange={setTemperatureFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Temperatura" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas prioridades</SelectItem>
-            <SelectItem value="alta">Alta</SelectItem>
-            <SelectItem value="media">Média</SelectItem>
-            <SelectItem value="baixa">Baixa</SelectItem>
+            <SelectItem value="all">Toda temperatura</SelectItem>
+            <SelectItem value="frio">🔵 Frio</SelectItem>
+            <SelectItem value="morno">🟡 Morno</SelectItem>
+            <SelectItem value="quente">🔴 Quente</SelectItem>
           </SelectContent>
         </Select>
         <Select value={nicheFilter} onValueChange={setNicheFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Nicho" /></SelectTrigger>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Segmento" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos nichos</SelectItem>
+            <SelectItem value="all">Todos segmentos</SelectItem>
             {niches.map((n) => (
               <SelectItem key={n} value={n}>{n}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Mês" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos meses</SelectItem>
+            {months.map((m) => (
+              <SelectItem key={m} value={m}>
+                {new Date(m + "-01").toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
       </div>
 
       {isLoading ? (
