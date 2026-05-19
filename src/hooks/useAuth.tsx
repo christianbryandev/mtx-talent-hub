@@ -9,10 +9,14 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/types/database";
 
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
+  profile: Profile | null;
+  avatarUrl: string | null;
+  updateAvatar: (url: string | null) => void;
   loading: boolean;
   status: "loading" | "authenticated" | "unauthenticated";
   isAuthenticated: boolean;
@@ -25,6 +29,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   const applySession = useCallback((nextSession: Session | null) => {
     setSession(nextSession);
@@ -72,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (event === "SIGNED_OUT") {
         applySession(null);
+        setProfile(null);
         return;
       }
 
@@ -93,29 +99,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [applySession, refreshSession]);
 
+  // Carrega o profile do usuário logado e assina realtime em profiles
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      if (!cancelled && data) setProfile(data as Profile);
+    })();
+
+    const channel = supabase
+      .channel(`realtime-profile-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          setProfile(payload.new as Profile);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id]);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+  }, []);
+
+  const updateAvatar = useCallback((url: string | null) => {
+    setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev));
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user: session?.user ?? null,
+      profile,
+      avatarUrl: profile?.avatar_url ?? null,
+      updateAvatar,
       loading,
       status: loading ? "loading" : session ? "authenticated" : "unauthenticated",
       isAuthenticated: !!session,
       signOut,
       refreshSession,
     }),
-    [loading, refreshSession, session, signOut],
+    [loading, profile, refreshSession, session, signOut, updateAvatar],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

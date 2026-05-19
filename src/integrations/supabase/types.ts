@@ -367,6 +367,123 @@ export type Database = {
           },
         ]
       }
+      edit_requests: {
+        Row: {
+          approved_until: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          reason: string
+          requested_fields: Json
+          requester_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          approved_until?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type?: string
+          id?: string
+          reason: string
+          requested_fields?: Json
+          requester_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          approved_until?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          reason?: string
+          requested_fields?: Json
+          requester_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edit_requests_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edit_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edit_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_phases: {
+        Row: {
+          checklist: Json
+          created_at: string
+          description: string | null
+          id: string
+          phase: string
+          position: number
+          status: string
+          title: string
+          training_links: Json
+          updated_at: string
+          young_id: string
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          phase: string
+          position?: number
+          status?: string
+          title: string
+          training_links?: Json
+          updated_at?: string
+          young_id: string
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          phase?: string
+          position?: number
+          status?: string
+          title?: string
+          training_links?: Json
+          updated_at?: string
+          young_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_phases_young_id_fkey"
+            columns: ["young_id"]
+            isOneToOne: false
+            referencedRelation: "young_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_agenda_items: {
         Row: {
           completed: boolean
@@ -710,6 +827,42 @@ export type Database = {
           },
         ]
       }
+      opportunity_services: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_services_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1001,6 +1154,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          awaiting_approval: boolean
           client_id: string | null
           completed_at: string | null
           created_at: string
@@ -1021,6 +1175,7 @@ export type Database = {
           young_responsible: string | null
         }
         Insert: {
+          awaiting_approval?: boolean
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
@@ -1041,6 +1196,7 @@ export type Database = {
           young_responsible?: string | null
         }
         Update: {
+          awaiting_approval?: boolean
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
