@@ -193,18 +193,19 @@ function ClientesListPage() {
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Valor mensal</TableHead>
               <TableHead>Entrada</TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
@@ -231,6 +232,59 @@ function ClientesListPage() {
                     {c.entry_date
                       ? new Date(c.entry_date).toLocaleDateString("pt-BR")
                       : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowActionsMenu
+                      label={c.company_name}
+                      onView={() => navigate({ to: "/clientes/$id", params: { id: c.id } })}
+                      onEdit={
+                        isAdmin || isComercial
+                          ? () => navigate({ to: "/clientes/$id", params: { id: c.id } })
+                          : undefined
+                      }
+                      onDuplicate={
+                        isAdmin || isComercial
+                          ? async () => {
+                              try {
+                                const copy = await duplicateRow<{ id: string }>(
+                                  "clients",
+                                  c.id,
+                                  { labelField: "company_name", excludeFields: ["profile_id"] },
+                                );
+                                await logActivity({
+                                  action: "client_duplicated",
+                                  entity_type: "client",
+                                  entity_id: copy.id,
+                                  description: `Cliente "${c.company_name}" duplicado`,
+                                });
+                                toast.success("Cliente duplicado");
+                                qc.invalidateQueries({ queryKey: ["clients"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                      onDelete={
+                        isAdmin
+                          ? async () => {
+                              try {
+                                await deleteClientCascade(c.id);
+                                await logActivity({
+                                  action: "client_deleted",
+                                  entity_type: "client",
+                                  entity_id: c.id,
+                                  description: `Cliente "${c.company_name}" excluído`,
+                                });
+                                toast.success("Cliente excluído");
+                                qc.invalidateQueries({ queryKey: ["clients"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))
