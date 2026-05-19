@@ -297,22 +297,10 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
               </div>
               <div>
                 <Label>Responsável comercial</Label>
-                <Select
-                  onValueChange={(v) =>
-                    form.setValue("commercial_responsible", v === "_none" ? "" : v)
-                  }
-                  value={form.watch("commercial_responsible") || "_none"}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">— Nenhum —</SelectItem>
-                    {profiles.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name || p.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ProfileSearchSelect
+                  value={form.watch("commercial_responsible") || null}
+                  onChange={(v) => form.setValue("commercial_responsible", v ?? "")}
+                />
               </div>
             </div>
           )}
