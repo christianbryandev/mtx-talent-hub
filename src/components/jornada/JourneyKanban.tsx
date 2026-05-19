@@ -449,13 +449,32 @@ function CardDrawer({
   const [status, setStatus] = useState<CardStatus>(card.status);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist);
   const [links, setLinks] = useState<TrainingLink[]>(card.training_links);
-  const [assignedYoungId, setAssignedYoungId] = useState<string | null>(card.young_id);
+  const [assignedIds, setAssignedIds] = useState<string[]>([card.young_id]);
+  const [initialAssignees, setInitialAssignees] = useState<string[]>([card.young_id]);
   const [newItem, setNewItem] = useState("");
   const [newLinkLabel, setNewLinkLabel] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // carrega assignees atuais
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("journey_phase_assignees")
+        .select("young_id")
+        .eq("phase_id", card.id);
+      if (cancelled) return;
+      const ids = (data ?? []).map((r) => r.young_id as string);
+      // garante que o young_id "dono" esteja sempre presente na lista
+      const merged = Array.from(new Set([card.young_id, ...ids]));
+      setAssignedIds(merged);
+      setInitialAssignees(merged);
+    })();
+    return () => { cancelled = true; };
+  }, [card.id, card.young_id]);
 
   const save = async () => {
     setSaving(true);
@@ -467,14 +486,37 @@ function CardDrawer({
         checklist,
         training_links: links,
       };
-      if (canReassign && assignedYoungId && assignedYoungId !== card.young_id) {
-        payload.young_id = assignedYoungId;
+      // se admin alterou os assignees e o "dono" original não está mais entre eles,
+      // o young_id do card vira o primeiro selecionado
+      if (canReassign && assignedIds.length > 0 && !assignedIds.includes(card.young_id)) {
+        payload.young_id = assignedIds[0];
       }
       const { error } = await supabase
         .from("journey_phases")
         .update(payload as never)
         .eq("id", card.id);
       if (error) throw error;
+
+      if (canReassign) {
+        const toAdd = assignedIds.filter((id) => !initialAssignees.includes(id));
+        const toRemove = initialAssignees.filter((id) => !assignedIds.includes(id));
+        if (toAdd.length > 0) {
+          const rows = toAdd.map((yid) => ({ phase_id: card.id, young_id: yid }));
+          const { error: aErr } = await supabase
+            .from("journey_phase_assignees")
+            .insert(rows as never);
+          if (aErr) throw aErr;
+        }
+        if (toRemove.length > 0) {
+          const { error: dErr } = await supabase
+            .from("journey_phase_assignees")
+            .delete()
+            .eq("phase_id", card.id)
+            .in("young_id", toRemove);
+          if (dErr) throw dErr;
+        }
+      }
+
       await logActivity({
         action: "journey_card_updated",
         entity_type: "journey_phase",
