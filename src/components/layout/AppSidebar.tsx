@@ -12,6 +12,7 @@ import {
   Shield,
   Settings as SettingsIcon,
   LogOut,
+  UserCircle,
 } from "lucide-react";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
 
