@@ -83,27 +83,8 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
     },
   });
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ["clients-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("clients").select("id, company_name").order("company_name");
-      return data ?? [];
-    },
-  });
-  const { data: services = [] } = useQuery({
-    queryKey: ["services-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("services").select("id, name").order("name");
-      return data ?? [];
-    },
-  });
-  const { data: youngs = [] } = useQuery({
-    queryKey: ["youngs-min"], enabled: open,
-    queryFn: async () => {
-      const { data } = await supabase.from("young_people").select("id, full_name").order("full_name");
-      return data ?? [];
-    },
-  });
+
+
 
   const updateTask = useMutation({
     mutationFn: async (patch: Partial<Task>) => {
