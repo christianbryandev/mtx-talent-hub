@@ -742,18 +742,19 @@ function NewCardDialog({
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [assignedYoungId, setAssignedYoungId] = useState<string | null>(youngId);
+  const [assignedIds, setAssignedIds] = useState<string[]>([youngId]);
   const [submitting, setSubmitting] = useState(false);
 
   const handle = async () => {
     if (!title.trim()) return;
     setSubmitting(true);
     try {
-      const targetYoungId = canReassign && assignedYoungId ? assignedYoungId : youngId;
+      const ids = canReassign && assignedIds.length > 0 ? assignedIds : [youngId];
+      const primary = ids[0];
       const { data, error } = await supabase
         .from("journey_phases")
         .insert({
-          young_id: targetYoungId,
+          young_id: primary,
           phase,
           position: nextPosition,
           title: title.trim(),
@@ -765,15 +766,26 @@ function NewCardDialog({
         .select("id")
         .single();
       if (error) throw error;
+      const phaseId = data.id as string;
+
+      // Insere todos os jovens selecionados como assignees (inclusive o primário)
+      if (ids.length > 0) {
+        const rows = ids.map((yid) => ({ phase_id: phaseId, young_id: yid }));
+        const { error: aErr } = await supabase
+          .from("journey_phase_assignees")
+          .insert(rows as never);
+        if (aErr) throw aErr;
+      }
+
       await logActivity({
         action: "journey_card_created",
         entity_type: "journey_phase",
-        entity_id: data.id as string,
-        description: `Card "${title}" criado em ${TRAIL_PHASE_LABELS[phase]}`,
+        entity_id: phaseId,
+        description: `Card "${title}" criado em ${TRAIL_PHASE_LABELS[phase]} (${ids.length} jovem(ns) atribuído(s))`,
       });
       toast.success(
-        targetYoungId !== youngId
-          ? "Card criado e atribuído ao jovem selecionado"
+        ids.length > 1
+          ? `Card criado e atribuído a ${ids.length} jovens`
           : "Card criado",
       );
       onCreated();
@@ -802,14 +814,14 @@ function NewCardDialog({
           </div>
           {canReassign && (
             <div>
-              <Label>Jovem atribuído</Label>
-              <YoungSearchSelect
-                value={assignedYoungId}
-                onChange={setAssignedYoungId}
-                placeholder="Selecionar jovem"
+              <Label>Jovens atribuídos</Label>
+              <MultiYoungSearchSelect
+                value={assignedIds}
+                onChange={setAssignedIds}
+                placeholder="Selecionar um ou mais jovens"
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Apenas o jovem selecionado verá este card em "Minha Jornada".
+                Cada jovem selecionado verá este card em "Minha Jornada".
               </p>
             </div>
           )}
@@ -825,3 +837,4 @@ function NewCardDialog({
     </Dialog>
   );
 }
+
