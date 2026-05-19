@@ -167,6 +167,8 @@ function AdminDashboardContent() {
         </div>
       </div>
 
+      <TodayMeetingBanner />
+
       {/* KPIs principais */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Jovens ativos" value={isLoading ? "..." : stats!.activeYoungs} icon={<Users className="h-5 w-5" />} accent="primary" />
