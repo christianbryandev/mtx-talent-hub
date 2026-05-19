@@ -45,6 +45,12 @@ import {
   type FunnelStage,
   type Opportunity,
 } from "@/types/crm";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  EditRequestBanner,
+  useEditRequestState,
+} from "@/components/crm/EditRequestBanner";
+import { ServiceMultiSelect } from "@/components/crm/ServiceMultiSelect";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
   head: () => ({ meta: [{ title: "Oportunidade — MTX Hub" }] }),
@@ -58,6 +64,7 @@ function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
 
   const [showLoss, setShowLoss] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
@@ -103,6 +110,54 @@ function OpportunityDetailPage() {
     },
   });
 
+  const { data: oppServices = [] } = useQuery({
+    queryKey: ["opp-services", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opportunity_services")
+        .select("id, service_id")
+        .eq("opportunity_id", id);
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; service_id: string }>;
+    },
+  });
+
+  const servicesMutation = useMutation({
+    mutationFn: async (nextIds: string[]) => {
+      const current = oppServices.map((s) => s.service_id);
+      const toAdd = nextIds.filter((sid) => !current.includes(sid));
+      const toRemove = oppServices.filter((s) => !nextIds.includes(s.service_id));
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("opportunity_services")
+          .delete()
+          .in(
+            "id",
+            toRemove.map((r) => r.id),
+          );
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("opportunity_services")
+          .insert(
+            toAdd.map((sid) => ({
+              opportunity_id: id,
+              service_id: sid,
+            })) as never,
+          );
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Serviços atualizados");
+      qc.invalidateQueries({ queryKey: ["opp-services", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const { hasActiveApproval } = useEditRequestState("opportunity", id);
+
   const updateMutation = useMutation({
     mutationFn: async (patch: Partial<Opportunity>) => {
       const { error } = await supabase
@@ -138,12 +193,22 @@ function OpportunityDetailPage() {
 
   const today = new Date().toISOString().slice(0, 10);
   const isLate = opp.next_followup_date && opp.next_followup_date < today;
+  const isClosed = opp.status !== "aberta";
+  const canEdit = !isClosed || isAdmin || hasActiveApproval;
 
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link to="/crm"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link>
       </Button>
+
+      <EditRequestBanner
+        entityType="opportunity"
+        entityId={id}
+        entityLabel={`oportunidade "${opp.company_name}"`}
+        locked={isClosed}
+      />
+
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
@@ -158,7 +223,7 @@ function OpportunityDetailPage() {
             <Select
               value={opp.funnel_stage}
               onValueChange={(v) => updateMutation.mutate({ funnel_stage: v as FunnelStage })}
-              disabled={opp.status !== "aberta"}
+              disabled={!canEdit}
             >
               <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -208,10 +273,20 @@ function OpportunityDetailPage() {
                 onValueChange={(v) => updateMutation.mutate({ closing_probability: v[0] })}
                 max={100}
                 step={5}
-                disabled={opp.status !== "aberta"}
+                disabled={!canEdit}
               />
             </div>
             <Field label="Origem do lead" value={opp.lead_origin} />
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                Serviços ofertados
+              </p>
+              <ServiceMultiSelect
+                value={oppServices.map((s) => s.service_id)}
+                onChange={(ids) => servicesMutation.mutate(ids)}
+                disabled={!canEdit || servicesMutation.isPending}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -234,6 +309,7 @@ function OpportunityDetailPage() {
               <Input
                 type="date"
                 defaultValue={opp.last_contact_date ?? ""}
+                disabled={!canEdit}
                 onBlur={(e) => updateMutation.mutate({ last_contact_date: e.target.value || null })}
               />
             </div>
@@ -245,6 +321,7 @@ function OpportunityDetailPage() {
               <Input
                 type="date"
                 defaultValue={opp.next_followup_date ?? ""}
+                disabled={!canEdit}
                 onBlur={(e) => updateMutation.mutate({ next_followup_date: e.target.value || null })}
               />
               {isLate && <p className="text-xs text-destructive mt-1">Follow-up atrasado</p>}

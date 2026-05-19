@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_STAGES, type FunnelStage } from "@/types/crm";
+import { ServiceMultiSelect } from "./ServiceMultiSelect";
 
 const schema = z.object({
   company_name: z.string().min(2, "Empresa obrigatória").max(200),
@@ -59,6 +60,7 @@ interface Props {
 export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCreated }: Props) {
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
+  const [serviceIds, setServiceIds] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -111,6 +113,18 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         .single();
       if (error) throw error;
 
+      if (serviceIds.length > 0) {
+        const { error: svcErr } = await supabase
+          .from("opportunity_services")
+          .insert(
+            serviceIds.map((sid) => ({
+              opportunity_id: data.id as string,
+              service_id: sid,
+            })) as never,
+          );
+        if (svcErr) throw svcErr;
+      }
+
       await supabase.from("activity_logs").insert({
         action: "opportunity_created",
         entity_type: "opportunity",
@@ -125,6 +139,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       toast.success("Oportunidade criada");
       qc.invalidateQueries({ queryKey: ["opportunities"] });
       form.reset();
+      setServiceIds([]);
       onOpenChange(false);
       onCreated?.(id);
     },
@@ -184,8 +199,12 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
               <Label>Solução sugerida</Label>
               <Textarea rows={2} {...form.register("suggested_solution")} />
             </div>
+            <div className="md:col-span-2">
+              <Label>Serviços ofertados</Label>
+              <ServiceMultiSelect value={serviceIds} onChange={setServiceIds} />
+            </div>
             <div>
-              <Label>Serviço ofertado</Label>
+              <Label>Serviço (texto livre / legado)</Label>
               <Input {...form.register("offered_service")} />
             </div>
             <div>
