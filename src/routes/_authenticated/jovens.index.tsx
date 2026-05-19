@@ -57,12 +57,8 @@ function JovensListPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (y: YoungPerson) => {
-      await supabase.from("young_evolution").delete().eq("young_id", y.id);
-      await supabase.from("young_attendance").delete().eq("young_id", y.id);
-      const { error } = await supabase.from("young_people").delete().eq("id", y.id);
-      if (error) throw error;
-      await supabase.from("activity_logs").insert({
-        user_id: user?.id ?? null,
+      await deleteYoungCascade(y.id);
+      await logActivity({
         action: "young_deleted",
         entity_type: "young_people",
         entity_id: y.id,
