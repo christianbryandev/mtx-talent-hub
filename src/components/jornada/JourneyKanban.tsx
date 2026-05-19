@@ -281,6 +281,7 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
         <CardDrawer
           card={openCard}
           canEdit={canEdit}
+          canReassign={canReassign}
           onClose={() => setOpenCardId(null)}
           onUpdated={() =>
             qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
