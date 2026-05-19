@@ -146,13 +146,22 @@ function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Visão geral</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Resumo executivo da operação MTX</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Visão geral</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Resumo executivo da operação MTX</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => startOnboardingTour()}
+          className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+        >
+          Rever tour de introdução
+        </button>
       </div>
 
       {/* KPIs principais */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-tour="dashboard-kpis">
         <KpiCard label="Jovens ativos" value={isLoading ? "..." : stats!.activeYoungs} icon={<Users className="h-5 w-5" />} accent="primary" />
         <KpiCard label="Clientes ativos" value={isLoading ? "..." : stats!.activeClients} icon={<Building2 className="h-5 w-5" />} accent="info" />
         <KpiCard label="Tarefas em aberto" value={isLoading ? "..." : stats!.openTasks} icon={<ListChecks className="h-5 w-5" />} accent="warning" />
