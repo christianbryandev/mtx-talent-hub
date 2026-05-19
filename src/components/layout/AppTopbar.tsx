@@ -1,12 +1,10 @@
 import { useRouterState } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
-
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
