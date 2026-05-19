@@ -277,10 +277,20 @@ function OpportunityDetailPage() {
                 onValueChange={(v) => updateMutation.mutate({ closing_probability: v[0] })}
                 max={100}
                 step={5}
-                disabled={opp.status !== "aberta"}
+                disabled={!canEdit}
               />
             </div>
             <Field label="Origem do lead" value={opp.lead_origin} />
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                Serviços ofertados
+              </p>
+              <ServiceMultiSelect
+                value={oppServices.map((s) => s.service_id)}
+                onChange={(ids) => servicesMutation.mutate(ids)}
+                disabled={!canEdit || servicesMutation.isPending}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -303,6 +313,7 @@ function OpportunityDetailPage() {
               <Input
                 type="date"
                 defaultValue={opp.last_contact_date ?? ""}
+                disabled={!canEdit}
                 onBlur={(e) => updateMutation.mutate({ last_contact_date: e.target.value || null })}
               />
             </div>
@@ -314,6 +325,7 @@ function OpportunityDetailPage() {
               <Input
                 type="date"
                 defaultValue={opp.next_followup_date ?? ""}
+                disabled={!canEdit}
                 onBlur={(e) => updateMutation.mutate({ next_followup_date: e.target.value || null })}
               />
               {isLate && <p className="text-xs text-destructive mt-1">Follow-up atrasado</p>}
