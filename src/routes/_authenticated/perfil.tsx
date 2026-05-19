@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/perfil")({
 });
 
 function PerfilPage() {
-  const { user } = useAuth();
+  const { user, updateAvatar } = useAuth();
   const { role } = usePermissions();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
