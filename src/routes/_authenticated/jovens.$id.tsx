@@ -455,6 +455,102 @@ function JovemDetailPage() {
         </TabsContent>
 
         {/* Dados Profissionais */}
+        {/* Tarefas */}
+        <TabsContent value="tasks" className="mt-4 space-y-3">
+          <Card className="p-4">
+            <div className="mb-3 text-sm font-semibold">Tarefas do jovem ({youngTasks.length})</div>
+            {youngTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída.</p>
+            ) : (
+              <div className="space-y-2">
+                {youngTasks.map((t) => (
+                  <Link
+                    key={t.id}
+                    to="/tarefas"
+                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2 hover:bg-accent/30"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{t.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t.area ?? "—"} • {t.kanban_column} • {t.priority}
+                        {t.due_date ? ` • venc. ${new Date(t.due_date).toLocaleDateString("pt-BR")}` : ""}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Reuniões */}
+        <TabsContent value="meetings" className="mt-4 space-y-3">
+          <Card className="p-4">
+            <div className="mb-3 text-sm font-semibold">Reuniões ({youngMeetings.length})</div>
+            {youngMeetings.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem reuniões registradas.</p>
+            ) : (
+              <div className="space-y-2">
+                {youngMeetings.map((m) => (
+                  <Link
+                    key={m.id}
+                    to="/reunioes/$id"
+                    params={{ id: m.id }}
+                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2 hover:bg-accent/30"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{m.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {m.type} • {new Date(m.date).toLocaleDateString("pt-BR")}
+                        {m.start_time ? ` • ${m.start_time}` : ""} • {m.status}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Financeiro */}
+        <TabsContent value="financial" className="mt-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Card className="p-4">
+              <Field
+                label="Renda gerada"
+                value={
+                  <span className="font-semibold text-emerald-400">
+                    R$ {Number(y.total_income_generated ?? 0).toFixed(2)}
+                  </span>
+                }
+              />
+            </Card>
+            <Card className="p-4">
+              <Field
+                label="Primeiro cliente"
+                value={
+                  y.first_client_attended
+                    ? `Sim${y.first_client_date ? ` (${new Date(y.first_client_date).toLocaleDateString("pt-BR")})` : ""}`
+                    : "Não"
+                }
+              />
+            </Card>
+            <Card className="p-4">
+              <Field label="CNPJ" value={y.has_cnpj ? `Sim${y.cnpj_type ? ` • ${y.cnpj_type}` : ""}` : "Não"} />
+            </Card>
+            <Card className="p-4">
+              <Field label="Chave Pix" value={y.pix_key} />
+            </Card>
+            <Card className="p-4">
+              <Field label="Banco" value={y.bank_name} />
+            </Card>
+            <Card className="p-4">
+              <Field label="Conta" value={y.bank_account ? `Ag. ${y.bank_agency ?? "—"} / ${y.bank_account}` : "—"} />
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Dados Profissionais */}
         <TabsContent value="professional" className="mt-4">
           <Card className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Possui CNPJ" value={y.has_cnpj ? "Sim" : "Não"} />
