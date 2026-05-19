@@ -1,136 +1,51 @@
-## Visão geral
+## Entrega 2 — CRUD completo em todos os módulos admin
 
-Construir a fundação do MTX Hub: identidade visual dark premium com destaque dourado, autenticação completa (Supabase Auth), sistema de papéis (RBAC), layout shell reutilizável (sidebar + topbar) e páginas iniciais funcionais. Demais módulos ficam como placeholders "Em construção".
+### A) Minha Jornada — atribuição na criação do card
+Hoje a reatribuição de jovem só aparece ao **editar** um card (já implementado na Entrega 1). Vou adicionar o mesmo `YoungSearchSelect` no **NewCardDialog** (visível só pra admin/super_admin) — assim ao criar o card já dá pra escolher pra qual jovem ele vai. Comportamento: se nenhum jovem for escolhido, usa o `youngId` da página atual (o próprio).
 
-## Stack (ajuste importante)
+### B) CRUD padronizado em todos os módulos
+Padrão único: cada linha de lista / card / item de tabela ganha um menu "..." (DropdownMenu) com **Visualizar · Editar · Duplicar · Excluir**. Excluir usa `ConfirmDialog` (hard delete com confirmação). Duplicar copia o registro com sufixo "(cópia)". Editar abre o FormDialog existente em modo edição. Visualizar leva à rota de detalhe.
 
-O template usa **TanStack Router/Start** (não React Router DOM). Vou manter esse stack — toda navegação, rotas protegidas e SSR seguirão padrões TanStack. Para o usuário final, a experiência é idêntica.
+Módulos cobertos (lista → ação):
 
-Demais bibliotecas pedidas (Tailwind, shadcn/ui, RHF + Zod, TanStack Query, Lucide, Recharts, Supabase) já estão instaladas.
+| Módulo | Lista | FormDialog | Cascade |
+|---|---|---|---|
+| **Clientes** | `clientes.index.tsx` | `ClientFormDialog` ✓ | `deleteClientCascade` ✓ |
+| **Jovens** | `jovens.index.tsx` | `YoungFormDialog` ✓ | hard delete |
+| **Serviços** | `servicos.index.tsx` | `ServiceFormDialog` ✓ | `deleteServiceCascade` ✓ |
+| **CRM/Oportunidades** | `crm.lista.tsx` + `crm.index.tsx` (kanban) | `OpportunityFormDialog` ✓ | hard delete + limpar `opportunity_services` |
+| **Tarefas/Kanban** | `tarefas.tsx` | `TaskFormDialog` ✓ | hard delete + limpar `task_*` |
+| **Reuniões** | `reunioes.index.tsx` | `MeetingFormDialog` ✓ | hard delete + limpar `meeting_*` |
+| **Usuários** | `users.tsx` | já tem invite/delete ✓ | já ok |
 
-## 1. Design system (`src/styles.css`)
+Para cada módulo eu adiciono um componente local `<RowActionsMenu />` reutilizável (ou um único compartilhado em `src/components/shared/RowActionsMenu.tsx`) com as 4 ações.
 
-Reescrever tokens em `oklch`:
-- background: `#0F0F0F`, card/surface: `#1A1A2E`, border: `#2A2A3E`
-- primary (dourado): `#D4A017`
-- foreground: `#FFFFFF`, muted-foreground: `#A0A0B0`
-- success/warning/destructive/info
-- raio 10px, dark como padrão
+### C) Helpers compartilhados
+- `src/components/shared/RowActionsMenu.tsx` — menu "..." com props `onView/onEdit/onDuplicate/onDelete` e flags de visibilidade. Só renderiza ações cujos handlers forem passados.
+- Estender `src/lib/cascade-delete.ts` com:
+  - `deleteOpportunityCascade(id)` — apaga `opportunity_services`, `opportunity_interactions`, `proposals` da oportunidade, e a `opportunities`.
+  - `deleteTaskCascade(id)` — apaga `task_checklists`, `task_attachments`, `task_comments`, `meeting_tasks`, `tasks`.
+  - `deleteMeetingCascade(id)` — apaga `meeting_participants`, `meeting_agenda_items`, `meeting_tasks`, `young_attendance` da reunião, `meetings`.
+  - `deleteYoungCascade(id)` — apaga `service_young_people`, `young_attendance`, `young_evolution`, `journey_phases`, `meeting_participants`, detach em `tasks.young_responsible`, `clients.young_responsible`, e a `young_people`.
 
-Importar fonte **Inter** via `<link>` no `__root.tsx`.
+### D) Duplicação
+Função genérica `duplicateRow(table, id, exclude: string[])`:
+1. SELECT * WHERE id=$1
+2. Remove `id`, `created_at`, `updated_at` + colunas únicas
+3. Acrescenta " (cópia)" no campo principal (`title`/`full_name`/`company_name`/`name`)
+4. INSERT
+5. `logActivity` + `toast` + `refetch`
 
-## 2. Banco de dados (migração)
+Aplicada em: Clientes (`company_name`), Jovens (`full_name`), Serviços (`name`), Oportunidades (`company_name`), Tarefas (`title`), Reuniões (`title`).
 
-```text
-enum app_role: 'super_admin' | 'admin' | 'comercial' | 'colaborador' | 'cliente'
+### E) Acesso
+Todas as ações de Editar / Excluir / Duplicar usam `usePermissions().isAdmin` (super_admin + admin). Comercial mantém o que já pode (CRM/clientes). Colaborador só visualiza. Não muda nenhuma RLS — as policies já cobrem.
 
-profiles (
-  id uuid PK -> auth.users,
-  full_name, avatar_url,
-  is_active boolean default true,
-  created_at, updated_at
-)
+### F) UX
+- Toast de sucesso/erro em todas as ações.
+- `ConfirmDialog` em todos os Excluir, com nome do registro embedded na mensagem.
+- Loading nos botões via `loading` prop do ConfirmDialog.
+- `logActivity` em create/update/delete/duplicate.
 
-user_roles (   -- tabela SEPARADA (segurança)
-  id, user_id -> auth.users, role app_role, unique(user_id, role)
-)
-
-activity_logs (
-  id, user_id, action, entity_type, entity_id, description, created_at
-)
-```
-
-- Função `has_role(uuid, app_role)` SECURITY DEFINER
-- Trigger `on_auth_user_created` → cria profile + role padrão `colaborador`
-- RLS habilitado em todas; policies usando `has_role()` (evita recursão)
-- `super_admin` lê/edita tudo; usuários leem o próprio profile
-
-## 3. Autenticação
-
-- `/login` — email + senha
-- `/forgot-password` — `resetPasswordForEmail` com redirect para `/reset-password`
-- `/reset-password` — `updateUser({ password })` ao detectar `type=recovery`
-- Listener `onAuthStateChange` no root + `router.invalidate()`
-- Sessão persistente via cliente padrão
-
-Sem Google OAuth nesta etapa (não foi pedido explicitamente; pode ser adicionado depois).
-
-## 4. RBAC
-
-- `src/hooks/useAuth.ts` — usuário + sessão + loading
-- `src/hooks/usePermissions.ts` — `role`, `can(action)`, `hasRole(roles[])`
-- Rotas protegidas via layout `_authenticated.tsx` (`beforeLoad` redireciona para `/login`)
-- Subcamadas: `_authenticated/_admin.tsx` para gates por papel (Usuários, Configurações)
-
-## 5. Layout shell
-
-`src/routes/_authenticated.tsx` renderiza:
-- **Sidebar** (240px, collapsible via shadcn `Sidebar`): logo MTX Hub, navegação completa com ícones Lucide, item ativo dourado, footer com avatar + logout
-- **Topbar** (64px): título do módulo, busca global, sino de notificações, avatar
-- **Main**: `<Outlet />` com scroll
-
-Componente `AppSidebar` em `src/components/layout/`.
-
-## 6. Páginas geradas
-
-| Rota | Acesso | Conteúdo |
-|---|---|---|
-| `/login`, `/forgot-password`, `/reset-password` | público | Forms RHF+Zod |
-| `/` | redireciona p/ `/dashboard` ou `/login` |
-| `/dashboard` | autenticado | KPIs, atividade recente, próximas reuniões, tarefas, 2 mini-charts Recharts |
-| `/jovens`, `/clientes`, `/crm`, `/servicos`, `/tarefas`, `/reunioes`, `/indicadores` | autenticado | Placeholder "Em construção" |
-| `/users` | super_admin + admin | Lista de usuários, convidar, alterar papel, ativar/desativar |
-| `/settings` | super_admin | Placeholder de configurações |
-| 404 | — | Já existe no `__root.tsx`, refinar visual |
-
-## 7. Organização de pastas
-
-```text
-src/
-  components/
-    layout/        AppSidebar, AppTopbar, AuthLayout
-    dashboard/     KpiCard, RecentActivity, UpcomingMeetings, ...
-    ui/            (shadcn existente)
-  hooks/           useAuth, usePermissions
-  lib/             utils, format
-  types/           index.ts (Profile, Role, ActivityLog, ...)
-  routes/
-    __root.tsx
-    index.tsx                  (redireciona)
-    login.tsx
-    forgot-password.tsx
-    reset-password.tsx
-    _authenticated.tsx         (gate + shell)
-    _authenticated/
-      dashboard.tsx
-      jovens.tsx
-      clientes.tsx
-      crm.tsx
-      servicos.tsx
-      tarefas.tsx
-      reunioes.tsx
-      indicadores.tsx
-      _admin.tsx               (gate por papel)
-      _admin/
-        users.tsx
-        settings.tsx
-```
-
-## 8. Detalhes técnicos
-
-- `useAuth` usa `supabase.auth.getSession()` + listener `onAuthStateChange`
-- `usePermissions` busca `user_roles` via TanStack Query (cache + invalidação no logout)
-- `AppSidebar` usa `useRouterState` para item ativo
-- Mutações de gestão de usuários via `createServerFn` + `supabaseAdmin` (RLS bypass controlado)
-- Toast: `sonner`
-- Todos os textos em pt-BR; `<title>` = "MTX Hub"
-
-## 9. Fora de escopo desta etapa
-
-- Conteúdo real dos módulos Jovens/Clientes/CRM/etc. (apenas placeholders)
-- Notificações reais (sino é decorativo)
-- Busca global funcional (input decorativo)
-- Convite real por e-mail dentro de Usuários (UI pronta, integração no próximo prompt)
-- Google/Apple login
-
-Aprove o plano para eu começar a implementação.
+### Não inclui (vai pra Entrega 3)
+- Padronizar os Selects relacionais (clientes, serviços, jovens) com autocomplete em **todos** os FormDialogs. Já existe `YoungSearchSelect` e `ServiceMultiSelect`; faltam `ClientSearchSelect`, `ServiceSearchSelect` etc. — isso é o foco da Entrega 3.
