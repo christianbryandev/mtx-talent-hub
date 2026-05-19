@@ -168,15 +168,37 @@ function JovensListPage() {
         </div>
       </div>
 
-      {/* Contador por status */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {YOUNG_STATUS_LIST.slice(0, 5).map((s) => (
-          <Card key={s} className="p-3">
-            <div className="text-xs text-muted-foreground">{YOUNG_STATUS_LABELS[s]}</div>
-            <div className="mt-1 text-2xl font-bold">{statusCounts[s] ?? 0}</div>
-          </Card>
-        ))}
-      </div>
+      {/* Funil visual */}
+      <Card className="p-4">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Funil de progresso
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(["inscrito", "em_analise", "aprovado", "em_formacao", "em_pratica"] as YoungStatus[]).map((s, i, arr) => {
+            const active = statusFilter === s;
+            return (
+              <button
+                key={s}
+                onClick={() => {
+                  setStatusFilter(active ? "all" : s);
+                  setPage(0);
+                }}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-card/40 hover:border-primary/40"
+                }`}
+              >
+                <span className="font-semibold">{YOUNG_STATUS_LABELS[s]}</span>
+                <span className="rounded-full bg-background/60 px-2 text-xs font-bold">
+                  {statusCounts[s] ?? 0}
+                </span>
+                {i < arr.length - 1 && <span className="text-muted-foreground/50">→</span>}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Filtros */}
       <Card className="p-4">
