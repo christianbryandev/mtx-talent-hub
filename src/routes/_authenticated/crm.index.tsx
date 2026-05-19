@@ -43,6 +43,11 @@ import {
   type Opportunity,
   type OpportunityPriority,
 } from "@/types/crm";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteOpportunityCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/crm/")({
   head: () => ({ meta: [{ title: "CRM Comercial — MTX Hub" }] }),
