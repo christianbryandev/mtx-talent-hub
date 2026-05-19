@@ -66,7 +66,7 @@ function MyJourneyPage() {
           Acompanhe e organize cada fase da sua trilha MTX.
         </p>
       </div>
-      <JourneyKanban youngId={young.id} canEdit={isAdmin} />
+      <JourneyKanban youngId={young.id} canEdit={isAdmin} canReassign={isAdmin} />
     </div>
   );
 }
