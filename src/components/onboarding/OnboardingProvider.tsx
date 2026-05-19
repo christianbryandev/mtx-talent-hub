@@ -119,6 +119,8 @@ export function OnboardingProvider() {
       popover: {
         title: s.title,
         description: s.description,
+        showButtons: ["next", "previous", "close"] as ("next" | "previous" | "close")[],
+        closeBtnText: "Pular tour",
       },
     }));
 
