@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Inbox, Link2, Trash2 } from "lucide-react";
+import { Plus, Search, Inbox, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,10 @@ import { InscricaoLinkDialog } from "@/components/jovens/InscricaoLinkDialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
 import { YoungFormDialog } from "@/components/jovens/YoungFormDialog";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { deleteYoungCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 import {
   YOUNG_STATUS_LIST,
   YOUNG_STATUS_LABELS,
