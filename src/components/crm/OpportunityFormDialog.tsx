@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { FUNNEL_STAGES, type FunnelStage } from "@/types/crm";
+import { FUNNEL_STAGES, LEAD_ORIGIN_OPTIONS, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
@@ -35,6 +35,7 @@ const schema = z.object({
   email: z.string().email("E-mail inválido").optional().or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
   whatsapp: z.string().max(30).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
   niche: z.string().max(100).optional().or(z.literal("")),
   main_pain: z.string().max(2000).optional().or(z.literal("")),
   suggested_solution: z.string().max(2000).optional().or(z.literal("")),
@@ -43,6 +44,9 @@ const schema = z.object({
   closing_probability: z.string().optional().or(z.literal("")),
   funnel_stage: z.string(),
   priority: z.string(),
+  temperature: z.string().optional().or(z.literal("")),
+  is_icp: z.boolean().optional(),
+  segment_validated: z.boolean().optional(),
   commercial_responsible: z.string().optional().or(z.literal("")),
   lead_origin: z.string().max(100).optional().or(z.literal("")),
   next_followup_date: z.string().optional().or(z.literal("")),
@@ -84,6 +88,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         email: values.email || null,
         phone: values.phone || null,
         whatsapp: values.whatsapp || null,
+        city: values.city || null,
         niche: values.niche || null,
         main_pain: values.main_pain || null,
         suggested_solution: values.suggested_solution || null,
@@ -92,6 +97,9 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         closing_probability: values.closing_probability ? Number(values.closing_probability) : null,
         funnel_stage: values.funnel_stage,
         priority: values.priority,
+        temperature: values.temperature || null,
+        is_icp: values.is_icp ?? null,
+        segment_validated: values.segment_validated ?? null,
         commercial_responsible: values.commercial_responsible || null,
         lead_origin: values.lead_origin || null,
         next_followup_date: values.next_followup_date || null,
@@ -163,7 +171,11 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
               <Input {...form.register("contact_name")} />
             </div>
             <div>
-              <Label>Nicho</Label>
+              <Label>Cidade</Label>
+              <Input {...form.register("city")} />
+            </div>
+            <div>
+              <Label>Segmento</Label>
               <Input {...form.register("niche")} />
             </div>
             <div>
@@ -180,7 +192,49 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div>
               <Label>Origem do lead</Label>
-              <Input {...form.register("lead_origin")} />
+              <Select
+                value={form.watch("lead_origin") || ""}
+                onValueChange={(v) => form.setValue("lead_origin", v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {LEAD_ORIGIN_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o}>{o}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Temperatura</Label>
+              <Select
+                value={form.watch("temperature") || ""}
+                onValueChange={(v) => form.setValue("temperature", v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="frio">🔵 Frio</SelectItem>
+                  <SelectItem value="morno">🟡 Morno</SelectItem>
+                  <SelectItem value="quente">🔴 Quente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2 flex flex-wrap gap-4 items-center text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.watch("is_icp") ?? false}
+                  onChange={(e) => form.setValue("is_icp", e.target.checked)}
+                />
+                ICP (Ideal Customer Profile)
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.watch("segment_validated") ?? false}
+                  onChange={(e) => form.setValue("segment_validated", e.target.checked)}
+                />
+                Segmento validado
+              </label>
             </div>
             <div className="md:col-span-2">
               <Label>Dor principal</Label>

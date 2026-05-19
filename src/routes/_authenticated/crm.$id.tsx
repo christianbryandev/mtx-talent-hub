@@ -13,6 +13,7 @@ import {
   Phone,
   Mail,
   AlertTriangle,
+  Copy,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -42,8 +43,12 @@ import {
   FUNNEL_STAGES,
   INTERACTION_TYPES,
   PROPOSAL_STATUS_LABELS,
+  PROPOSAL_STATUS_FORM_LABELS,
+  LEAD_ORIGIN_OPTIONS,
   type FunnelStage,
   type Opportunity,
+  type OpportunityTemperature,
+  type ProposalStatus,
 } from "@/types/crm";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
@@ -216,7 +221,7 @@ function OpportunityDetailPage() {
           <p className="text-sm text-muted-foreground">
             {opp.contact_name ?? "—"} · {opp.niche ?? "Sem nicho"}
           </p>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant={opp.status === "ganha" ? "default" : opp.status === "perdida" ? "destructive" : "secondary"}>
               {opp.status}
             </Badge>
@@ -232,6 +237,24 @@ function OpportunityDetailPage() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex gap-1">
+              {(["frio", "morno", "quente"] as OpportunityTemperature[]).map((t) => {
+                const active = opp.temperature === t;
+                const emoji = t === "frio" ? "🔵" : t === "morno" ? "🟡" : "🔴";
+                return (
+                  <Button
+                    key={t}
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    disabled={!canEdit}
+                    onClick={() => updateMutation.mutate({ temperature: t })}
+                  >
+                    {emoji} {t}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
         {opp.status === "aberta" && (
@@ -296,14 +319,15 @@ function OpportunityDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {opp.email && (
-              <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {opp.email}</p>
+              <ContactRow icon={<Mail className="h-4 w-4 text-muted-foreground" />} value={opp.email} />
             )}
             {opp.phone && (
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {opp.phone}</p>
+              <ContactRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} value={opp.phone} />
             )}
             {opp.whatsapp && (
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> WhatsApp: {opp.whatsapp}</p>
+              <ContactRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} value={opp.whatsapp} label="WhatsApp" />
             )}
+            {opp.city && <Field label="Cidade" value={opp.city} />}
             <div>
               <Label className="text-xs">Último contato</Label>
               <Input
@@ -329,6 +353,94 @@ function OpportunityDetailPage() {
             {opp.loss_reason && (
               <Field label="Motivo de perda" value={opp.loss_reason} />
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Classificação</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <ToggleField label="ICP — Ideal Customer Profile" value={opp.is_icp} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ is_icp: v })} />
+            <ToggleField label="Segmento validado" value={opp.segment_validated} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ segment_validated: v })} />
+            <div>
+              <Label className="text-xs">Origem do lead</Label>
+              <Select value={opp.lead_origin ?? ""} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ lead_origin: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {LEAD_ORIGIN_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Qualificação</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <ToggleField label="Tem demanda clara?" value={opp.has_demand} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_demand: v })} />
+            <ToggleField label="Tem orçamento disponível?" value={opp.has_budget} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_budget: v })} />
+            <ToggleField label="Tem urgência?" value={opp.has_urgency} disabled={!canEdit}
+              onChange={(v) => updateMutation.mutate({ has_urgency: v })} />
+            <div>
+              <Label className="text-xs">Nota de qualificação: {opp.qualification_score ?? 0}/10</Label>
+              <Slider value={[opp.qualification_score ?? 0]} max={10} step={1} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ qualification_score: v[0] })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader><CardTitle className="text-base">Diagnóstico</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3 text-sm">
+            <div>
+              <Label className="text-xs">Problema identificado</Label>
+              <Textarea rows={3} defaultValue={opp.problem_identified ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ problem_identified: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">O que precisa melhorar</Label>
+              <Textarea rows={3} defaultValue={opp.improvement_needed ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ improvement_needed: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Oportunidade de solução</Label>
+              <Textarea rows={3} defaultValue={opp.solution_opportunity ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ solution_opportunity: e.target.value || null })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader><CardTitle className="text-base">Proposta</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3 text-sm">
+            <div>
+              <Label className="text-xs">Valor da proposta (R$)</Label>
+              <Input type="number" step="0.01" defaultValue={opp.proposal_value ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ proposal_value: e.target.value ? Number(e.target.value) : null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Data de envio</Label>
+              <Input type="date" defaultValue={opp.proposal_sent_date ?? ""} disabled={!canEdit}
+                onBlur={(e) => updateMutation.mutate({ proposal_sent_date: e.target.value || null })} />
+            </div>
+            <div>
+              <Label className="text-xs">Status</Label>
+              <Select value={opp.proposal_status ?? ""} disabled={!canEdit}
+                onValueChange={(v) => updateMutation.mutate({ proposal_status: v as ProposalStatus })}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(PROPOSAL_STATUS_FORM_LABELS) as ProposalStatus[]).map((k) => (
+                    <SelectItem key={k} value={k}>{PROPOSAL_STATUS_FORM_LABELS[k]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -419,6 +531,35 @@ function OpportunityDetailPage() {
         opportunityId={id}
         onSaved={() => qc.invalidateQueries({ queryKey: ["opp-proposals", id] })}
       />
+    </div>
+  );
+}
+
+function ContactRow({ icon, value, label }: { icon: React.ReactNode; value: string; label?: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      {icon}
+      <span className="flex-1">{label ? `${label}: ` : ""}{value}</span>
+      <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+        onClick={() => { navigator.clipboard.writeText(value); toast.success("Copiado"); }}>
+        <Copy className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
+function ToggleField({ label, value, onChange, disabled }: {
+  label: string; value: boolean | null; onChange: (v: boolean) => void; disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex gap-1">
+        <Button size="sm" variant={value === true ? "default" : "outline"} className="h-7 px-2 text-xs"
+          disabled={disabled} onClick={() => onChange(true)}>Sim</Button>
+        <Button size="sm" variant={value === false ? "default" : "outline"} className="h-7 px-2 text-xs"
+          disabled={disabled} onClick={() => onChange(false)}>Não</Button>
+      </div>
     </div>
   );
 }

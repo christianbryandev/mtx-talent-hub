@@ -1,28 +1,18 @@
 export type FunnelStage =
-  | "icp_definido"
-  | "segmentacao"
   | "prospeccao"
-  | "contato_realizado"
-  | "follow_up"
+  | "contato"
   | "qualificacao"
   | "diagnostico"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechamento"
-  | "onboarding";
+  | "proposta"
+  | "fechamento";
 
 export const FUNNEL_STAGES: { id: FunnelStage; label: string }[] = [
-  { id: "icp_definido", label: "ICP Definido" },
-  { id: "segmentacao", label: "Segmentação" },
   { id: "prospeccao", label: "Prospecção" },
-  { id: "contato_realizado", label: "Contato Realizado" },
-  { id: "follow_up", label: "Follow-up" },
+  { id: "contato", label: "Contato" },
   { id: "qualificacao", label: "Qualificação" },
   { id: "diagnostico", label: "Diagnóstico" },
-  { id: "proposta_enviada", label: "Proposta Enviada" },
-  { id: "negociacao", label: "Negociação" },
+  { id: "proposta", label: "Proposta" },
   { id: "fechamento", label: "Fechamento" },
-  { id: "onboarding", label: "Onboarding" },
 ];
 
 export const FUNNEL_STAGE_LABELS: Record<FunnelStage, string> =
@@ -33,11 +23,26 @@ export const FUNNEL_STAGE_LABELS: Record<FunnelStage, string> =
 
 export type OpportunityPriority = "baixa" | "media" | "alta";
 export type OpportunityStatus = "aberta" | "ganha" | "perdida";
+export type OpportunityTemperature = "frio" | "morno" | "quente";
+export type ProposalStatus = "nao_enviada" | "enviada" | "em_analise" | "em_negociacao";
 
 export const PRIORITY_LABELS: Record<OpportunityPriority, string> = {
   baixa: "Baixa",
   media: "Média",
   alta: "Alta",
+};
+
+export const TEMPERATURE_LABELS: Record<OpportunityTemperature, string> = {
+  frio: "🔵 Frio",
+  morno: "🟡 Morno",
+  quente: "🔴 Quente",
+};
+
+export const PROPOSAL_STATUS_FORM_LABELS: Record<ProposalStatus, string> = {
+  nao_enviada: "Não enviada",
+  enviada: "Enviada",
+  em_analise: "Em análise",
+  em_negociacao: "Em negociação",
 };
 
 export const INTERACTION_TYPES = [
@@ -55,6 +60,15 @@ export const PROPOSAL_STATUS_LABELS: Record<string, string> = {
   recusada: "Recusada",
 };
 
+export const LEAD_ORIGIN_OPTIONS = [
+  "Indicação",
+  "Instagram",
+  "WhatsApp",
+  "LinkedIn",
+  "Prospecção ativa",
+  "Outro",
+] as const;
+
 export interface Opportunity {
   id: string;
   company_name: string;
@@ -62,6 +76,7 @@ export interface Opportunity {
   phone: string | null;
   whatsapp: string | null;
   email: string | null;
+  city: string | null;
   niche: string | null;
   company_size: string | null;
   main_pain: string | null;
@@ -73,6 +88,19 @@ export interface Opportunity {
   commercial_responsible: string | null;
   lead_origin: string | null;
   priority: OpportunityPriority;
+  temperature: OpportunityTemperature | null;
+  is_icp: boolean | null;
+  segment_validated: boolean | null;
+  has_demand: boolean | null;
+  has_budget: boolean | null;
+  has_urgency: boolean | null;
+  qualification_score: number | null;
+  problem_identified: string | null;
+  improvement_needed: string | null;
+  solution_opportunity: string | null;
+  proposal_value: number | null;
+  proposal_sent_date: string | null;
+  proposal_status: ProposalStatus | null;
   last_contact_date: string | null;
   next_followup_date: string | null;
   status: OpportunityStatus;

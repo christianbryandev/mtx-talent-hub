@@ -75,9 +75,18 @@ function CrmKanbanPage() {
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [temperatureFilter, setTemperatureFilter] = useState("all");
   const [nicheFilter, setNicheFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const clearFilters = () => {
+    setSearch("");
+    setResponsibleFilter("all");
+    setTemperatureFilter("all");
+    setNicheFilter("all");
+    setMonthFilter("all");
+  };
 
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ["opportunities"],
@@ -106,6 +115,12 @@ function CrmKanbanPage() {
     [opportunities],
   );
 
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    opportunities.forEach((o) => set.add(o.created_at.slice(0, 7)));
+    return Array.from(set).sort().reverse();
+  }, [opportunities]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return opportunities.filter((o) => {
@@ -113,11 +128,12 @@ function CrmKanbanPage() {
         return false;
       if (responsibleFilter !== "all" && o.commercial_responsible !== responsibleFilter)
         return false;
-      if (priorityFilter !== "all" && o.priority !== priorityFilter) return false;
+      if (temperatureFilter !== "all" && o.temperature !== temperatureFilter) return false;
       if (nicheFilter !== "all" && o.niche !== nicheFilter) return false;
+      if (monthFilter !== "all" && o.created_at.slice(0, 7) !== monthFilter) return false;
       return true;
     });
-  }, [opportunities, search, responsibleFilter, priorityFilter, nicheFilter]);
+  }, [opportunities, search, responsibleFilter, temperatureFilter, nicheFilter, monthFilter]);
 
   const open = filtered.filter((o) => o.status === "aberta");
 
@@ -132,15 +148,24 @@ function CrmKanbanPage() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const totalOpen = opportunities.filter((o) => o.status === "aberta").length;
-  const pipelineValue = opportunities
-    .filter((o) => o.status === "aberta")
-    .reduce((s, o) => s + Number(o.estimated_value ?? 0), 0);
   const closedThisMonth = opportunities.filter(
     (o) => o.status !== "aberta" && (o.updated_at ?? "") >= startOfMonth,
   );
-  const wonThisMonth = closedThisMonth.filter((o) => o.status === "ganha").length;
+  const wonOppsMonth = closedThisMonth.filter((o) => o.status === "ganha");
+  const wonThisMonth = wonOppsMonth.length;
   const conversion = closedThisMonth.length
     ? Math.round((wonThisMonth / closedThisMonth.length) * 100)
+    : 0;
+  const avgTicket = wonOppsMonth.length
+    ? wonOppsMonth.reduce((s, o) => s + Number(o.proposal_value ?? o.estimated_value ?? 0), 0) /
+      wonOppsMonth.length
+    : 0;
+  const avgClosingDays = wonOppsMonth.length
+    ? wonOppsMonth.reduce((s, o) => {
+        const start = new Date(o.created_at).getTime();
+        const end = new Date(o.updated_at).getTime();
+        return s + Math.max(0, (end - start) / (1000 * 60 * 60 * 24));
+      }, 0) / wonOppsMonth.length
     : 0;
   const todayIso = now.toISOString().slice(0, 10);
   const lateFollowups = opportunities.filter(
@@ -213,15 +238,20 @@ function CrmKanbanPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
-        <KpiCard label="Oportunidades abertas" value={totalOpen} icon={<Target className="h-4 w-4" />} />
-        <KpiCard label="Pipeline (R$)" value={brl(pipelineValue)} icon={<DollarSign className="h-4 w-4" />} />
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <KpiCard label="Oport. abertas" value={totalOpen} icon={<Target className="h-4 w-4" />} />
         <KpiCard label="Ganhas no mês" value={wonThisMonth} icon={<CheckCircle2 className="h-4 w-4" />} />
-        <KpiCard label="Conversão do mês" value={`${conversion}%`} icon={<Target className="h-4 w-4" />} />
         <KpiCard
           label="Follow-ups atrasados"
           value={lateFollowups}
           icon={<AlertTriangle className="h-4 w-4" />}
+        />
+        <KpiCard label="Conversão" value={`${conversion}%`} icon={<Target className="h-4 w-4" />} />
+        <KpiCard label="Ticket médio" value={brl(avgTicket)} icon={<DollarSign className="h-4 w-4" />} />
+        <KpiCard
+          label="Tempo médio fech."
+          value={`${Math.round(avgClosingDays)}d`}
+          icon={<Target className="h-4 w-4" />}
         />
       </div>
 
@@ -244,24 +274,36 @@ function CrmKanbanPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+        <Select value={temperatureFilter} onValueChange={setTemperatureFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Temperatura" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas prioridades</SelectItem>
-            <SelectItem value="alta">Alta</SelectItem>
-            <SelectItem value="media">Média</SelectItem>
-            <SelectItem value="baixa">Baixa</SelectItem>
+            <SelectItem value="all">Toda temperatura</SelectItem>
+            <SelectItem value="frio">🔵 Frio</SelectItem>
+            <SelectItem value="morno">🟡 Morno</SelectItem>
+            <SelectItem value="quente">🔴 Quente</SelectItem>
           </SelectContent>
         </Select>
         <Select value={nicheFilter} onValueChange={setNicheFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Nicho" /></SelectTrigger>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Segmento" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos nichos</SelectItem>
+            <SelectItem value="all">Todos segmentos</SelectItem>
             {niches.map((n) => (
               <SelectItem key={n} value={n}>{n}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Mês" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos meses</SelectItem>
+            {months.map((m) => (
+              <SelectItem key={m} value={m}>
+                {new Date(m + "-01").toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
       </div>
 
       {isLoading ? (
