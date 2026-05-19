@@ -406,10 +406,12 @@ function OpportunityCard({
   opp,
   onClick,
   dragging,
+  actions,
 }: {
   opp: Opportunity;
   onClick?: () => void;
   dragging?: boolean;
+  actions?: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: opp.id });
   const today = new Date().toISOString().slice(0, 10);
@@ -425,11 +427,16 @@ function OpportunityCard({
         e.stopPropagation();
         onClick?.();
       }}
-      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md ${
+      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md relative ${
         isDragging || dragging ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
+      {actions && (
+        <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-2 pr-8">
         <div className="flex-1 min-w-0">
           <p className="truncate text-sm font-semibold">{opp.company_name}</p>
           {opp.contact_name && (
