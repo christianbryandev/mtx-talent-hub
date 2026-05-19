@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { IncompleteProfileBanner } from "@/components/layout/IncompleteProfileBanner";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
