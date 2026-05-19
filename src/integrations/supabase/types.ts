@@ -270,6 +270,7 @@ export type Database = {
           niche: string | null
           observations: string | null
           phone: string | null
+          profile_id: string | null
           segment: string | null
           setup_value: number | null
           state: string | null
@@ -305,6 +306,7 @@ export type Database = {
           niche?: string | null
           observations?: string | null
           phone?: string | null
+          profile_id?: string | null
           segment?: string | null
           setup_value?: number | null
           state?: string | null
@@ -340,6 +342,7 @@ export type Database = {
           niche?: string | null
           observations?: string | null
           phone?: string | null
+          profile_id?: string | null
           segment?: string | null
           setup_value?: number | null
           state?: string | null

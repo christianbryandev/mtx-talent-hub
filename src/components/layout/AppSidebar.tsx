@@ -36,16 +36,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ROLE_LABELS } from "@/types";
 
-const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tour: "nav-dashboard" },
-  { title: "Jovens", url: "/jovens", icon: Users, tour: "nav-jovens" },
-  { title: "Clientes", url: "/clientes", icon: Building2, tour: "nav-clientes" },
-  { title: "CRM Comercial", url: "/crm", icon: Target, tour: "nav-crm" },
-  { title: "Serviços", url: "/servicos", icon: Briefcase, tour: "nav-servicos" },
-  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, tour: "nav-tarefas" },
-  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, tour: "nav-reunioes" },
-  { title: "Indicadores", url: "/indicadores", icon: BarChart3, tour: "nav-indicadores" },
-] as const;
+import type { AppRole } from "@/types";
+
+type MainItem = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  roles: AppRole[]; // papéis que podem ver
+};
+
+const mainItems: MainItem[] = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
+  { title: "Jovens", url: "/jovens", icon: Users, roles: ["super_admin", "admin"] },
+  { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin", "comercial"] },
+  { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial"] },
+  { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin"] },
+  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "colaborador"] },
+  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
+  { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
+];
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -110,7 +119,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => {
+              {mainItems
+                .filter((item) => !role || item.roles.includes(role))
+                .map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
                 return (
                   <SidebarMenuItem key={item.url}>

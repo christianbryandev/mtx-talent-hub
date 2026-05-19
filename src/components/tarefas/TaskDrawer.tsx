@@ -18,6 +18,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { usePermissions } from "@/hooks/usePermissions";
+import { logActivity } from "@/lib/activity-log";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   KANBAN_COLUMNS, PRIORITY_LABELS, type Task, type TaskPriority, type KanbanColumn,
 } from "@/types/tasks";
@@ -30,6 +37,7 @@ interface Props {
 
 export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
   const qc = useQueryClient();
+  const { isSuperAdmin } = usePermissions();
   const [comment, setComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
@@ -156,6 +164,26 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteTask = useMutation({
+    mutationFn: async () => {
+      if (!taskId) return;
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+      if (error) throw error;
+      await logActivity({
+        action: "task_deleted",
+        entity_type: "task",
+        entity_id: taskId,
+        description: `Tarefa "${task?.title ?? ""}" excluída`,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Tarefa excluída");
+      onOpenChange(false);
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!task) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -193,6 +221,37 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               </button>
             )}
           </SheetTitle>
+          {isSuperAdmin && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-12 top-4 h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir tarefa?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é irreversível. A tarefa "{task.title}" e todos os seus
+                    comentários, checklist e anexos serão removidos permanentemente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => deleteTask.mutate()}
+                  >
+                    Excluir definitivamente
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
