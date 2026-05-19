@@ -986,6 +986,47 @@ export type Database = {
           },
         ]
       }
+      phase_review_progress: {
+        Row: {
+          attempt_id: string | null
+          created_at: string
+          id: string
+          item: string
+          phase: string
+          position: number
+          reviewed: boolean
+          young_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          created_at?: string
+          id?: string
+          item: string
+          phase: string
+          position?: number
+          reviewed?: boolean
+          young_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          created_at?: string
+          id?: string
+          item?: string
+          phase?: string
+          position?: number
+          reviewed?: boolean
+          young_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_review_progress_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "young_quiz_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1766,6 +1807,7 @@ export type Database = {
           has_professional_chip: boolean | null
           id: string
           interest_area: string | null
+          last_progress_at: string
           legal_guardian: string | null
           mentor_id: string | null
           mother_name: string | null
@@ -1820,6 +1862,7 @@ export type Database = {
           has_professional_chip?: boolean | null
           id?: string
           interest_area?: string | null
+          last_progress_at?: string
           legal_guardian?: string | null
           mentor_id?: string | null
           mother_name?: string | null
@@ -1874,6 +1917,7 @@ export type Database = {
           has_professional_chip?: boolean | null
           id?: string
           interest_area?: string | null
+          last_progress_at?: string
           legal_guardian?: string | null
           mentor_id?: string | null
           mother_name?: string | null
@@ -1913,6 +1957,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      young_quiz_attempts: {
+        Row: {
+          attempt_number: number
+          created_at: string
+          id: string
+          passed: boolean
+          phase: string
+          score: number
+          young_id: string
+        }
+        Insert: {
+          attempt_number?: number
+          created_at?: string
+          id?: string
+          passed?: boolean
+          phase: string
+          score: number
+          young_id: string
+        }
+        Update: {
+          attempt_number?: number
+          created_at?: string
+          id?: string
+          passed?: boolean
+          phase?: string
+          score?: number
+          young_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
