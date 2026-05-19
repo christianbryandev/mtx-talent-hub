@@ -186,6 +186,59 @@ function CrmListPage() {
                       {o.status}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <RowActionsMenu
+                      label={o.company_name}
+                      onView={() => navigate({ to: "/crm/$id", params: { id: o.id } })}
+                      onEdit={
+                        canManage
+                          ? () => navigate({ to: "/crm/$id", params: { id: o.id } })
+                          : undefined
+                      }
+                      onDuplicate={
+                        canManage
+                          ? async () => {
+                              try {
+                                const copy = await duplicateRow<{ id: string }>(
+                                  "opportunities",
+                                  o.id,
+                                  { labelField: "company_name", excludeFields: ["converted_client_id"] },
+                                );
+                                await logActivity({
+                                  action: "opportunity_duplicated",
+                                  entity_type: "opportunity",
+                                  entity_id: copy.id,
+                                  description: `Oportunidade "${o.company_name}" duplicada`,
+                                });
+                                toast.success("Oportunidade duplicada");
+                                qc.invalidateQueries({ queryKey: ["opportunities"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                      onDelete={
+                        isAdmin
+                          ? async () => {
+                              try {
+                                await deleteOpportunityCascade(o.id);
+                                await logActivity({
+                                  action: "opportunity_deleted",
+                                  entity_type: "opportunity",
+                                  entity_id: o.id,
+                                  description: `Oportunidade "${o.company_name}" excluída`,
+                                });
+                                toast.success("Oportunidade excluída");
+                                qc.invalidateQueries({ queryKey: ["opportunities"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
