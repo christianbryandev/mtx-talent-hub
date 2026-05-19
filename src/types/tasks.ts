@@ -3,18 +3,14 @@ export type KanbanColumn =
   | "a_fazer"
   | "em_andamento"
   | "em_revisao"
-  | "aguardando_cliente"
-  | "concluido"
-  | "pausado";
+  | "concluido";
 
 export const KANBAN_COLUMNS: { id: KanbanColumn; label: string }[] = [
   { id: "backlog", label: "Backlog" },
   { id: "a_fazer", label: "A Fazer" },
   { id: "em_andamento", label: "Em Andamento" },
   { id: "em_revisao", label: "Em Revisão" },
-  { id: "aguardando_cliente", label: "Aguardando Cliente" },
   { id: "concluido", label: "Concluído" },
-  { id: "pausado", label: "Pausado" },
 ];
 
 export const KANBAN_LABELS: Record<KanbanColumn, string> = KANBAN_COLUMNS.reduce(
@@ -41,6 +37,40 @@ export const PRIORITY_STYLE: Record<TaskPriority, string> = {
   baixa: "bg-muted text-muted-foreground border-border",
 };
 
+export type TaskArea =
+  | "dev_hub"
+  | "comercial"
+  | "social_media"
+  | "design"
+  | "trafego"
+  | "formacao";
+
+export const TASK_AREAS: { value: TaskArea; label: string }[] = [
+  { value: "dev_hub", label: "Dev / Hub" },
+  { value: "comercial", label: "Comercial" },
+  { value: "social_media", label: "Social Media" },
+  { value: "design", label: "Design" },
+  { value: "trafego", label: "Tráfego" },
+  { value: "formacao", label: "Formação" },
+];
+
+export const TASK_AREA_LABELS: Record<TaskArea, string> = TASK_AREAS.reduce(
+  (acc, a) => {
+    acc[a.value] = a.label;
+    return acc;
+  },
+  {} as Record<TaskArea, string>,
+);
+
+export const TASK_AREA_STYLE: Record<TaskArea, string> = {
+  dev_hub: "bg-sky-500/15 text-sky-600 dark:text-sky-300 border-sky-500/30",
+  comercial: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30",
+  social_media: "bg-pink-500/15 text-pink-600 dark:text-pink-300 border-pink-500/30",
+  design: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 border-fuchsia-500/30",
+  trafego: "bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30",
+  formacao: "bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30",
+};
+
 export interface Task {
   id: string;
   title: string;
@@ -54,7 +84,11 @@ export interface Task {
   position: number;
   priority: TaskPriority;
   due_date: string | null;
+  start_date: string | null;
   estimated_hours: number | null;
+  hours_realized: number | null;
+  area: TaskArea | null;
+  auto_generated: boolean;
   status: string;
   created_by: string | null;
   created_at: string;
