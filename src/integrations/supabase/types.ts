@@ -746,6 +746,7 @@ export type Database = {
       }
       opportunities: {
         Row: {
+          city: string | null
           closing_probability: number | null
           commercial_responsible: string | null
           company_name: string
@@ -756,7 +757,12 @@ export type Database = {
           email: string | null
           estimated_value: number | null
           funnel_stage: string
+          has_budget: boolean | null
+          has_demand: boolean | null
+          has_urgency: boolean | null
           id: string
+          improvement_needed: string | null
+          is_icp: boolean | null
           last_contact_date: string | null
           lead_origin: string | null
           loss_reason: string | null
@@ -767,12 +773,21 @@ export type Database = {
           offered_service: string | null
           phone: string | null
           priority: string
+          problem_identified: string | null
+          proposal_sent_date: string | null
+          proposal_status: string | null
+          proposal_value: number | null
+          qualification_score: number | null
+          segment_validated: boolean | null
+          solution_opportunity: string | null
           status: string
           suggested_solution: string | null
+          temperature: string | null
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
+          city?: string | null
           closing_probability?: number | null
           commercial_responsible?: string | null
           company_name: string
@@ -783,7 +798,12 @@ export type Database = {
           email?: string | null
           estimated_value?: number | null
           funnel_stage?: string
+          has_budget?: boolean | null
+          has_demand?: boolean | null
+          has_urgency?: boolean | null
           id?: string
+          improvement_needed?: string | null
+          is_icp?: boolean | null
           last_contact_date?: string | null
           lead_origin?: string | null
           loss_reason?: string | null
@@ -794,12 +814,21 @@ export type Database = {
           offered_service?: string | null
           phone?: string | null
           priority?: string
+          problem_identified?: string | null
+          proposal_sent_date?: string | null
+          proposal_status?: string | null
+          proposal_value?: number | null
+          qualification_score?: number | null
+          segment_validated?: boolean | null
+          solution_opportunity?: string | null
           status?: string
           suggested_solution?: string | null
+          temperature?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
+          city?: string | null
           closing_probability?: number | null
           commercial_responsible?: string | null
           company_name?: string
@@ -810,7 +839,12 @@ export type Database = {
           email?: string | null
           estimated_value?: number | null
           funnel_stage?: string
+          has_budget?: boolean | null
+          has_demand?: boolean | null
+          has_urgency?: boolean | null
           id?: string
+          improvement_needed?: string | null
+          is_icp?: boolean | null
           last_contact_date?: string | null
           lead_origin?: string | null
           loss_reason?: string | null
@@ -821,8 +855,16 @@ export type Database = {
           offered_service?: string | null
           phone?: string | null
           priority?: string
+          problem_identified?: string | null
+          proposal_sent_date?: string | null
+          proposal_status?: string | null
+          proposal_value?: number | null
+          qualification_score?: number | null
+          segment_validated?: boolean | null
+          solution_opportunity?: string | null
           status?: string
           suggested_solution?: string | null
+          temperature?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
