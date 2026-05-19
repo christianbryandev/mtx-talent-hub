@@ -29,7 +29,11 @@ const brl = (v: number | null) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
 
 function ServicosListPage() {
+  const { isAdmin } = usePermissions();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [openNew, setOpenNew] = useState(false);
+  const [editService, setEditService] = useState<Service | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
