@@ -289,7 +289,175 @@ function InscricoesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ComplementModal
+        state={complement}
+        onClose={() => setComplement(null)}
+        onSentInvite={(link) => setInviteLink(link)}
+        createInviteFn={createInviteFn}
+        navigate={navigate}
+        qc={qc}
+      />
+
+      <Dialog open={!!inviteLink} onOpenChange={(o) => !o && setInviteLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convite gerado</DialogTitle>
+            <DialogDescription>
+              Copie e envie o link abaixo manualmente para o(a) jovem.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Input readOnly value={inviteLink ?? ""} />
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => {
+                if (inviteLink) {
+                  navigator.clipboard.writeText(inviteLink);
+                  toast.success("Link copiado!");
+                }
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+interface ComplementState {
+  youngId: string;
+  app: YoungApplication;
+}
+
+function ComplementModal({
+  state,
+  onClose,
+  onSentInvite,
+  createInviteFn,
+  navigate,
+  qc,
+}: {
+  state: ComplementState | null;
+  onClose: () => void;
+  onSentInvite: (link: string) => void;
+  createInviteFn: ReturnType<typeof useServerFn<typeof createInvite>>;
+  navigate: ReturnType<typeof useNavigate>;
+  qc: ReturnType<typeof useQueryClient>;
+}) {
+  const [mentorId, setMentorId] = useState("");
+  const [phase, setPhase] = useState<TrailPhase>("fase_1");
+  const [observations, setObservations] = useState("");
+  const [sendInvite, setSendInvite] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const { data: mentors = [] } = useQuery({
+    queryKey: ["mentors-min"],
+    enabled: !!state,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("is_active", true);
+      return data ?? [];
+    },
+  });
+
+  const handleSave = async (goToProfile: boolean) => {
+    if (!state) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from("young_people")
+        .update({
+          mentor_id: mentorId || null,
+          trail_phase: phase,
+          observations: observations || null,
+        })
+        .eq("id", state.youngId);
+
+      if (sendInvite && state.app.email) {
+        const res = await createInviteFn({
+          data: {
+            email: state.app.email,
+            fullName: state.app.full_name,
+            role: "colaborador",
+          },
+        });
+        const token = (res as { invite: { token: string } }).invite.token;
+        const link = `${window.location.origin}/convite/${token}`;
+        onSentInvite(link);
+      }
+
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      toast.success("Perfil complementado!");
+      onClose();
+      if (goToProfile) navigate({ to: "/jovens/$id", params: { id: state.youngId } });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Complementar perfil</DialogTitle>
+          <DialogDescription>
+            Adicione informações que não vieram no formulário de inscrição.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Mentor responsável</Label>
+            <Select value={mentorId} onValueChange={setMentorId}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {mentors.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>{m.full_name ?? m.email}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Fase da trilha</Label>
+            <Select value={phase} onValueChange={(v) => setPhase(v as TrailPhase)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TRAIL_PHASE_LIST.map((p) => (
+                  <SelectItem key={p} value={p}>{TRAIL_PHASE_LABELS[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Observações iniciais</Label>
+            <Textarea rows={3} value={observations} onChange={(e) => setObservations(e.target.value)} />
+          </div>
+          {state?.app.email && (
+            <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+              <Checkbox checked={sendInvite} onCheckedChange={(c) => setSendInvite(!!c)} className="mt-0.5" />
+              <span>
+                Enviar convite de acesso ao sistema para <b>{state.app.email}</b>
+              </span>
+            </label>
+          )}
+        </div>
+        <DialogFooter className="flex-wrap gap-2">
+          <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
+            Salvar e completar depois
+          </Button>
+          <Button onClick={() => handleSave(true)} disabled={saving}>
+            Completar agora
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
