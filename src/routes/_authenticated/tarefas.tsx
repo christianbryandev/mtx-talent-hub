@@ -46,6 +46,8 @@ interface TaskRow extends Task {
 
 function TarefasKanbanPage() {
   const qc = useQueryClient();
+  const { isAdmin, isComercial } = usePermissions();
+  const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
   const [newColumn, setNewColumn] = useState<KanbanColumn>("backlog");
   const [drawerId, setDrawerId] = useState<string | null>(null);
