@@ -437,6 +437,42 @@ export type Database = {
           },
         ]
       }
+      journey_phase_assignees: {
+        Row: {
+          created_at: string
+          id: string
+          phase_id: string
+          young_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phase_id: string
+          young_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phase_id?: string
+          young_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_phase_assignees_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_phase_assignees_young_id_fkey"
+            columns: ["young_id"]
+            isOneToOne: false
+            referencedRelation: "young_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_phases: {
         Row: {
           checklist: Json
