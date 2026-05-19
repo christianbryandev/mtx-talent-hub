@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { FUNNEL_STAGES, type FunnelStage } from "@/types/crm";
+import { FUNNEL_STAGES, LEAD_ORIGIN_OPTIONS, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
@@ -35,6 +35,7 @@ const schema = z.object({
   email: z.string().email("E-mail inválido").optional().or(z.literal("")),
   phone: z.string().max(30).optional().or(z.literal("")),
   whatsapp: z.string().max(30).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
   niche: z.string().max(100).optional().or(z.literal("")),
   main_pain: z.string().max(2000).optional().or(z.literal("")),
   suggested_solution: z.string().max(2000).optional().or(z.literal("")),
@@ -43,6 +44,9 @@ const schema = z.object({
   closing_probability: z.string().optional().or(z.literal("")),
   funnel_stage: z.string(),
   priority: z.string(),
+  temperature: z.string().optional().or(z.literal("")),
+  is_icp: z.boolean().optional(),
+  segment_validated: z.boolean().optional(),
   commercial_responsible: z.string().optional().or(z.literal("")),
   lead_origin: z.string().max(100).optional().or(z.literal("")),
   next_followup_date: z.string().optional().or(z.literal("")),
