@@ -72,18 +72,8 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
     },
   });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles-min"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
+
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
