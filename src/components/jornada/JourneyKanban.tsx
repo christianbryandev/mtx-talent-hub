@@ -694,8 +694,13 @@ function CardDrawer({
 
           {canEdit && (
             <div className="flex gap-2 pt-4 border-t">
-              <Button variant="destructive" size="sm" onClick={remove} disabled={deleting}>
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmOpen(true)}
+                disabled={deleting}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
                 Excluir
               </Button>
               <div className="flex-1" />
@@ -707,6 +712,16 @@ function CardDrawer({
             </div>
           )}
         </div>
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Excluir card da jornada?"
+          description={`O card "${card.title}" será removido permanentemente.`}
+          confirmLabel="Excluir"
+          variant="destructive"
+          loading={deleting}
+          onConfirm={remove}
+        />
       </SheetContent>
     </Sheet>
   );
