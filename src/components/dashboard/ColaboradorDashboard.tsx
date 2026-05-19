@@ -141,14 +141,14 @@ export function ColaboradorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <KpiCard icon={CheckSquare} label="Tarefas abertas" value={data.openCount.toString()} />
+        <KpiCard icon={<CheckSquare className="h-5 w-5" />} label="Tarefas abertas" value={data.openCount.toString()} />
         <KpiCard
-          icon={AlertCircle}
+          icon={<AlertCircle className="h-5 w-5" />}
           label="Tarefas atrasadas"
           value={data.overdueCount.toString()}
-          variant={data.overdueCount > 0 ? "destructive" : "default"}
+          accent={data.overdueCount > 0 ? "warning" : "primary"}
         />
-        <KpiCard icon={CalendarDays} label="Próximas reuniões" value={data.upcomingMeetings.length.toString()} />
+        <KpiCard icon={<CalendarDays className="h-5 w-5" />} label="Próximas reuniões" value={data.upcomingMeetings.length.toString()} />
       </div>
 
       <Card>

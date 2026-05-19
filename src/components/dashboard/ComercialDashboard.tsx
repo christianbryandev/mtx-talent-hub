@@ -102,23 +102,23 @@ export function ComercialDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          icon={Target}
+          icon={<Target className="h-5 w-5" />}
           label="Oportunidades abertas"
           value={data.openCount.toString()}
         />
         <KpiCard
-          icon={TrendingUp}
+          icon={<TrendingUp className="h-5 w-5" />}
           label="Pipeline (valor)"
           value={brl(data.pipelineValue)}
         />
         <KpiCard
-          icon={AlertCircle}
+          icon={<AlertCircle className="h-5 w-5" />}
           label="Follow-ups atrasados"
           value={data.overdueCount.toString()}
-          variant={data.overdueCount > 0 ? "destructive" : "default"}
+          accent={data.overdueCount > 0 ? "warning" : "primary"}
         />
         <KpiCard
-          icon={Trophy}
+          icon={<Trophy className="h-5 w-5" />}
           label="Ganhas este mês"
           value={data.wonCount.toString()}
         />
