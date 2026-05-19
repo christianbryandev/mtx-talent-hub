@@ -140,57 +140,31 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
             </div>
             <div>
               <Label>Cliente</Label>
-              <Select
-                value={form.watch("client_id") || "_none"}
-                onValueChange={(v) => form.setValue("client_id", v === "_none" ? "" : v)}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {clients.map((c) => (<SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <ClientSearchSelect
+                value={form.watch("client_id") || null}
+                onChange={(v) => form.setValue("client_id", v ?? "")}
+              />
             </div>
             <div>
               <Label>Serviço</Label>
-              <Select
-                value={form.watch("service_id") || "_none"}
-                onValueChange={(v) => form.setValue("service_id", v === "_none" ? "" : v)}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <ServiceSearchSelect
+                value={form.watch("service_id") || null}
+                onChange={(v) => form.setValue("service_id", v ?? "")}
+              />
             </div>
             <div>
               <Label>Jovem responsável</Label>
-              <Select
-                value={form.watch("young_responsible") || "_none"}
-                onValueChange={(v) => form.setValue("young_responsible", v === "_none" ? "" : v)}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {youngs.map((y) => (<SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <YoungSearchSelect
+                value={form.watch("young_responsible") || null}
+                onChange={(v) => form.setValue("young_responsible", v ?? "")}
+              />
             </div>
             <div>
               <Label>Supervisor</Label>
-              <Select
-                value={form.watch("supervisor_id") || "_none"}
-                onValueChange={(v) => form.setValue("supervisor_id", v === "_none" ? "" : v)}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {profiles.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.full_name || p.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ProfileSearchSelect
+                value={form.watch("supervisor_id") || null}
+                onChange={(v) => form.setValue("supervisor_id", v ?? "")}
+              />
             </div>
             <div>
               <Label>Prioridade</Label>
