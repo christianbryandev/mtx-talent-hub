@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
+import { PhaseEvolutionPanel } from "@/components/jornada/PhaseEvolutionPanel";
 import {
   YOUNG_STATUS_LIST,
   YOUNG_STATUS_LABELS,
