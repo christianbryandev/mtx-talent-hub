@@ -58,7 +58,7 @@ export function ColaboradorDashboard() {
 
       const tasks = tasksRes.data ?? [];
       const openTasks = tasks.filter(
-        (t) => t.kanban_column !== "concluido" && t.kanban_column !== "pausado",
+        (t) => t.kanban_column !== "concluido",
       );
       const overdueTasks = openTasks.filter(
         (t) => t.due_date && t.due_date < today,

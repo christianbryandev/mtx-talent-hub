@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,11 +39,10 @@ import { useAuth } from "@/hooks/useAuth";
 const schema = z.object({
   title: z.string().min(2, "Informe um título"),
   type: z.enum([
-    "geral_jovens",
-    "mentoria",
-    "operacional",
-    "comercial",
-    "alinhamento_entrega",
+    "formacao_mentoria",
+    "checkin_operacional",
+    "comercial_cliente",
+    "gestao_mtx",
   ]),
   date: z.string().min(1, "Informe a data"),
   start_time: z.string().optional(),
@@ -53,6 +52,9 @@ const schema = z.object({
   recurrence_rule: z.string().optional(),
   agenda: z.string().optional(),
   objectives: z.string().optional(),
+  link_kind: z.enum(["none", "opportunity", "client"]),
+  link_opportunity_id: z.string().optional(),
+  link_client_id: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -72,7 +74,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
-      type: "operacional" as MeetingType,
+      type: "checkin_operacional" as MeetingType,
       date: new Date().toISOString().slice(0, 10),
       start_time: "",
       end_time: "",
@@ -81,11 +83,19 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
       recurrence_rule: "",
       agenda: "",
       objectives: "",
+      link_kind: "none",
+      link_opportunity_id: "",
+      link_client_id: "",
     },
   });
 
   useEffect(() => {
     if (open) {
+      const linkKind: "none" | "opportunity" | "client" = meeting?.link_opportunity_id
+        ? "opportunity"
+        : meeting?.link_client_id
+          ? "client"
+          : "none";
       form.reset(
         meeting
           ? {
@@ -99,10 +109,13 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               recurrence_rule: meeting.recurrence_rule ?? "",
               agenda: meeting.agenda ?? "",
               objectives: meeting.objectives ?? "",
+              link_kind: linkKind,
+              link_opportunity_id: meeting.link_opportunity_id ?? "",
+              link_client_id: meeting.link_client_id ?? "",
             }
           : {
               title: "",
-              type: "operacional",
+              type: "checkin_operacional",
               date: new Date().toISOString().slice(0, 10),
               start_time: "",
               end_time: "",
@@ -111,12 +124,41 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               recurrence_rule: "",
               agenda: "",
               objectives: "",
+              link_kind: "none",
+              link_opportunity_id: "",
+              link_client_id: "",
             },
       );
     }
   }, [open, meeting, form]);
 
   const isRecurring = form.watch("is_recurring");
+  const linkKind = form.watch("link_kind");
+
+  const { data: opportunities = [] } = useQuery({
+    queryKey: ["opps-min"],
+    enabled: linkKind === "opportunity",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("opportunities")
+        .select("id, company_name")
+        .eq("status", "aberta")
+        .order("company_name");
+      return data ?? [];
+    },
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients-min-meeting"],
+    enabled: linkKind === "client",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("clients")
+        .select("id, company_name")
+        .order("company_name");
+      return data ?? [];
+    },
+  });
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -131,12 +173,16 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
         recurrence_rule: values.is_recurring ? values.recurrence_rule || null : null,
         agenda: values.agenda || null,
         objectives: values.objectives || null,
+        link_opportunity_id:
+          values.link_kind === "opportunity" ? values.link_opportunity_id || null : null,
+        link_client_id:
+          values.link_kind === "client" ? values.link_client_id || null : null,
       };
 
       if (isEdit && meeting) {
         const { error } = await supabase
           .from("meetings")
-          .update(payload)
+          .update(payload as never)
           .eq("id", meeting.id);
         if (error) throw error;
         if (user) {
@@ -152,7 +198,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
       }
       const { data, error } = await supabase
         .from("meetings")
-        .insert(payload)
+        .insert(payload as never)
         .select("id")
         .single();
       if (error) throw error;
@@ -183,7 +229,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar reunião" : "Nova reunião"}</DialogTitle>
           <DialogDescription>
-            Configure os detalhes, pauta e responsáveis da reunião.
+            Configure os detalhes, pauta e vínculos da reunião.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -202,7 +248,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Tipo *</Label>
+              <Label>Categoria *</Label>
               <Select
                 value={form.watch("type")}
                 onValueChange={(v) => form.setValue("type", v as MeetingType)}
@@ -238,6 +284,59 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               <Label htmlFor="location">Local / Link</Label>
               <Input id="location" {...form.register("location")} placeholder="Sala 2 ou URL" />
             </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-border/60 bg-card/40 p-3">
+            <Label>Vincular a</Label>
+            <Select
+              value={linkKind}
+              onValueChange={(v) =>
+                form.setValue("link_kind", v as "none" | "opportunity" | "client")
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem vínculo</SelectItem>
+                <SelectItem value="opportunity">Oportunidade (CRM)</SelectItem>
+                <SelectItem value="client">Cliente ativo</SelectItem>
+              </SelectContent>
+            </Select>
+            {linkKind === "opportunity" && (
+              <Select
+                value={form.watch("link_opportunity_id") ?? ""}
+                onValueChange={(v) => form.setValue("link_opportunity_id", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a oportunidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {opportunities.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.company_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {linkKind === "client" && (
+              <Select
+                value={form.watch("link_client_id") ?? ""}
+                onValueChange={(v) => form.setValue("link_client_id", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.company_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card/40 p-3">
@@ -283,11 +382,11 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="agenda">Pauta (resumo)</Label>
+            <Label htmlFor="agenda">Pauta prévia</Label>
             <Textarea
               id="agenda"
               rows={3}
-              placeholder="Você pode adicionar itens detalhados depois"
+              placeholder="O que será discutido (pode adicionar itens detalhados depois)"
               {...form.register("agenda")}
             />
           </div>

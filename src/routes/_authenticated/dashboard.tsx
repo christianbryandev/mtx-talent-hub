@@ -78,12 +78,12 @@ function AdminDashboardContent() {
       ] = await Promise.all([
         supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase"),
         supabase.from("clients").select("id, status, monthly_value, created_at"),
-        supabase.from("tasks").select("id, kanban_column").not("kanban_column", "in", "(concluido,pausado)"),
+        supabase.from("tasks").select("id, kanban_column").not("kanban_column", "in", "(concluido)"),
         supabase.from("clients").select("created_at").gte("created_at", sixMonthsAgo),
         supabase.from("opportunities").select("id, status, estimated_value, next_followup_date"),
-        supabase.from("tasks").select("id").lt("due_date", today).not("kanban_column", "in", "(concluido,pausado)"),
+        supabase.from("tasks").select("id").lt("due_date", today).not("kanban_column", "in", "(concluido)"),
         supabase.from("meetings").select("*").eq("status", "agendada").gte("date", today).order("date").limit(5),
-        supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido,pausado)").not("due_date", "is", null).order("due_date").limit(5),
+        supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
       ]);
 

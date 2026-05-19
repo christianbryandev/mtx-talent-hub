@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import {
   Plus, Search, MessageSquare, CheckSquare, Calendar as CalendarIcon,
+  AlertTriangle, BookOpen, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,12 @@ import {
 import { TaskFormDialog } from "@/components/tarefas/TaskFormDialog";
 import { TaskDrawer } from "@/components/tarefas/TaskDrawer";
 import {
-  KANBAN_COLUMNS, PRIORITY_STYLE, type KanbanColumn, type Task,
+  KANBAN_COLUMNS, PRIORITY_STYLE, TASK_AREAS, TASK_AREA_LABELS, TASK_AREA_STYLE,
+  type KanbanColumn, type Task, type TaskArea,
 } from "@/types/tasks";
 import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { deleteTaskCascade } from "@/lib/cascade-delete";
 import { duplicateRow } from "@/lib/duplicate-row";
 import { logActivity } from "@/lib/activity-log";
@@ -46,6 +49,7 @@ interface TaskRow extends Task {
 
 function TarefasKanbanPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const { isAdmin, isComercial } = usePermissions();
   const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
@@ -57,7 +61,30 @@ function TarefasKanbanPage() {
   const [youngFilter, setYoungFilter] = useState("all");
   const [serviceFilter, setServiceFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [areaFilter, setAreaFilter] = useState("all");
+  const [onlyLate, setOnlyLate] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  // Descobre o young_id do usuário logado (para colaboradores)
+  const { data: currentYoung } = useQuery({
+    queryKey: ["my-young-id", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("young_people")
+        .select("id, full_name")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Quando colaborador (não admin/comercial) carrega: filtra pelas próprias tarefas
+  useEffect(() => {
+    if (!isAdmin && !isComercial && currentYoung?.id && youngFilter === "all") {
+      setYoungFilter(currentYoung.id);
+    }
+  }, [isAdmin, isComercial, currentYoung, youngFilter]);
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -73,8 +100,8 @@ function TarefasKanbanPage() {
       if (error) throw error;
 
       const ids = (data ?? []).map((t) => t.id);
-      let checklistMap: Record<string, { total: number; done: number }> = {};
-      let commentMap: Record<string, number> = {};
+      const checklistMap: Record<string, { total: number; done: number }> = {};
+      const commentMap: Record<string, number> = {};
       if (ids.length) {
         const [{ data: cls }, { data: cms }] = await Promise.all([
           supabase.from("task_checklists").select("task_id, completed").in("task_id", ids),
@@ -120,6 +147,8 @@ function TarefasKanbanPage() {
     },
   });
 
+  const today = new Date().toISOString().slice(0, 10);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tasks.filter((t) => {
@@ -128,9 +157,14 @@ function TarefasKanbanPage() {
       if (youngFilter !== "all" && t.young_responsible !== youngFilter) return false;
       if (serviceFilter !== "all" && t.service_id !== serviceFilter) return false;
       if (priorityFilter !== "all" && t.priority !== priorityFilter) return false;
+      if (areaFilter !== "all" && t.area !== areaFilter) return false;
+      if (onlyLate) {
+        if (!t.due_date || t.kanban_column === "concluido") return false;
+        if (t.due_date >= today) return false;
+      }
       return true;
     });
-  }, [tasks, search, clientFilter, youngFilter, serviceFilter, priorityFilter]);
+  }, [tasks, search, clientFilter, youngFilter, serviceFilter, priorityFilter, areaFilter, onlyLate, today]);
 
   const byColumn = useMemo(() => {
     const map: Record<KanbanColumn, TaskRow[]> = {} as never;
@@ -143,6 +177,11 @@ function TarefasKanbanPage() {
 
   const moveTask = useMutation({
     mutationFn: async ({ id, column }: { id: string; column: KanbanColumn }) => {
+      const task = tasks.find((t) => t.id === id);
+      // Regra: backlog → outra coluna exige responsável
+      if (task && task.kanban_column === "backlog" && column !== "backlog" && !task.young_responsible) {
+        throw new Error("Defina um responsável antes de mover esta tarefa");
+      }
       const patch: Record<string, unknown> = { kanban_column: column };
       if (column === "concluido") patch.completed_at = new Date().toISOString();
       const { error } = await supabase.from("tasks").update(patch as never).eq("id", id);
@@ -183,10 +222,20 @@ function TarefasKanbanPage() {
 
   const lateCount = tasks.filter((t) => {
     if (!t.due_date || t.kanban_column === "concluido") return false;
-    return t.due_date < new Date().toISOString().slice(0, 10);
+    return t.due_date < today;
   }).length;
 
   const draggingTask = draggingId ? tasks.find((t) => t.id === draggingId) : null;
+
+  const clearFilters = () => {
+    setSearch("");
+    setClientFilter("all");
+    setYoungFilter(!isAdmin && !isComercial && currentYoung?.id ? currentYoung.id : "all");
+    setServiceFilter("all");
+    setPriorityFilter("all");
+    setAreaFilter("all");
+    setOnlyLate(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -194,7 +243,7 @@ function TarefasKanbanPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Tarefas / Kanban</h1>
           <p className="text-sm text-muted-foreground">
-            Quadro operacional da equipe
+            Quadro operacional unificado (trabalho + formação)
             {lateCount > 0 && (
               <Badge variant="destructive" className="ml-2 text-[10px]">
                 {lateCount} atrasada{lateCount > 1 ? "s" : ""}
@@ -207,7 +256,7 @@ function TarefasKanbanPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -215,18 +264,20 @@ function TarefasKanbanPage() {
             placeholder="Buscar tarefa..." className="pl-8"
           />
         </div>
+        {(isAdmin || isComercial) && (
+          <Select value={youngFilter} onValueChange={setYoungFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Responsável" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos responsáveis</SelectItem>
+              {youngs.map((y) => (<SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>))}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={clientFilter} onValueChange={setClientFilter}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos clientes</SelectItem>
             {clients.map((c) => (<SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>))}
-          </SelectContent>
-        </Select>
-        <Select value={youngFilter} onValueChange={setYoungFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Jovem" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos jovens</SelectItem>
-            {youngs.map((y) => (<SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>))}
           </SelectContent>
         </Select>
         <Select value={serviceFilter} onValueChange={setServiceFilter}>
@@ -236,8 +287,15 @@ function TarefasKanbanPage() {
             {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
           </SelectContent>
         </Select>
+        <Select value={areaFilter} onValueChange={setAreaFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Área" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas áreas</SelectItem>
+            {TASK_AREAS.map((a) => (<SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>))}
+          </SelectContent>
+        </Select>
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Prioridade" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="urgente">Urgente</SelectItem>
@@ -246,11 +304,21 @@ function TarefasKanbanPage() {
             <SelectItem value="baixa">Baixa</SelectItem>
           </SelectContent>
         </Select>
+        <Button
+          variant={onlyLate ? "destructive" : "outline"}
+          size="sm"
+          onClick={() => setOnlyLate((v) => !v)}
+        >
+          <AlertTriangle className="h-3.5 w-3.5 mr-1" /> Só atrasadas
+        </Button>
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          Limpar
+        </Button>
       </div>
 
       {isLoading ? (
         <div className="flex gap-3 overflow-x-auto">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-[400px] w-[280px] shrink-0" />
           ))}
         </div>
@@ -282,8 +350,7 @@ function TarefasKanbanPage() {
                               ? async () => {
                                   try {
                                     const copy = await duplicateRow<{ id: string }>(
-                                      "tasks",
-                                      t.id,
+                                      "tasks", t.id,
                                       {
                                         labelField: "title",
                                         excludeFields: ["completed_at", "position"],
@@ -376,6 +443,8 @@ function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
   const today = new Date().toISOString().slice(0, 10);
   const isLate = task.due_date && task.due_date < today && task.kanban_column !== "concluido";
+  const isToday = task.due_date && task.due_date === today && task.kanban_column !== "concluido";
+  const isFormation = task.area === "formacao";
 
   return (
     <div
@@ -383,7 +452,7 @@ function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick
       onClick={(e) => { if (isDragging) return; e.stopPropagation(); onClick?.(); }}
       className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md relative ${
         isDragging || dragging ? "opacity-50" : ""
-      } ${isLate ? "border-destructive/60" : ""}`}
+      } ${isLate ? "border-destructive/60" : ""} ${isFormation ? "border-l-4 border-l-purple-500" : ""}`}
     >
       {actions && (
         <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
@@ -397,11 +466,25 @@ function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick
         </Badge>
       </div>
       <div className="flex flex-wrap gap-1 mb-2">
+        {task.area && (
+          <Badge variant="outline" className={`text-[9px] ${TASK_AREA_STYLE[task.area as TaskArea]}`}>
+            {task.area === "formacao" && <BookOpen className="h-2.5 w-2.5 mr-0.5" />}
+            {TASK_AREA_LABELS[task.area as TaskArea]}
+          </Badge>
+        )}
         {task.clients?.company_name && (
-          <Badge variant="secondary" className="text-[9px]">{task.clients.company_name}</Badge>
+          <Badge variant="secondary" className="text-[9px]">🏷️ {task.clients.company_name}</Badge>
         )}
         {task.services?.name && (
-          <Badge variant="outline" className="text-[9px]">{task.services.name}</Badge>
+          <Badge variant="outline" className="text-[9px]">🏷️ {task.services.name}</Badge>
+        )}
+        {task.auto_generated && (
+          <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 dark:text-blue-300">
+            <RefreshCw className="h-2.5 w-2.5 mr-0.5" /> Auto
+          </Badge>
+        )}
+        {isLate && (
+          <Badge variant="destructive" className="text-[9px]">⚠️ Atrasada</Badge>
         )}
       </div>
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -427,7 +510,11 @@ function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick
           )}
         </div>
         {task.due_date && (
-          <span className={`flex items-center gap-0.5 ${isLate ? "text-destructive font-medium" : ""}`}>
+          <span
+            className={`flex items-center gap-0.5 ${
+              isLate ? "text-destructive font-medium" : isToday ? "text-amber-600 font-medium" : ""
+            }`}
+          >
             <CalendarIcon className="h-3 w-3" />
             {new Date(task.due_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
           </span>

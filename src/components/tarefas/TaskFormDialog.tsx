@@ -23,7 +23,8 @@ import {
 } from "@/components/shared/RelationalSelects";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import {
-  KANBAN_COLUMNS, PRIORITY_LABELS, type KanbanColumn, type TaskPriority,
+  KANBAN_COLUMNS, PRIORITY_LABELS, TASK_AREAS,
+  type KanbanColumn, type TaskPriority,
 } from "@/types/tasks";
 
 const schema = z.object({
@@ -34,8 +35,10 @@ const schema = z.object({
   opportunity_id: z.string().optional().or(z.literal("")),
   young_responsible: z.string().optional().or(z.literal("")),
   supervisor_id: z.string().optional().or(z.literal("")),
+  area: z.string().optional().or(z.literal("")),
   priority: z.string(),
   kanban_column: z.string(),
+  start_date: z.string().optional().or(z.literal("")),
   due_date: z.string().optional().or(z.literal("")),
   estimated_hours: z.string().optional().or(z.literal("")),
   checklist_text: z.string().optional().or(z.literal("")),

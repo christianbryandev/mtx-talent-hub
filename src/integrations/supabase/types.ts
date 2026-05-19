@@ -529,6 +529,36 @@ export type Database = {
           },
         ]
       }
+      meeting_action_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          meeting_id: string
+          position: number
+          responsible_id: string | null
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          meeting_id: string
+          position?: number
+          responsible_id?: string | null
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          meeting_id?: string
+          position?: number
+          responsible_id?: string | null
+          task_id?: string | null
+        }
+        Relationships: []
+      }
       meeting_agenda_items: {
         Row: {
           completed: boolean
@@ -649,6 +679,8 @@ export type Database = {
           end_time: string | null
           id: string
           is_recurring: boolean | null
+          link_client_id: string | null
+          link_opportunity_id: string | null
           location: string | null
           next_steps: string | null
           objectives: string | null
@@ -669,6 +701,8 @@ export type Database = {
           end_time?: string | null
           id?: string
           is_recurring?: boolean | null
+          link_client_id?: string | null
+          link_opportunity_id?: string | null
           location?: string | null
           next_steps?: string | null
           objectives?: string | null
@@ -689,6 +723,8 @@ export type Database = {
           end_time?: string | null
           id?: string
           is_recurring?: boolean | null
+          link_client_id?: string | null
+          link_opportunity_id?: string | null
           location?: string | null
           next_steps?: string | null
           objectives?: string | null
@@ -1338,6 +1374,8 @@ export type Database = {
       }
       tasks: {
         Row: {
+          area: string | null
+          auto_generated: boolean
           awaiting_approval: boolean
           client_id: string | null
           completed_at: string | null
@@ -1346,12 +1384,14 @@ export type Database = {
           description: string | null
           due_date: string | null
           estimated_hours: number | null
+          hours_realized: number | null
           id: string
           kanban_column: string
           opportunity_id: string | null
           position: number
           priority: string
           service_id: string | null
+          start_date: string | null
           status: string
           supervisor_id: string | null
           title: string
@@ -1359,6 +1399,8 @@ export type Database = {
           young_responsible: string | null
         }
         Insert: {
+          area?: string | null
+          auto_generated?: boolean
           awaiting_approval?: boolean
           client_id?: string | null
           completed_at?: string | null
@@ -1367,12 +1409,14 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           estimated_hours?: number | null
+          hours_realized?: number | null
           id?: string
           kanban_column?: string
           opportunity_id?: string | null
           position?: number
           priority?: string
           service_id?: string | null
+          start_date?: string | null
           status?: string
           supervisor_id?: string | null
           title: string
@@ -1380,6 +1424,8 @@ export type Database = {
           young_responsible?: string | null
         }
         Update: {
+          area?: string | null
+          auto_generated?: boolean
           awaiting_approval?: boolean
           client_id?: string | null
           completed_at?: string | null
@@ -1388,12 +1434,14 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           estimated_hours?: number | null
+          hours_realized?: number | null
           id?: string
           kanban_column?: string
           opportunity_id?: string | null
           position?: number
           priority?: string
           service_id?: string | null
+          start_date?: string | null
           status?: string
           supervisor_id?: string | null
           title?: string
