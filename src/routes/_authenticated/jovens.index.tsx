@@ -168,15 +168,37 @@ function JovensListPage() {
         </div>
       </div>
 
-      {/* Contador por status */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {YOUNG_STATUS_LIST.slice(0, 5).map((s) => (
-          <Card key={s} className="p-3">
-            <div className="text-xs text-muted-foreground">{YOUNG_STATUS_LABELS[s]}</div>
-            <div className="mt-1 text-2xl font-bold">{statusCounts[s] ?? 0}</div>
-          </Card>
-        ))}
-      </div>
+      {/* Funil visual */}
+      <Card className="p-4">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Funil de progresso
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(["inscrito", "em_analise", "aprovado", "em_formacao", "em_pratica"] as YoungStatus[]).map((s, i, arr) => {
+            const active = statusFilter === s;
+            return (
+              <button
+                key={s}
+                onClick={() => {
+                  setStatusFilter(active ? "all" : s);
+                  setPage(0);
+                }}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-card/40 hover:border-primary/40"
+                }`}
+              >
+                <span className="font-semibold">{YOUNG_STATUS_LABELS[s]}</span>
+                <span className="rounded-full bg-background/60 px-2 text-xs font-bold">
+                  {statusCounts[s] ?? 0}
+                </span>
+                {i < arr.length - 1 && <span className="text-muted-foreground/50">→</span>}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Filtros */}
       <Card className="p-4">
@@ -267,8 +289,18 @@ function JovensListPage() {
                   </TableCell>
                   <TableCell>{y.age ?? "—"}</TableCell>
                   <TableCell>{y.city ?? "—"}</TableCell>
-                  <TableCell><PhaseBadge phase={y.trail_phase} /></TableCell>
-                  <TableCell><StatusBadge status={y.status as YoungStatus} /></TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <PhaseBadge phase={y.trail_phase} />
+                      <ProgressMini youngId={y.id} phase={y.trail_phase} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <StatusBadge status={y.status as YoungStatus} />
+                      <StuckBadge lastProgressAt={y.last_progress_at} />
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {y.mentor_id ? mentorsMap[y.mentor_id] ?? "—" : "—"}
                   </TableCell>
@@ -351,3 +383,51 @@ function JovensListPage() {
     </div>
   );
 }
+
+function StuckBadge({ lastProgressAt }: { lastProgressAt: string | null | undefined }) {
+  if (!lastProgressAt) return null;
+  const days = Math.floor((Date.now() - new Date(lastProgressAt).getTime()) / 86_400_000);
+  if (days >= 14)
+    return (
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+        🔴 Inativo ({days}d)
+      </span>
+    );
+  if (days >= 7)
+    return (
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+        ⚠️ Travado ({days}d)
+      </span>
+    );
+  return null;
+}
+
+function ProgressMini({ youngId, phase }: { youngId: string; phase: string | null }) {
+  const { data } = useQuery({
+    queryKey: ["young-progress-mini", youngId, phase],
+    enabled: !!phase,
+    queryFn: async () => {
+      const [{ data: row }, { count: openCount }, { data: passed }] = await Promise.all([
+        supabase.from("journey_phases").select("checklist").eq("young_id", youngId).eq("phase", phase!).maybeSingle(),
+        supabase.from("tasks").select("id", { count: "exact", head: true })
+          .eq("young_responsible", youngId).not("status", "in", "(concluida,cancelada)"),
+        supabase.from("young_quiz_attempts").select("id").eq("young_id", youngId).eq("phase", phase!).eq("passed", true).limit(1),
+      ]);
+      const checklist = ((row?.checklist ?? []) as Array<{ done?: boolean }>);
+      const lessonsDone = checklist.length > 0 && checklist.every((c) => c.done);
+      const tasksDone = (openCount ?? 0) === 0;
+      const quizDone = (passed ?? []).length > 0;
+      return Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
+    },
+  });
+  const pct = data ?? 0;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-20 rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[10px] text-muted-foreground">{pct}%</span>
+    </div>
+  );
+}
+

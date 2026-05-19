@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
+import { PhaseEvolutionPanel } from "@/components/jornada/PhaseEvolutionPanel";
 import {
   YOUNG_STATUS_LIST,
   YOUNG_STATUS_LABELS,
@@ -143,8 +144,9 @@ function JovemDetailPage() {
         type: "phase_change",
         previous_value: prev,
         new_value: newPhase,
-        description: `Fase alterada${prev ? `: ${TRAIL_PHASE_LABELS[prev]} → ` : ": "}${TRAIL_PHASE_LABELS[newPhase]}`,
+        description: `Avanço manual forçado pelo Admin${prev ? ` (${TRAIL_PHASE_LABELS[prev]} → ` : " ("}${TRAIL_PHASE_LABELS[newPhase]}) em ${new Date().toLocaleString("pt-BR")}`,
       });
+      await supabase.from("young_people").update({ last_progress_at: new Date().toISOString() } as never).eq("id", id);
     },
     onSuccess: () => {
       toast.success("Fase atualizada");
@@ -238,9 +240,20 @@ function JovemDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setStatusModalOpen(true)}>
               <Pencil className="mr-1.5 h-3.5 w-3.5" /> Mudar status
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setPhaseModalOpen(true)}>
-              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Mudar fase
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+                onClick={() => {
+                  if (window.confirm("Atenção: você está forçando o avanço manual desta fase. Isso sobrescreve os critérios automáticos. Deseja continuar?")) {
+                    setPhaseModalOpen(true);
+                  }
+                }}
+              >
+                ⚠️ Forçar Avanço (Override)
+              </Button>
+            )}
             <Button size="sm" onClick={() => setNoteModalOpen(true)}>
               <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Observação
             </Button>
@@ -357,6 +370,8 @@ function JovemDetailPage() {
 
         {/* Trilha e Evolução */}
         <TabsContent value="trail" className="mt-4 space-y-4">
+          <PhaseEvolutionPanel young={y} canSubmit={y.profile_id === user?.id} />
+
           <Card className="p-5">
             <div className="text-sm font-semibold mb-3">Trilha de Formação</div>
             <div className="space-y-2">
