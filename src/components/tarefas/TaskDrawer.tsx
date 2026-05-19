@@ -37,6 +37,7 @@ interface Props {
 
 export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
   const qc = useQueryClient();
+  const { isSuperAdmin } = usePermissions();
   const [comment, setComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
