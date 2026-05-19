@@ -60,6 +60,8 @@ type ClientRow = {
 
 function ClientesListPage() {
   const { isAdmin, isComercial } = usePermissions();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
