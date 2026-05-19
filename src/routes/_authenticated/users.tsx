@@ -489,7 +489,7 @@ function UsersPage() {
                             <RefreshCw className="h-4 w-4" />
                           </Button>
                         )}
-                        {isPending && (
+                        {!inv.used && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -497,7 +497,7 @@ function UsersPage() {
                             onClick={() =>
                               setPendingRevoke({ id: inv.id, email: inv.email })
                             }
-                            title="Revogar"
+                            title="Excluir convite"
                           >
                             <X className="h-4 w-4" />
                           </Button>
