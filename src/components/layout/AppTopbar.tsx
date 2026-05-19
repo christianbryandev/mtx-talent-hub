@@ -21,13 +21,10 @@ const TITLES: Record<string, string> = {
 
 export function AppTopbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user } = useAuth();
 
   const title =
     Object.entries(TITLES).find(([k]) => pathname === k || pathname.startsWith(k + "/"))?.[1] ??
     "MTX Hub";
-
-  const initials = (user?.email ?? "?").split("@")[0].slice(0, 2).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/5 bg-background/60 px-4 backdrop-blur-xl lg:px-6">
@@ -45,11 +42,7 @@ export function AppTopbar() {
           />
         </div>
         <NotificationBell />
-        <Avatar className="h-8 w-8 border border-white/10">
-          <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <UserMenu />
       </div>
     </header>
   );
