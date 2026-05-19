@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { LogOut, UserCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
@@ -8,31 +7,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ROLE_LABELS } from "@/types";
 
 export function UserMenu() {
-  const { user, signOut } = useAuth();
+  const { user, profile, avatarUrl, signOut } = useAuth();
   const { role } = usePermissions();
-
-  const { data: profile } = useQuery({
-    queryKey: ["my-profile-avatar", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url, email")
-        .eq("id", user!.id)
-        .single();
-      return data;
-    },
-  });
 
   const displayName = profile?.full_name ?? user?.email ?? "Usuário";
   const initials = (displayName ?? "?")
