@@ -138,7 +138,6 @@ export function OnboardingProvider() {
       prevBtnText: "← Voltar",
       doneBtnText: "Começar a usar",
       showButtons: ["next", "previous", "close"],
-      closeBtnText: "Pular tour",
       progressText: "Passo {{current}} de {{total}}",
       steps: driverSteps,
       onNextClick: async () => {
