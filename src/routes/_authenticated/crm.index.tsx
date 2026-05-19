@@ -75,9 +75,18 @@ function CrmKanbanPage() {
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [temperatureFilter, setTemperatureFilter] = useState("all");
   const [nicheFilter, setNicheFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const clearFilters = () => {
+    setSearch("");
+    setResponsibleFilter("all");
+    setTemperatureFilter("all");
+    setNicheFilter("all");
+    setMonthFilter("all");
+  };
 
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ["opportunities"],
@@ -106,6 +115,12 @@ function CrmKanbanPage() {
     [opportunities],
   );
 
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    opportunities.forEach((o) => set.add(o.created_at.slice(0, 7)));
+    return Array.from(set).sort().reverse();
+  }, [opportunities]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return opportunities.filter((o) => {
@@ -113,11 +128,12 @@ function CrmKanbanPage() {
         return false;
       if (responsibleFilter !== "all" && o.commercial_responsible !== responsibleFilter)
         return false;
-      if (priorityFilter !== "all" && o.priority !== priorityFilter) return false;
+      if (temperatureFilter !== "all" && o.temperature !== temperatureFilter) return false;
       if (nicheFilter !== "all" && o.niche !== nicheFilter) return false;
+      if (monthFilter !== "all" && o.created_at.slice(0, 7) !== monthFilter) return false;
       return true;
     });
-  }, [opportunities, search, responsibleFilter, priorityFilter, nicheFilter]);
+  }, [opportunities, search, responsibleFilter, temperatureFilter, nicheFilter, monthFilter]);
 
   const open = filtered.filter((o) => o.status === "aberta");
 
@@ -132,15 +148,24 @@ function CrmKanbanPage() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const totalOpen = opportunities.filter((o) => o.status === "aberta").length;
-  const pipelineValue = opportunities
-    .filter((o) => o.status === "aberta")
-    .reduce((s, o) => s + Number(o.estimated_value ?? 0), 0);
   const closedThisMonth = opportunities.filter(
     (o) => o.status !== "aberta" && (o.updated_at ?? "") >= startOfMonth,
   );
-  const wonThisMonth = closedThisMonth.filter((o) => o.status === "ganha").length;
+  const wonOppsMonth = closedThisMonth.filter((o) => o.status === "ganha");
+  const wonThisMonth = wonOppsMonth.length;
   const conversion = closedThisMonth.length
     ? Math.round((wonThisMonth / closedThisMonth.length) * 100)
+    : 0;
+  const avgTicket = wonOppsMonth.length
+    ? wonOppsMonth.reduce((s, o) => s + Number(o.proposal_value ?? o.estimated_value ?? 0), 0) /
+      wonOppsMonth.length
+    : 0;
+  const avgClosingDays = wonOppsMonth.length
+    ? wonOppsMonth.reduce((s, o) => {
+        const start = new Date(o.created_at).getTime();
+        const end = new Date(o.updated_at).getTime();
+        return s + Math.max(0, (end - start) / (1000 * 60 * 60 * 24));
+      }, 0) / wonOppsMonth.length
     : 0;
   const todayIso = now.toISOString().slice(0, 10);
   const lateFollowups = opportunities.filter(
