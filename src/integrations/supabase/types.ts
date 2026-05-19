@@ -195,9 +195,11 @@ export type Database = {
           client_id: string
           created_at: string
           end_date: string | null
+          executor_id: string | null
           id: string
           monthly_value: number | null
           notes: string | null
+          recurrence_paused: boolean
           service_id: string | null
           service_name: string | null
           start_date: string | null
@@ -207,9 +209,11 @@ export type Database = {
           client_id: string
           created_at?: string
           end_date?: string | null
+          executor_id?: string | null
           id?: string
           monthly_value?: number | null
           notes?: string | null
+          recurrence_paused?: boolean
           service_id?: string | null
           service_name?: string | null
           start_date?: string | null
@@ -219,9 +223,11 @@ export type Database = {
           client_id?: string
           created_at?: string
           end_date?: string | null
+          executor_id?: string | null
           id?: string
           monthly_value?: number | null
           notes?: string | null
+          recurrence_paused?: boolean
           service_id?: string | null
           service_name?: string | null
           start_date?: string | null
@@ -1027,6 +1033,79 @@ export type Database = {
           },
         ]
       }
+      service_onboarding_checklist: {
+        Row: {
+          created_at: string
+          id: string
+          item: string
+          position: number
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item: string
+          position?: number
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item?: string
+          position?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_onboarding_checklist_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_task_templates: {
+        Row: {
+          created_at: string
+          default_deadline_days: number | null
+          id: string
+          name: string
+          position: number
+          responsible_area: string | null
+          service_id: string
+          task_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_deadline_days?: number | null
+          id?: string
+          name: string
+          position?: number
+          responsible_area?: string | null
+          service_id: string
+          task_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_deadline_days?: number | null
+          id?: string
+          name?: string
+          position?: number
+          responsible_area?: string | null
+          service_id?: string
+          task_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_task_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_young_people: {
         Row: {
           created_at: string
@@ -1070,13 +1149,21 @@ export type Database = {
           billing_model: string | null
           category: string | null
           created_at: string
+          default_executor_id: string | null
           default_value: number | null
           deliverables: string | null
           description: string | null
+          executor_profile: string | null
+          frequency: string | null
           id: string
           is_active: boolean
           name: string
+          pct_commercial: number | null
+          pct_executor: number | null
+          pct_mtx: number | null
+          responsible_area: string | null
           scope: string | null
+          service_type: string | null
           status: string | null
           updated_at: string
         }
@@ -1086,13 +1173,21 @@ export type Database = {
           billing_model?: string | null
           category?: string | null
           created_at?: string
+          default_executor_id?: string | null
           default_value?: number | null
           deliverables?: string | null
           description?: string | null
+          executor_profile?: string | null
+          frequency?: string | null
           id?: string
           is_active?: boolean
           name: string
+          pct_commercial?: number | null
+          pct_executor?: number | null
+          pct_mtx?: number | null
+          responsible_area?: string | null
           scope?: string | null
+          service_type?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -1102,13 +1197,21 @@ export type Database = {
           billing_model?: string | null
           category?: string | null
           created_at?: string
+          default_executor_id?: string | null
           default_value?: number | null
           deliverables?: string | null
           description?: string | null
+          executor_profile?: string | null
+          frequency?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          pct_commercial?: number | null
+          pct_executor?: number | null
+          pct_mtx?: number | null
+          responsible_area?: string | null
           scope?: string | null
+          service_type?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -1768,6 +1871,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_client_service: {
+        Args: { _client_service_id: string }
+        Returns: Json
+      }
       daily_notifications_job: { Args: never; Returns: undefined }
       get_invite_by_token: {
         Args: { _token: string }
