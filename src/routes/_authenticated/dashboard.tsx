@@ -37,6 +37,8 @@ import {
   type Meeting,
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
+import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
+import { ColaboradorDashboard } from "@/components/dashboard/ColaboradorDashboard";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -45,6 +47,16 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function DashboardPage() {
+  const { isAdmin, isComercial, hasRole, loading } = usePermissions();
+
+  if (loading) return null;
+  if (!isAdmin && isComercial) return <ComercialDashboard />;
+  if (!isAdmin && hasRole("colaborador")) return <ColaboradorDashboard />;
+
+  return <AdminDashboardContent />;
+}
+
+function AdminDashboardContent() {
   const { isAdmin } = usePermissions();
 
   const { data: stats, isLoading } = useQuery({
