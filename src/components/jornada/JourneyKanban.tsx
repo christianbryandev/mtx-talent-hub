@@ -554,6 +554,22 @@ function CardDrawer({
             </Select>
           </div>
 
+          {canReassign && (
+            <div>
+              <Label>Atribuir a outro jovem</Label>
+              <YoungSearchSelect
+                value={assignedYoungId}
+                onChange={setAssignedYoungId}
+                placeholder="Selecionar jovem responsável"
+              />
+              {assignedYoungId && assignedYoungId !== card.young_id && (
+                <p className="text-[11px] text-amber-500 mt-1">
+                  Ao salvar, este card será movido para outro jovem.
+                </p>
+              )}
+            </div>
+          )}
+
           <div>
             <Label className="mb-2 block">Checklist</Label>
             <div className="space-y-1.5">
