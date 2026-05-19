@@ -473,6 +473,11 @@ function ListView({
                       {MEETING_STATUS_LABELS[m.status]}
                     </Badge>
                   </TableCell>
+                  {renderActions && (
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {renderActions(m)}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
