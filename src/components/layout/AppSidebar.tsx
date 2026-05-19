@@ -119,7 +119,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => {
+              {mainItems
+                .filter((item) => !role || item.roles.includes(role))
+                .map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
                 return (
                   <SidebarMenuItem key={item.url}>
