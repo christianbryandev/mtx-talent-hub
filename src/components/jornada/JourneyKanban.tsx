@@ -61,6 +61,7 @@ import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 import { logActivity } from "@/lib/activity-log";
 import { cn } from "@/lib/utils";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSelect";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type CardStatus = "pendente" | "em_andamento" | "concluida";
