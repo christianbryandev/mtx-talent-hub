@@ -11,6 +11,7 @@ import {
   BarChart3,
   Shield,
   Settings as SettingsIcon,
+  Route as RouteIcon,
   LogOut,
   UserCircle,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const mainItems: MainItem[] = [
   { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial"] },
   { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin"] },
   { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "colaborador"] },
+  { title: "Minha Jornada", url: "/minha-jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "colaborador"] },
   { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
 ];
