@@ -432,11 +432,13 @@ function CardPreview({ card }: { card: JourneyCard }) {
 function CardDrawer({
   card,
   canEdit,
+  canReassign,
   onClose,
   onUpdated,
 }: {
   card: JourneyCard;
   canEdit: boolean;
+  canReassign: boolean;
   onClose: () => void;
   onUpdated: () => void;
 }) {
@@ -445,24 +447,30 @@ function CardDrawer({
   const [status, setStatus] = useState<CardStatus>(card.status);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist);
   const [links, setLinks] = useState<TrainingLink[]>(card.training_links);
+  const [assignedYoungId, setAssignedYoungId] = useState<string | null>(card.young_id);
   const [newItem, setNewItem] = useState("");
   const [newLinkLabel, setNewLinkLabel] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const save = async () => {
     setSaving(true);
     try {
+      const payload: Record<string, unknown> = {
+        title,
+        description: description || null,
+        status,
+        checklist,
+        training_links: links,
+      };
+      if (canReassign && assignedYoungId && assignedYoungId !== card.young_id) {
+        payload.young_id = assignedYoungId;
+      }
       const { error } = await supabase
         .from("journey_phases")
-        .update({
-          title,
-          description: description || null,
-          status,
-          checklist,
-          training_links: links,
-        } as never)
+        .update(payload as never)
         .eq("id", card.id);
       if (error) throw error;
       await logActivity({
