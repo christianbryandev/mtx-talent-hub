@@ -535,6 +535,35 @@ function OpportunityDetailPage() {
   );
 }
 
+function ContactRow({ icon, value, label }: { icon: React.ReactNode; value: string; label?: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      {icon}
+      <span className="flex-1">{label ? `${label}: ` : ""}{value}</span>
+      <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+        onClick={() => { navigator.clipboard.writeText(value); toast.success("Copiado"); }}>
+        <Copy className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
+function ToggleField({ label, value, onChange, disabled }: {
+  label: string; value: boolean | null; onChange: (v: boolean) => void; disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex gap-1">
+        <Button size="sm" variant={value === true ? "default" : "outline"} className="h-7 px-2 text-xs"
+          disabled={disabled} onClick={() => onChange(true)}>Sim</Button>
+        <Button size="sm" variant={value === false ? "default" : "outline"} className="h-7 px-2 text-xs"
+          disabled={disabled} onClick={() => onChange(false)}>Não</Button>
+      </div>
+    </div>
+  );
+}
+
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
