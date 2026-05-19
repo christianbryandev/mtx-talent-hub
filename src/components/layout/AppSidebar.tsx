@@ -11,6 +11,7 @@ import {
   BarChart3,
   Shield,
   Settings as SettingsIcon,
+  Route as RouteIcon,
   LogOut,
   UserCircle,
 } from "lucide-react";
