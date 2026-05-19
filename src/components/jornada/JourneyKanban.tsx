@@ -783,7 +783,13 @@ function NewCardDialog({
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<CardStatus>("pendente");
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [links, setLinks] = useState<TrainingLink[]>([]);
   const [assignedIds, setAssignedIds] = useState<string[]>([youngId]);
+  const [newItem, setNewItem] = useState("");
+  const [newLinkLabel, setNewLinkLabel] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handle = async () => {
@@ -800,16 +806,15 @@ function NewCardDialog({
           position: nextPosition,
           title: title.trim(),
           description: description || null,
-          status: "pendente",
-          checklist: [],
-          training_links: [],
+          status,
+          checklist,
+          training_links: links,
         } as never)
         .select("id")
         .single();
       if (error) throw error;
       const phaseId = data.id as string;
 
-      // Insere todos os jovens selecionados como assignees (inclusive o primário)
       if (ids.length > 0) {
         const rows = ids.map((yid) => ({ phase_id: phaseId, young_id: yid }));
         const { error: aErr } = await supabase
@@ -839,12 +844,12 @@ function NewCardDialog({
   };
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo card · {TRAIL_PHASE_LABELS[phase]}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
+    <Sheet open onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Novo card · {TRAIL_PHASE_LABELS[phase]}</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-4 mt-4">
           <div>
             <Label>Título *</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
@@ -853,6 +858,18 @@ function NewCardDialog({
             <Label>Descrição</Label>
             <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as CardStatus)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(STATUS_META) as CardStatus[]).map((s) => (
+                  <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {canReassign && (
             <div>
               <Label>Jovens atribuídos</Label>
@@ -866,16 +883,131 @@ function NewCardDialog({
               </p>
             </div>
           )}
+
+          <div>
+            <Label className="mb-2 block">Checklist</Label>
+            <div className="space-y-1.5">
+              {checklist.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = [...checklist];
+                      next[idx] = { ...item, done: !item.done };
+                      setChecklist(next);
+                    }}
+                    className="text-muted-foreground"
+                  >
+                    {item.done ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
+                  </button>
+                  <span className={cn("text-sm flex-1", item.done && "line-through text-muted-foreground")}>
+                    {item.text}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Input
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  placeholder="Novo item"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newItem.trim()) {
+                      e.preventDefault();
+                      setChecklist([...checklist, { text: newItem.trim(), done: false }]);
+                      setNewItem("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!newItem.trim()) return;
+                    setChecklist([...checklist, { text: newItem.trim(), done: false }]);
+                    setNewItem("");
+                  }}
+                >
+                  Adicionar
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Links de treinamento</Label>
+            <div className="space-y-1.5">
+              {links.map((l, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
+                  >
+                    <ExternalLink className="h-3 w-3" /> {l.label}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setLinks(links.filter((_, i) => i !== idx))}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={newLinkLabel}
+                  onChange={(e) => setNewLinkLabel(e.target.value)}
+                  placeholder="Título"
+                />
+                <div className="flex gap-1">
+                  <Input
+                    value={newLinkUrl}
+                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                    placeholder="https://..."
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (!newLinkLabel.trim() || !newLinkUrl.trim()) return;
+                      setLinks([...links, { label: newLinkLabel.trim(), url: newLinkUrl.trim() }]);
+                      setNewLinkLabel("");
+                      setNewLinkUrl("");
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-4 border-t">
+            <div className="flex-1" />
+            <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
+            <Button size="sm" onClick={handle} disabled={submitting || !title.trim()}>
+              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Criar
+            </Button>
+          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handle} disabled={submitting || !title.trim()}>
-            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-            Criar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
