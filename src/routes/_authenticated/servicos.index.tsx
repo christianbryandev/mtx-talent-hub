@@ -48,6 +48,20 @@ function ServicosListPage() {
     },
   });
 
+  const { data: usageCounts = {} } = useQuery({
+    queryKey: ["services-usage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("client_services").select("service_id").not("service_id", "is", null);
+      const map: Record<string, number> = {};
+      for (const row of (data ?? []) as Array<{ service_id: string }>) {
+        map[row.service_id] = (map[row.service_id] ?? 0) + 1;
+      }
+      return map;
+    },
+  });
+
+
   const categories = useMemo(
     () => Array.from(new Set(services.map((s) => s.category).filter(Boolean))) as string[],
     [services],
