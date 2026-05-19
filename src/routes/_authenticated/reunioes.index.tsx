@@ -365,6 +365,7 @@ function ListView({
   setTypeFilter,
   statusFilter,
   setStatusFilter,
+  renderActions,
 }: {
   meetings: Meeting[];
   isLoading: boolean;
@@ -372,6 +373,7 @@ function ListView({
   setTypeFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
+  renderActions?: (m: Meeting) => React.ReactNode;
 }) {
   return (
     <Card className="border-border/60 bg-card/70">
