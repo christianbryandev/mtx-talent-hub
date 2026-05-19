@@ -319,14 +319,15 @@ function OpportunityDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {opp.email && (
-              <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {opp.email}</p>
+              <ContactRow icon={<Mail className="h-4 w-4 text-muted-foreground" />} value={opp.email} />
             )}
             {opp.phone && (
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {opp.phone}</p>
+              <ContactRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} value={opp.phone} />
             )}
             {opp.whatsapp && (
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> WhatsApp: {opp.whatsapp}</p>
+              <ContactRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} value={opp.whatsapp} label="WhatsApp" />
             )}
+            {opp.city && <Field label="Cidade" value={opp.city} />}
             <div>
               <Label className="text-xs">Último contato</Label>
               <Input
