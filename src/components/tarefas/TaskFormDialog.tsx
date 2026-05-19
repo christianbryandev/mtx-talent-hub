@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import {
@@ -16,6 +16,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ClientSearchSelect,
+  ServiceSearchSelect,
+  ProfileSearchSelect,
+} from "@/components/shared/RelationalSelects";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import {
   KANBAN_COLUMNS, PRIORITY_LABELS, type KanbanColumn, type TaskPriority,
 } from "@/types/tasks";
