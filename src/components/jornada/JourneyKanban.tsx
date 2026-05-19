@@ -730,26 +730,29 @@ function CardDrawer({
 
 /* -------------------- New Card Dialog -------------------- */
 function NewCardDialog({
-  youngId, phase, nextPosition, onClose, onCreated,
+  youngId, phase, nextPosition, canReassign = false, onClose, onCreated,
 }: {
   youngId: string;
   phase: TrailPhase;
   nextPosition: number;
+  canReassign?: boolean;
   onClose: () => void;
   onCreated: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [assignedYoungId, setAssignedYoungId] = useState<string | null>(youngId);
   const [submitting, setSubmitting] = useState(false);
 
   const handle = async () => {
     if (!title.trim()) return;
     setSubmitting(true);
     try {
+      const targetYoungId = canReassign && assignedYoungId ? assignedYoungId : youngId;
       const { data, error } = await supabase
         .from("journey_phases")
         .insert({
-          young_id: youngId,
+          young_id: targetYoungId,
           phase,
           position: nextPosition,
           title: title.trim(),
@@ -767,7 +770,11 @@ function NewCardDialog({
         entity_id: data.id as string,
         description: `Card "${title}" criado em ${TRAIL_PHASE_LABELS[phase]}`,
       });
-      toast.success("Card criado");
+      toast.success(
+        targetYoungId !== youngId
+          ? "Card criado e atribuído ao jovem selecionado"
+          : "Card criado",
+      );
       onCreated();
       onClose();
     } catch (e) {
@@ -792,6 +799,19 @@ function NewCardDialog({
             <Label>Descrição</Label>
             <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
+          {canReassign && (
+            <div>
+              <Label>Jovem atribuído</Label>
+              <YoungSearchSelect
+                value={assignedYoungId}
+                onChange={setAssignedYoungId}
+                placeholder="Selecionar jovem"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Apenas o jovem selecionado verá este card em "Minha Jornada".
+              </p>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
