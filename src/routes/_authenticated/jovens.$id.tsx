@@ -272,6 +272,9 @@ function JovemDetailPage() {
           <TabsTrigger value="personal">Dados Pessoais</TabsTrigger>
           <TabsTrigger value="profile">Perfil e História</TabsTrigger>
           <TabsTrigger value="trail">Trilha e Evolução</TabsTrigger>
+          <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+          <TabsTrigger value="meetings">Reuniões</TabsTrigger>
+          <TabsTrigger value="financial">Financeiro</TabsTrigger>
           <TabsTrigger value="professional">Dados Profissionais</TabsTrigger>
           <TabsTrigger value="notes">Observações</TabsTrigger>
         </TabsList>
