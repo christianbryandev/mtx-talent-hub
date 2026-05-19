@@ -21,6 +21,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { logActivity } from "@/lib/activity-log";
 import {
+  ClientSearchSelect,
+  ServiceSearchSelect,
+} from "@/components/shared/RelationalSelects";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
