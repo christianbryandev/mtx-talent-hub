@@ -120,7 +120,7 @@ export function JourneyKanban({ youngId, canEdit, title }: Props) {
         ...d,
         checklist: Array.isArray(d.checklist) ? d.checklist : [],
         training_links: Array.isArray(d.training_links) ? d.training_links : [],
-      })) as JourneyCard[];
+      })) as unknown as JourneyCard[];
     },
   });
 
