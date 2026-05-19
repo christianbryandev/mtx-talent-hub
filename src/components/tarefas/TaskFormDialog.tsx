@@ -83,8 +83,10 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
         opportunity_id: v.opportunity_id || null,
         young_responsible: v.young_responsible || null,
         supervisor_id: v.supervisor_id || null,
+        area: v.area || null,
         priority: v.priority,
         kanban_column: v.kanban_column,
+        start_date: v.start_date || null,
         due_date: v.due_date || null,
         estimated_hours: v.estimated_hours ? Number(v.estimated_hours) : null,
         created_by: userId ?? null,
@@ -190,6 +192,21 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Área</Label>
+              <Select value={form.watch("area") || ""} onValueChange={(v) => form.setValue("area", v)}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {TASK_AREAS.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Data de início</Label>
+              <Input type="date" {...form.register("start_date")} />
             </div>
             <div>
               <Label>Data de prazo</Label>

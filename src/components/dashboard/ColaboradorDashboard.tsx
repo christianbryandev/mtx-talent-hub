@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
 export function ColaboradorDashboard() {
@@ -139,6 +140,8 @@ export function ColaboradorDashboard() {
           Aqui está o resumo da sua jornada na MTX.
         </p>
       </div>
+
+      <TodayMeetingBanner />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard icon={<CheckSquare className="h-5 w-5" />} label="Tarefas abertas" value={data.openCount.toString()} />

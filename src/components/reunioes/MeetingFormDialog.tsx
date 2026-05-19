@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2, ListPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -391,6 +391,9 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
             />
           </div>
 
+          {isEdit && meeting && <ActionItemsSection meetingId={meeting.id} />}
+
+
           <DialogFooter>
             <Button
               type="button"
@@ -408,5 +411,139 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface ActionItem {
+  id: string;
+  description: string;
+  responsible_id: string | null;
+  task_id: string | null;
+  position: number;
+}
+
+function ActionItemsSection({ meetingId }: { meetingId: string }) {
+  const qc = useQueryClient();
+  const [newDesc, setNewDesc] = useState("");
+
+  const { data: items = [] } = useQuery({
+    queryKey: ["meeting-action-items", meetingId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("meeting_action_items")
+        .select("*")
+        .eq("meeting_id", meetingId)
+        .order("position");
+      if (error) throw error;
+      return (data ?? []) as ActionItem[];
+    },
+  });
+
+  const addItem = useMutation({
+    mutationFn: async (description: string) => {
+      const { error } = await supabase
+        .from("meeting_action_items")
+        .insert({ meeting_id: meetingId, description, position: items.length } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setNewDesc("");
+      qc.invalidateQueries({ queryKey: ["meeting-action-items", meetingId] });
+    },
+  });
+
+  const removeItem = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("meeting_action_items").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["meeting-action-items", meetingId] }),
+  });
+
+  const convertToTask = useMutation({
+    mutationFn: async (item: ActionItem) => {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const { data: task, error } = await supabase
+        .from("tasks")
+        .insert({
+          title: item.description,
+          description: `Gerado a partir de reunião`,
+          status: "aberta",
+          kanban_column: "a_fazer",
+          priority: "media",
+          supervisor_id: item.responsible_id,
+          created_by: userId ?? null,
+        } as never)
+        .select("id")
+        .single();
+      if (error) throw error;
+      await supabase
+        .from("meeting_action_items")
+        .update({ task_id: (task as { id: string }).id } as never)
+        .eq("id", item.id);
+    },
+    onSuccess: () => {
+      toast.success("Tarefa criada a partir do próximo passo");
+      qc.invalidateQueries({ queryKey: ["meeting-action-items", meetingId] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-2 rounded-lg border border-border/60 bg-card/40 p-3">
+      <Label>Próximos passos / decisões</Label>
+      <div className="flex gap-2">
+        <Input
+          value={newDesc}
+          onChange={(e) => setNewDesc(e.target.value)}
+          placeholder="Descreva o próximo passo"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (newDesc.trim()) addItem.mutate(newDesc.trim());
+            }
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => newDesc.trim() && addItem.mutate(newDesc.trim())}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+      <ul className="space-y-1">
+        {items.map((it) => (
+          <li key={it.id} className="flex items-center gap-2 rounded border border-border/40 bg-background/40 p-2 text-sm">
+            <span className="flex-1">{it.description}</span>
+            {it.task_id ? (
+              <span className="text-xs text-muted-foreground">✓ Tarefa criada</span>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => convertToTask.mutate(it)}
+                disabled={convertToTask.isPending}
+              >
+                <ListPlus className="h-3 w-3 mr-1" /> Virar tarefa
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => removeItem.mutate(it.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="text-xs text-muted-foreground">Nenhum próximo passo registrado ainda.</li>
+        )}
+      </ul>
+    </div>
   );
 }

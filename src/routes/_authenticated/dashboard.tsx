@@ -39,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
 import { ColaboradorDashboard } from "@/components/dashboard/ColaboradorDashboard";
+import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -165,6 +166,8 @@ function AdminDashboardContent() {
           <p className="mt-1 text-sm text-muted-foreground">Resumo executivo da operação MTX</p>
         </div>
       </div>
+
+      <TodayMeetingBanner />
 
       {/* KPIs principais */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
