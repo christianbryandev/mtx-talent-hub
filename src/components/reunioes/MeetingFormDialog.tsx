@@ -391,6 +391,9 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
             />
           </div>
 
+          {isEdit && meeting && <ActionItemsSection meetingId={meeting.id} />}
+
+
           <DialogFooter>
             <Button
               type="button"
