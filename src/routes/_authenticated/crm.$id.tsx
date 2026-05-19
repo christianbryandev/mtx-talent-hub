@@ -221,7 +221,7 @@ function OpportunityDetailPage() {
           <p className="text-sm text-muted-foreground">
             {opp.contact_name ?? "—"} · {opp.niche ?? "Sem nicho"}
           </p>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant={opp.status === "ganha" ? "default" : opp.status === "perdida" ? "destructive" : "secondary"}>
               {opp.status}
             </Badge>
@@ -237,6 +237,24 @@ function OpportunityDetailPage() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex gap-1">
+              {(["frio", "morno", "quente"] as OpportunityTemperature[]).map((t) => {
+                const active = opp.temperature === t;
+                const emoji = t === "frio" ? "🔵" : t === "morno" ? "🟡" : "🔴";
+                return (
+                  <Button
+                    key={t}
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    disabled={!canEdit}
+                    onClick={() => updateMutation.mutate({ temperature: t })}
+                  >
+                    {emoji} {t}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
         {opp.status === "aberta" && (
