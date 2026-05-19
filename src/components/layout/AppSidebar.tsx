@@ -30,7 +30,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -62,7 +62,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, signOut } = useAuth();
+  const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
 
   const { data: pendingApps = 0 } = useQuery({
@@ -221,21 +221,28 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="flex items-center gap-2 p-2">
-          <Avatar className="h-8 w-8 border border-border">
-            <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="truncate text-xs font-medium">
-                {user?.email ?? "Usuário"}
-              </span>
-              <span className="truncate text-[10px] text-muted-foreground">
-                {role ? ROLE_LABELS[role] : "Sem papel"}
-              </span>
-            </div>
-          )}
+          <Link
+            to="/perfil"
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-md p-1 transition-colors hover:bg-sidebar-accent"
+            title="Meu perfil"
+          >
+            <Avatar className="h-8 w-8 border border-border">
+              <AvatarImage src={avatarUrl ?? undefined} />
+              <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                <span className="truncate text-xs font-medium">
+                  {user?.email ?? "Usuário"}
+                </span>
+                <span className="truncate text-[10px] text-muted-foreground">
+                  {role ? ROLE_LABELS[role] : "Sem papel"}
+                </span>
+              </div>
+            )}
+          </Link>
           {!collapsed && (
             <Button
               variant="ghost"
