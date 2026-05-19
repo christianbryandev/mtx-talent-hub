@@ -235,10 +235,16 @@ function ReunioesPage() {
           setTypeFilter={setTypeFilter}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          renderActions={renderActions}
         />
       )}
 
       <MeetingFormDialog open={open} onOpenChange={setOpen} />
+      <MeetingFormDialog
+        open={!!editMeeting}
+        onOpenChange={(o) => !o && setEditMeeting(null)}
+        meeting={editMeeting}
+      />
     </div>
   );
 }
