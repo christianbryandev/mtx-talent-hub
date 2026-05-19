@@ -369,6 +369,8 @@ function JovemDetailPage() {
 
         {/* Trilha e Evolução */}
         <TabsContent value="trail" className="mt-4 space-y-4">
+          <PhaseEvolutionPanel young={y} canSubmit={y.profile_id === user?.id} />
+
           <Card className="p-5">
             <div className="text-sm font-semibold mb-3">Trilha de Formação</div>
             <div className="space-y-2">
