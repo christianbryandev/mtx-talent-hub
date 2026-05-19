@@ -597,14 +597,32 @@ function ServicesTab({
                       {s.start_date ? `Início: ${new Date(s.start_date).toLocaleDateString("pt-BR")}` : ""}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="outline">{s.status}</Badge>
-                    <p className="text-xs mt-1">{fmtBRL(s.monthly_value)}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <Badge variant="outline">{s.status}</Badge>
+                      <p className="text-xs mt-1">{fmtBRL(s.monthly_value)}</p>
+                    </div>
+                    {canEdit && s.status !== "ativo" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const { data, error } = await supabase.rpc("activate_client_service" as never, { _client_service_id: s.id } as never);
+                          if (error) { toast.error(error.message); return; }
+                          const created = (data as { tasks_created?: number } | null)?.tasks_created ?? 0;
+                          toast.success(`Serviço ativado · ${created} tarefa(s) criada(s)`);
+                          qc.invalidateQueries({ queryKey: ["client-services", clientId] });
+                        }}
+                      >
+                        Ativar
+                      </Button>
+                    )}
                   </div>
                 </li>
               ))}
             </ul>
           )}
+
         </CardContent>
       </Card>
 

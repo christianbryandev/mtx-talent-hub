@@ -75,6 +75,14 @@ export interface Service {
   status: string | null;
   is_active: boolean;
   base_price: number | null;
+  service_type: string | null;
+  responsible_area: string | null;
+  executor_profile: string | null;
+  frequency: string | null;
+  pct_mtx: number | null;
+  pct_commercial: number | null;
+  pct_executor: number | null;
+  default_executor_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -84,3 +92,44 @@ export const BILLING_MODELS = [
   { value: "pontual", label: "Pontual" },
   { value: "por_entrega", label: "Por entrega" },
 ] as const;
+
+export const SERVICE_TYPES = [
+  { value: "recorrente", label: "Recorrente" },
+  { value: "pontual", label: "Pontual" },
+  { value: "projeto", label: "Projeto" },
+] as const;
+
+export const RESPONSIBLE_AREAS = [
+  { value: "marketing", label: "Marketing" },
+  { value: "design", label: "Design" },
+  { value: "trafego", label: "Tráfego" },
+  { value: "social_media", label: "Social Media" },
+  { value: "comercial", label: "Comercial" },
+  { value: "desenvolvimento", label: "Desenvolvimento" },
+  { value: "outros", label: "Outros" },
+] as const;
+
+export const SERVICE_FREQUENCIES = [
+  { value: "diaria", label: "Diária" },
+  { value: "semanal", label: "Semanal" },
+  { value: "quinzenal", label: "Quinzenal" },
+  { value: "mensal", label: "Mensal" },
+  { value: "unica", label: "Única" },
+] as const;
+
+export interface ServiceTaskTemplate {
+  id: string;
+  service_id: string;
+  name: string;
+  task_type: string | null;
+  responsible_area: string | null;
+  default_deadline_days: number | null;
+  position: number;
+}
+
+export interface ServiceOnboardingItem {
+  id: string;
+  service_id: string;
+  item: string;
+  position: number;
+}
