@@ -1538,6 +1538,16 @@ export type Database = {
     }
     Functions: {
       daily_notifications_job: { Args: never; Returns: undefined }
+      get_invite_by_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          full_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          used: boolean
+        }[]
+      }
       get_primary_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
