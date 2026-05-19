@@ -39,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
 import { ColaboradorDashboard } from "@/components/dashboard/ColaboradorDashboard";
+import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
