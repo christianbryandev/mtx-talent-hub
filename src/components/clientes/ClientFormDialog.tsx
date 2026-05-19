@@ -91,31 +91,8 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
     },
   });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles-commercial"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
 
-  const { data: youngs = [] } = useQuery({
-    queryKey: ["young-list-min"],
-    enabled: open,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("young_people")
-        .select("id, full_name")
-        .order("full_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
