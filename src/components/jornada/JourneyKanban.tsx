@@ -294,6 +294,7 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
           youngId={youngId}
           phase={showNew}
           nextPosition={cardsByPhase[showNew].length}
+          canReassign={canReassign}
           onClose={() => setShowNew(null)}
           onCreated={() =>
             qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
