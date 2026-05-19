@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Inbox, Link2, Trash2 } from "lucide-react";
+import { Plus, Search, Inbox, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,10 @@ import { InscricaoLinkDialog } from "@/components/jovens/InscricaoLinkDialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
 import { YoungFormDialog } from "@/components/jovens/YoungFormDialog";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { deleteYoungCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 import {
   YOUNG_STATUS_LIST,
   YOUNG_STATUS_LABELS,
@@ -38,7 +42,9 @@ const PAGE_SIZE = 10;
 
 function JovensListPage() {
   const { isAdmin, isSuperAdmin } = usePermissions();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  void user;
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -51,12 +57,8 @@ function JovensListPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (y: YoungPerson) => {
-      await supabase.from("young_evolution").delete().eq("young_id", y.id);
-      await supabase.from("young_attendance").delete().eq("young_id", y.id);
-      const { error } = await supabase.from("young_people").delete().eq("id", y.id);
-      if (error) throw error;
-      await supabase.from("activity_logs").insert({
-        user_id: user?.id ?? null,
+      await deleteYoungCascade(y.id);
+      await logActivity({
         action: "young_deleted",
         entity_type: "young_people",
         entity_id: y.id,
@@ -233,19 +235,19 @@ function JovensListPage() {
               <TableHead>Status</TableHead>
               <TableHead>Mentor</TableHead>
               <TableHead>Entrada</TableHead>
-              {isSuperAdmin && <TableHead className="w-12"></TableHead>}
+              {isAdmin && <TableHead className="w-12"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={isSuperAdmin ? 8 : 7}><Skeleton className="h-10 w-full" /></TableCell>
+                  <TableCell colSpan={isAdmin ? 8 : 7}><Skeleton className="h-10 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isSuperAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
                   Nenhum jovem encontrado
                 </TableCell>
               </TableRow>
@@ -273,16 +275,37 @@ function JovensListPage() {
                   <TableCell className="text-sm text-muted-foreground">
                     {y.entry_date ? new Date(y.entry_date).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
-                  {isSuperAdmin && (
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setToDelete(y); }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <RowActionsMenu
+                        label={y.full_name}
+                        onView={() => navigate({ to: "/jovens/$id", params: { id: y.id } })}
+                        onEdit={() => navigate({ to: "/jovens/$id", params: { id: y.id } })}
+                        onDuplicate={async () => {
+                          try {
+                            const copy = await duplicateRow<{ id: string }>(
+                              "young_people",
+                              y.id,
+                              {
+                                labelField: "full_name",
+                                excludeFields: ["profile_id", "cpf", "rg", "email"],
+                                overrides: { status: "inscrito", profile_id: null },
+                              },
+                            );
+                            await logActivity({
+                              action: "young_duplicated",
+                              entity_type: "young_people",
+                              entity_id: copy.id,
+                              description: `Jovem "${y.full_name}" duplicado`,
+                            });
+                            toast.success("Jovem duplicado");
+                            qc.invalidateQueries({ queryKey: ["young-people"] });
+                          } catch (e) {
+                            toast.error((e as Error).message);
+                          }
+                        }}
+                        onDelete={() => setToDelete(y)}
+                      />
                     </TableCell>
                   )}
                 </TableRow>
