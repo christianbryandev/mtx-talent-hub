@@ -24,6 +24,11 @@ import { TaskDrawer } from "@/components/tarefas/TaskDrawer";
 import {
   KANBAN_COLUMNS, PRIORITY_STYLE, type KanbanColumn, type Task,
 } from "@/types/tasks";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteTaskCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — MTX Hub" }] }),
