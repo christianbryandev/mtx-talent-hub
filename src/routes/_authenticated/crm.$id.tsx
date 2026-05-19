@@ -115,14 +115,10 @@ function OpportunityDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunity_services")
-        .select("id, service_id, services(id, name, category)")
+        .select("id, service_id")
         .eq("opportunity_id", id);
       if (error) throw error;
-      return (data ?? []) as Array<{
-        id: string;
-        service_id: string;
-        services: { id: string; name: string; category: string | null } | null;
-      }>;
+      return (data ?? []) as Array<{ id: string; service_id: string }>;
     },
   });
 
