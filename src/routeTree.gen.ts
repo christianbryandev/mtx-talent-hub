@@ -24,6 +24,7 @@ import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReunioesRouteImport } from './routes/_authenticated/reunioes'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
+import { Route as AuthenticatedMinhaJornadaRouteImport } from './routes/_authenticated/minha-jornada'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedJovensRouteImport } from './routes/_authenticated/jovens'
 import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
@@ -42,6 +43,7 @@ import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
+import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -116,6 +118,12 @@ const AuthenticatedNotificacoesRoute =
   AuthenticatedNotificacoesRouteImport.update({
     id: '/notificacoes',
     path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMinhaJornadaRoute =
+  AuthenticatedMinhaJornadaRouteImport.update({
+    id: '/minha-jornada',
+    path: '/minha-jornada',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
@@ -214,6 +222,12 @@ const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedClientesRoute,
 } as any)
+const AuthenticatedJovensIdJornadaRoute =
+  AuthenticatedJovensIdJornadaRouteImport.update({
+    id: '/jornada',
+    path: '/jornada',
+    getParentRoute: () => AuthenticatedJovensIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -227,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
+  '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/reunioes': typeof AuthenticatedReunioesRouteWithChildren
@@ -239,7 +254,7 @@ export interface FileRoutesByFullPath {
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
-  '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
@@ -248,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/jovens/': typeof AuthenticatedJovensIndexRoute
   '/reunioes/': typeof AuthenticatedReunioesIndexRoute
   '/servicos/': typeof AuthenticatedServicosIndexRoute
+  '/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -258,6 +274,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
+  '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -268,7 +285,7 @@ export interface FileRoutesByTo {
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
-  '/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
@@ -277,6 +294,7 @@ export interface FileRoutesByTo {
   '/jovens': typeof AuthenticatedJovensIndexRoute
   '/reunioes': typeof AuthenticatedReunioesIndexRoute
   '/servicos': typeof AuthenticatedServicosIndexRoute
+  '/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -292,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
   '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
+  '/_authenticated/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRouteWithChildren
@@ -304,7 +323,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
-  '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRoute
+  '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
   '/_authenticated/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/_authenticated/servicos/$id': typeof AuthenticatedServicosIdRoute
@@ -313,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
   '/_authenticated/reunioes/': typeof AuthenticatedReunioesIndexRoute
   '/_authenticated/servicos/': typeof AuthenticatedServicosIndexRoute
+  '/_authenticated/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -328,6 +348,7 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/jovens'
     | '/meu-perfil'
+    | '/minha-jornada'
     | '/notificacoes'
     | '/perfil'
     | '/reunioes'
@@ -349,6 +370,7 @@ export interface FileRouteTypes {
     | '/jovens/'
     | '/reunioes/'
     | '/servicos/'
+    | '/jovens/$id/jornada'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -359,6 +381,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/indicadores'
     | '/meu-perfil'
+    | '/minha-jornada'
     | '/notificacoes'
     | '/perfil'
     | '/settings'
@@ -378,6 +401,7 @@ export interface FileRouteTypes {
     | '/jovens'
     | '/reunioes'
     | '/servicos'
+    | '/jovens/$id/jornada'
   id:
     | '__root__'
     | '/'
@@ -392,6 +416,7 @@ export interface FileRouteTypes {
     | '/_authenticated/indicadores'
     | '/_authenticated/jovens'
     | '/_authenticated/meu-perfil'
+    | '/_authenticated/minha-jornada'
     | '/_authenticated/notificacoes'
     | '/_authenticated/perfil'
     | '/_authenticated/reunioes'
@@ -413,6 +438,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jovens/'
     | '/_authenticated/reunioes/'
     | '/_authenticated/servicos/'
+    | '/_authenticated/jovens/$id/jornada'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -531,6 +557,13 @@ declare module '@tanstack/react-router' {
       path: '/notificacoes'
       fullPath: '/notificacoes'
       preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/minha-jornada': {
+      id: '/_authenticated/minha-jornada'
+      path: '/minha-jornada'
+      fullPath: '/minha-jornada'
+      preLoaderRoute: typeof AuthenticatedMinhaJornadaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/meu-perfil': {
@@ -659,6 +692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesIdRouteImport
       parentRoute: typeof AuthenticatedClientesRoute
     }
+    '/_authenticated/jovens/$id/jornada': {
+      id: '/_authenticated/jovens/$id/jornada'
+      path: '/jornada'
+      fullPath: '/jovens/$id/jornada'
+      preLoaderRoute: typeof AuthenticatedJovensIdJornadaRouteImport
+      parentRoute: typeof AuthenticatedJovensIdRoute
+    }
   }
 }
 
@@ -692,14 +732,27 @@ const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
 const AuthenticatedCrmRouteWithChildren =
   AuthenticatedCrmRoute._addFileChildren(AuthenticatedCrmRouteChildren)
 
+interface AuthenticatedJovensIdRouteChildren {
+  AuthenticatedJovensIdJornadaRoute: typeof AuthenticatedJovensIdJornadaRoute
+}
+
+const AuthenticatedJovensIdRouteChildren: AuthenticatedJovensIdRouteChildren = {
+  AuthenticatedJovensIdJornadaRoute: AuthenticatedJovensIdJornadaRoute,
+}
+
+const AuthenticatedJovensIdRouteWithChildren =
+  AuthenticatedJovensIdRoute._addFileChildren(
+    AuthenticatedJovensIdRouteChildren,
+  )
+
 interface AuthenticatedJovensRouteChildren {
-  AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRoute
+  AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRouteWithChildren
   AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
   AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
 }
 
 const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
-  AuthenticatedJovensIdRoute: AuthenticatedJovensIdRoute,
+  AuthenticatedJovensIdRoute: AuthenticatedJovensIdRouteWithChildren,
   AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
   AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
 }
@@ -744,6 +797,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
   AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
+  AuthenticatedMinhaJornadaRoute: typeof AuthenticatedMinhaJornadaRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRouteWithChildren
@@ -760,6 +814,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
   AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
+  AuthenticatedMinhaJornadaRoute: AuthenticatedMinhaJornadaRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRouteWithChildren,
