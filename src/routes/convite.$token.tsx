@@ -30,13 +30,12 @@ function InvitePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["invite", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_invites")
-        .select("email, full_name, role, expires_at, used")
-        .eq("token", token)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("get_invite_by_token", {
+        _token: token,
+      });
       if (error) throw error;
-      return data;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ?? null;
     },
   });
 
