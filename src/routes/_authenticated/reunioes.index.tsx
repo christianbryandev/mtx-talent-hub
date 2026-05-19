@@ -428,6 +428,7 @@ function ListView({
                 <TableHead>Horário</TableHead>
                 <TableHead>Local</TableHead>
                 <TableHead>Status</TableHead>
+                {renderActions && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
