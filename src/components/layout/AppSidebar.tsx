@@ -62,7 +62,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, signOut } = useAuth();
+  const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
 
   const { data: pendingApps = 0 } = useQuery({
