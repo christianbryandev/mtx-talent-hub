@@ -143,8 +143,9 @@ function JovemDetailPage() {
         type: "phase_change",
         previous_value: prev,
         new_value: newPhase,
-        description: `Fase alterada${prev ? `: ${TRAIL_PHASE_LABELS[prev]} → ` : ": "}${TRAIL_PHASE_LABELS[newPhase]}`,
+        description: `Avanço manual forçado pelo Admin${prev ? ` (${TRAIL_PHASE_LABELS[prev]} → ` : " ("}${TRAIL_PHASE_LABELS[newPhase]}) em ${new Date().toLocaleString("pt-BR")}`,
       });
+      await supabase.from("young_people").update({ last_progress_at: new Date().toISOString() } as never).eq("id", id);
     },
     onSuccess: () => {
       toast.success("Fase atualizada");
