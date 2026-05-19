@@ -372,7 +372,7 @@ function Column({
   );
 }
 
-function TaskCard({ task, onClick, dragging }: { task: TaskRow; onClick?: () => void; dragging?: boolean }) {
+function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick?: () => void; dragging?: boolean; actions?: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
   const today = new Date().toISOString().slice(0, 10);
   const isLate = task.due_date && task.due_date < today && task.kanban_column !== "concluido";
@@ -381,11 +381,16 @@ function TaskCard({ task, onClick, dragging }: { task: TaskRow; onClick?: () => 
     <div
       ref={setNodeRef} {...listeners} {...attributes}
       onClick={(e) => { if (isDragging) return; e.stopPropagation(); onClick?.(); }}
-      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md ${
+      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md relative ${
         isDragging || dragging ? "opacity-50" : ""
       } ${isLate ? "border-destructive/60" : ""}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {actions && (
+        <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-2 mb-2 pr-8">
         <p className="text-sm font-medium leading-tight flex-1">{task.title}</p>
         <Badge variant="outline" className={`text-[9px] ${PRIORITY_STYLE[task.priority]}`}>
           {task.priority}
