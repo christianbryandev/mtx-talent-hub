@@ -42,7 +42,9 @@ const PAGE_SIZE = 10;
 
 function JovensListPage() {
   const { isAdmin, isSuperAdmin } = usePermissions();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  void user;
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
