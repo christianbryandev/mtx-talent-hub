@@ -11,6 +11,7 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const schema = z
   .object({
@@ -52,12 +53,12 @@ function ResetPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password">Nova senha</Label>
-          <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
+          <PasswordInput id="password" autoComplete="new-password" {...register("password")} />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirmar senha</Label>
-          <Input id="confirm" type="password" autoComplete="new-password" {...register("confirm")} />
+          <PasswordInput id="confirm" autoComplete="new-password" {...register("confirm")} />
           {errors.confirm && <p className="text-xs text-destructive">{errors.confirm.message}</p>}
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
