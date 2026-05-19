@@ -12,6 +12,7 @@ import {
   Shield,
   Settings as SettingsIcon,
   LogOut,
+  UserCircle,
 } from "lucide-react";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
 
@@ -121,6 +122,24 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {!isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Pessoal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/meu-perfil")} tooltip="Meu Perfil">
+                    <Link to="/meu-perfil" className="flex items-center gap-2">
+                      <UserCircle className="h-4 w-4" />
+                      <span>Meu Perfil</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {(isAdmin || isSuperAdmin) && (
           <SidebarGroup>

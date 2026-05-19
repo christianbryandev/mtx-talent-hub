@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { IncompleteProfileBanner } from "@/components/layout/IncompleteProfileBanner";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -41,6 +42,7 @@ function AuthenticatedLayout() {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <AppTopbar />
+          <IncompleteProfileBanner />
           <main className="flex-1 overflow-y-auto px-6 py-6 lg:px-8">
             <Outlet />
           </main>
