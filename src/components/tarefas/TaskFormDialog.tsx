@@ -194,6 +194,21 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
               </Select>
             </div>
             <div>
+              <Label>Área</Label>
+              <Select value={form.watch("area") || ""} onValueChange={(v) => form.setValue("area", v)}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {TASK_AREAS.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Data de início</Label>
+              <Input type="date" {...form.register("start_date")} />
+            </div>
+            <div>
               <Label>Data de prazo</Label>
               <Input type="date" {...form.register("due_date")} />
             </div>
