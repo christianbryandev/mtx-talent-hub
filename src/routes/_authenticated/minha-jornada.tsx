@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { JourneyKanban } from "@/components/jornada/JourneyKanban";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/minha-jornada")({
 
 function MyJourneyPage() {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
 
   const { data: young, isLoading } = useQuery({
     queryKey: ["my-young", user?.id],
@@ -64,7 +66,7 @@ function MyJourneyPage() {
           Acompanhe e organize cada fase da sua trilha MTX.
         </p>
       </div>
-      <JourneyKanban youngId={young.id} canEdit />
+      <JourneyKanban youngId={young.id} canEdit={isAdmin} />
     </div>
   );
 }
