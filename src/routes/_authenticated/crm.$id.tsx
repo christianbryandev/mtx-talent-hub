@@ -110,6 +110,58 @@ function OpportunityDetailPage() {
     },
   });
 
+  const { data: oppServices = [] } = useQuery({
+    queryKey: ["opp-services", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opportunity_services")
+        .select("id, service_id, services(id, name, category)")
+        .eq("opportunity_id", id);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        service_id: string;
+        services: { id: string; name: string; category: string | null } | null;
+      }>;
+    },
+  });
+
+  const servicesMutation = useMutation({
+    mutationFn: async (nextIds: string[]) => {
+      const current = oppServices.map((s) => s.service_id);
+      const toAdd = nextIds.filter((sid) => !current.includes(sid));
+      const toRemove = oppServices.filter((s) => !nextIds.includes(s.service_id));
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("opportunity_services")
+          .delete()
+          .in(
+            "id",
+            toRemove.map((r) => r.id),
+          );
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("opportunity_services")
+          .insert(
+            toAdd.map((sid) => ({
+              opportunity_id: id,
+              service_id: sid,
+            })) as never,
+          );
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Serviços atualizados");
+      qc.invalidateQueries({ queryKey: ["opp-services", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const { hasActiveApproval } = useEditRequestState("opportunity", id);
+
   const updateMutation = useMutation({
     mutationFn: async (patch: Partial<Opportunity>) => {
       const { error } = await supabase
