@@ -289,8 +289,18 @@ function JovensListPage() {
                   </TableCell>
                   <TableCell>{y.age ?? "—"}</TableCell>
                   <TableCell>{y.city ?? "—"}</TableCell>
-                  <TableCell><PhaseBadge phase={y.trail_phase} /></TableCell>
-                  <TableCell><StatusBadge status={y.status as YoungStatus} /></TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <PhaseBadge phase={y.trail_phase} />
+                      <ProgressMini youngId={y.id} phase={y.trail_phase} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <StatusBadge status={y.status as YoungStatus} />
+                      <StuckBadge lastProgressAt={y.last_progress_at} />
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {y.mentor_id ? mentorsMap[y.mentor_id] ?? "—" : "—"}
                   </TableCell>
