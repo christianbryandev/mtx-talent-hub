@@ -148,6 +148,7 @@ function CrmListPage() {
                 <TableHead className="text-right">Prob.</TableHead>
                 <TableHead>Follow-up</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
