@@ -238,9 +238,20 @@ function JovemDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setStatusModalOpen(true)}>
               <Pencil className="mr-1.5 h-3.5 w-3.5" /> Mudar status
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setPhaseModalOpen(true)}>
-              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Mudar fase
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+                onClick={() => {
+                  if (window.confirm("Atenção: você está forçando o avanço manual desta fase. Isso sobrescreve os critérios automáticos. Deseja continuar?")) {
+                    setPhaseModalOpen(true);
+                  }
+                }}
+              >
+                ⚠️ Forçar Avanço (Override)
+              </Button>
+            )}
             <Button size="sm" onClick={() => setNoteModalOpen(true)}>
               <MessageSquarePlus className="mr-1.5 h-3.5 w-3.5" /> Observação
             </Button>
