@@ -75,7 +75,7 @@ function AdminJourneyPage() {
           Edite, adicione e reorganize cards da trilha do jovem.
         </p>
       </div>
-      <JourneyKanban youngId={young.id} canEdit />
+      <JourneyKanban youngId={young.id} canEdit canReassign />
     </div>
   );
 }
