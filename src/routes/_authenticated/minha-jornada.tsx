@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { JourneyKanban } from "@/components/jornada/JourneyKanban";
