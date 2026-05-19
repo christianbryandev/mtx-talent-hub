@@ -133,8 +133,6 @@ function InvitePage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Senha (mínimo 8 caracteres)</Label>
-        <div className="space-y-2">
-          <Label htmlFor="password">Senha (mínimo 8 caracteres)</Label>
           <div className="relative">
             <Input
               id="password"
