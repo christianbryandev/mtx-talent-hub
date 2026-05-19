@@ -43,6 +43,11 @@ import {
   type Opportunity,
   type OpportunityPriority,
 } from "@/types/crm";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteOpportunityCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/crm/")({
   head: () => ({ meta: [{ title: "CRM Comercial — MTX Hub" }] }),
@@ -65,6 +70,8 @@ const brl = (v: number | null) =>
 function CrmKanbanPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { isAdmin, isComercial } = usePermissions();
+  const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
@@ -287,6 +294,62 @@ function CrmKanbanPage() {
                       onClick={() =>
                         navigate({ to: "/crm/$id", params: { id: o.id } })
                       }
+                      actions={
+                        <RowActionsMenu
+                          label={o.company_name}
+                          onView={() => navigate({ to: "/crm/$id", params: { id: o.id } })}
+                          onEdit={
+                            canManage
+                              ? () => navigate({ to: "/crm/$id", params: { id: o.id } })
+                              : undefined
+                          }
+                          onDuplicate={
+                            canManage
+                              ? async () => {
+                                  try {
+                                    const copy = await duplicateRow<{ id: string }>(
+                                      "opportunities",
+                                      o.id,
+                                      {
+                                        labelField: "company_name",
+                                        excludeFields: ["converted_client_id"],
+                                      },
+                                    );
+                                    await logActivity({
+                                      action: "opportunity_duplicated",
+                                      entity_type: "opportunity",
+                                      entity_id: copy.id,
+                                      description: `Oportunidade "${o.company_name}" duplicada`,
+                                    });
+                                    toast.success("Oportunidade duplicada");
+                                    qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                          onDelete={
+                            isAdmin
+                              ? async () => {
+                                  try {
+                                    await deleteOpportunityCascade(o.id);
+                                    await logActivity({
+                                      action: "opportunity_deleted",
+                                      entity_type: "opportunity",
+                                      entity_id: o.id,
+                                      description: `Oportunidade "${o.company_name}" excluída`,
+                                    });
+                                    toast.success("Oportunidade excluída");
+                                    qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                        />
+                      }
                     />
                   ))}
                 </KanbanColumn>
@@ -343,10 +406,12 @@ function OpportunityCard({
   opp,
   onClick,
   dragging,
+  actions,
 }: {
   opp: Opportunity;
   onClick?: () => void;
   dragging?: boolean;
+  actions?: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: opp.id });
   const today = new Date().toISOString().slice(0, 10);
@@ -362,11 +427,16 @@ function OpportunityCard({
         e.stopPropagation();
         onClick?.();
       }}
-      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md ${
+      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md relative ${
         isDragging || dragging ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
+      {actions && (
+        <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-2 pr-8">
         <div className="flex-1 min-w-0">
           <p className="truncate text-sm font-semibold">{opp.company_name}</p>
           {opp.contact_name && (

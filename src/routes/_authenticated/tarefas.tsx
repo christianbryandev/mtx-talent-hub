@@ -24,6 +24,11 @@ import { TaskDrawer } from "@/components/tarefas/TaskDrawer";
 import {
   KANBAN_COLUMNS, PRIORITY_STYLE, type KanbanColumn, type Task,
 } from "@/types/tasks";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteTaskCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — MTX Hub" }] }),
@@ -41,6 +46,8 @@ interface TaskRow extends Task {
 
 function TarefasKanbanPage() {
   const qc = useQueryClient();
+  const { isAdmin, isComercial } = usePermissions();
+  const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
   const [newColumn, setNewColumn] = useState<KanbanColumn>("backlog");
   const [drawerId, setDrawerId] = useState<string | null>(null);
@@ -261,6 +268,63 @@ function TarefasKanbanPage() {
                     <TaskCard
                       key={t.id} task={t}
                       onClick={() => { setDrawerId(t.id); setDrawerOpen(true); }}
+                      actions={
+                        <RowActionsMenu
+                          label={t.title}
+                          onView={() => { setDrawerId(t.id); setDrawerOpen(true); }}
+                          onEdit={
+                            canManage
+                              ? () => { setDrawerId(t.id); setDrawerOpen(true); }
+                              : undefined
+                          }
+                          onDuplicate={
+                            canManage
+                              ? async () => {
+                                  try {
+                                    const copy = await duplicateRow<{ id: string }>(
+                                      "tasks",
+                                      t.id,
+                                      {
+                                        labelField: "title",
+                                        excludeFields: ["completed_at", "position"],
+                                        overrides: { kanban_column: "backlog", status: "aberta" },
+                                      },
+                                    );
+                                    await logActivity({
+                                      action: "task_duplicated",
+                                      entity_type: "task",
+                                      entity_id: copy.id,
+                                      description: `Tarefa "${t.title}" duplicada`,
+                                    });
+                                    toast.success("Tarefa duplicada");
+                                    qc.invalidateQueries({ queryKey: ["tasks"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                          onDelete={
+                            canManage
+                              ? async () => {
+                                  try {
+                                    await deleteTaskCascade(t.id);
+                                    await logActivity({
+                                      action: "task_deleted",
+                                      entity_type: "task",
+                                      entity_id: t.id,
+                                      description: `Tarefa "${t.title}" excluída`,
+                                    });
+                                    toast.success("Tarefa excluída");
+                                    qc.invalidateQueries({ queryKey: ["tasks"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                        />
+                      }
                     />
                   ))}
                 </Column>
@@ -308,7 +372,7 @@ function Column({
   );
 }
 
-function TaskCard({ task, onClick, dragging }: { task: TaskRow; onClick?: () => void; dragging?: boolean }) {
+function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick?: () => void; dragging?: boolean; actions?: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id });
   const today = new Date().toISOString().slice(0, 10);
   const isLate = task.due_date && task.due_date < today && task.kanban_column !== "concluido";
@@ -317,11 +381,16 @@ function TaskCard({ task, onClick, dragging }: { task: TaskRow; onClick?: () => 
     <div
       ref={setNodeRef} {...listeners} {...attributes}
       onClick={(e) => { if (isDragging) return; e.stopPropagation(); onClick?.(); }}
-      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md ${
+      className={`cursor-grab rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md relative ${
         isDragging || dragging ? "opacity-50" : ""
       } ${isLate ? "border-destructive/60" : ""}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {actions && (
+        <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-2 mb-2 pr-8">
         <p className="text-sm font-medium leading-tight flex-1">{task.title}</p>
         <Badge variant="outline" className={`text-[9px] ${PRIORITY_STYLE[task.priority]}`}>
           {task.priority}

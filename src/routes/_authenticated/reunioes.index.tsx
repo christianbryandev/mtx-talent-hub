@@ -52,6 +52,14 @@ import {
   type Meeting,
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteMeetingCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reunioes/")({
   head: () => ({ meta: [{ title: "Reuniões — MTX Hub" }] }),
@@ -59,11 +67,64 @@ export const Route = createFileRoute("/_authenticated/reunioes/")({
 });
 
 function ReunioesPage() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [open, setOpen] = useState(false);
+  const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const renderActions = (m: Meeting) => (
+    <RowActionsMenu
+      label={m.title}
+      onView={() => navigate({ to: "/reunioes/$id", params: { id: m.id } })}
+      onEdit={isAdmin ? () => setEditMeeting(m) : undefined}
+      onDuplicate={
+        isAdmin
+          ? async () => {
+              try {
+                const copy = await duplicateRow<{ id: string }>("meetings", m.id, {
+                  labelField: "title",
+                  overrides: { status: "agendada" },
+                });
+                await logActivity({
+                  action: "meeting_duplicated",
+                  entity_type: "meeting",
+                  entity_id: copy.id,
+                  description: `Reunião "${m.title}" duplicada`,
+                });
+                toast.success("Reunião duplicada");
+                qc.invalidateQueries({ queryKey: ["meetings"] });
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }
+          : undefined
+      }
+      onDelete={
+        isAdmin
+          ? async () => {
+              try {
+                await deleteMeetingCascade(m.id);
+                await logActivity({
+                  action: "meeting_deleted",
+                  entity_type: "meeting",
+                  entity_id: m.id,
+                  description: `Reunião "${m.title}" excluída`,
+                });
+                toast.success("Reunião excluída");
+                qc.invalidateQueries({ queryKey: ["meetings"] });
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            }
+          : undefined
+      }
+    />
+  );
 
   const { data: meetings = [], isLoading } = useQuery({
     queryKey: ["meetings"],
@@ -174,10 +235,16 @@ function ReunioesPage() {
           setTypeFilter={setTypeFilter}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          renderActions={renderActions}
         />
       )}
 
       <MeetingFormDialog open={open} onOpenChange={setOpen} />
+      <MeetingFormDialog
+        open={!!editMeeting}
+        onOpenChange={(o) => !o && setEditMeeting(null)}
+        meeting={editMeeting}
+      />
     </div>
   );
 }
@@ -298,6 +365,7 @@ function ListView({
   setTypeFilter,
   statusFilter,
   setStatusFilter,
+  renderActions,
 }: {
   meetings: Meeting[];
   isLoading: boolean;
@@ -305,6 +373,7 @@ function ListView({
   setTypeFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
+  renderActions?: (m: Meeting) => React.ReactNode;
 }) {
   return (
     <Card className="border-border/60 bg-card/70">
@@ -359,6 +428,7 @@ function ListView({
                 <TableHead>Horário</TableHead>
                 <TableHead>Local</TableHead>
                 <TableHead>Status</TableHead>
+                {renderActions && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -403,6 +473,11 @@ function ListView({
                       {MEETING_STATUS_LABELS[m.status]}
                     </Badge>
                   </TableCell>
+                  {renderActions && (
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {renderActions(m)}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

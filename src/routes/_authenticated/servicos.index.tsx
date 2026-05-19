@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Plus, Search, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,11 @@ import {
 } from "@/components/ui/select";
 import { ServiceFormDialog } from "@/components/servicos/ServiceFormDialog";
 import { BILLING_MODELS, type Service } from "@/types/tasks";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteServiceCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/servicos/")({
   head: () => ({ meta: [{ title: "Serviços — MTX Hub" }] }),
@@ -23,7 +29,11 @@ const brl = (v: number | null) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
 
 function ServicosListPage() {
+  const { isAdmin } = usePermissions();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [openNew, setOpenNew] = useState(false);
+  const [editService, setEditService] = useState<Service | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -105,14 +115,62 @@ function ServicosListPage() {
           {filtered.map((s) => {
             const bm = BILLING_MODELS.find((b) => b.value === s.billing_model);
             return (
-              <Link
-                key={s.id}
-                to="/servicos/$id"
-                params={{ id: s.id }}
-                className="block"
-              >
-                <Card className="p-4 h-full hover:shadow-md transition border">
-                  <div className="flex items-start justify-between mb-2">
+              <Card key={s.id} className="p-4 h-full hover:shadow-md transition border relative">
+                <div className="absolute top-2 right-2">
+                  <RowActionsMenu
+                    label={s.name}
+                    onView={() => navigate({ to: "/servicos/$id", params: { id: s.id } })}
+                    onEdit={isAdmin ? () => setEditService(s) : undefined}
+                    onDuplicate={
+                      isAdmin
+                        ? async () => {
+                            try {
+                              const copy = await duplicateRow<{ id: string }>(
+                                "services",
+                                s.id,
+                                { labelField: "name" },
+                              );
+                              await logActivity({
+                                action: "service_duplicated",
+                                entity_type: "service",
+                                entity_id: copy.id,
+                                description: `Serviço "${s.name}" duplicado`,
+                              });
+                              toast.success("Serviço duplicado");
+                              qc.invalidateQueries({ queryKey: ["services"] });
+                            } catch (e) {
+                              toast.error((e as Error).message);
+                            }
+                          }
+                        : undefined
+                    }
+                    onDelete={
+                      isAdmin
+                        ? async () => {
+                            try {
+                              await deleteServiceCascade(s.id);
+                              await logActivity({
+                                action: "service_deleted",
+                                entity_type: "service",
+                                entity_id: s.id,
+                                description: `Serviço "${s.name}" excluído`,
+                              });
+                              toast.success("Serviço excluído");
+                              qc.invalidateQueries({ queryKey: ["services"] });
+                            } catch (e) {
+                              toast.error((e as Error).message);
+                            }
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+                <Link
+                  to="/servicos/$id"
+                  params={{ id: s.id }}
+                  className="block"
+                >
+                  <div className="flex items-start justify-between mb-2 pr-8">
                     <div className="grid h-9 w-9 place-items-center rounded-md bg-primary/10 text-primary">
                       <Briefcase className="h-4 w-4" />
                     </div>
@@ -128,14 +186,19 @@ function ServicosListPage() {
                     <span className="text-muted-foreground">{bm?.label ?? "—"}</span>
                     <span className="font-medium">{brl(s.default_value ?? s.base_price)}</span>
                   </div>
-                </Card>
-              </Link>
+                </Link>
+              </Card>
             );
           })}
         </div>
       )}
 
       <ServiceFormDialog open={openNew} onOpenChange={setOpenNew} />
+      <ServiceFormDialog
+        open={!!editService}
+        onOpenChange={(o) => !o && setEditService(null)}
+        service={editService}
+      />
     </div>
   );
 }

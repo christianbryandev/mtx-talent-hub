@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { LayoutGrid, Plus, Search } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,11 @@ import {
   FUNNEL_STAGE_LABELS,
   type Opportunity,
 } from "@/types/crm";
+import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
+import { usePermissions } from "@/hooks/usePermissions";
+import { deleteOpportunityCascade } from "@/lib/cascade-delete";
+import { duplicateRow } from "@/lib/duplicate-row";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/crm/lista")({
   head: () => ({ meta: [{ title: "CRM — Lista de oportunidades" }] }),
@@ -39,6 +45,9 @@ const brl = (v: number | null) =>
 
 function CrmListPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const { isAdmin, isComercial } = usePermissions();
+  const canManage = isAdmin || isComercial;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -139,6 +148,7 @@ function CrmListPage() {
                 <TableHead className="text-right">Prob.</TableHead>
                 <TableHead>Follow-up</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -175,6 +185,59 @@ function CrmListPage() {
                     >
                       {o.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <RowActionsMenu
+                      label={o.company_name}
+                      onView={() => navigate({ to: "/crm/$id", params: { id: o.id } })}
+                      onEdit={
+                        canManage
+                          ? () => navigate({ to: "/crm/$id", params: { id: o.id } })
+                          : undefined
+                      }
+                      onDuplicate={
+                        canManage
+                          ? async () => {
+                              try {
+                                const copy = await duplicateRow<{ id: string }>(
+                                  "opportunities",
+                                  o.id,
+                                  { labelField: "company_name", excludeFields: ["converted_client_id"] },
+                                );
+                                await logActivity({
+                                  action: "opportunity_duplicated",
+                                  entity_type: "opportunity",
+                                  entity_id: copy.id,
+                                  description: `Oportunidade "${o.company_name}" duplicada`,
+                                });
+                                toast.success("Oportunidade duplicada");
+                                qc.invalidateQueries({ queryKey: ["opportunities"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                      onDelete={
+                        isAdmin
+                          ? async () => {
+                              try {
+                                await deleteOpportunityCascade(o.id);
+                                await logActivity({
+                                  action: "opportunity_deleted",
+                                  entity_type: "opportunity",
+                                  entity_id: o.id,
+                                  description: `Oportunidade "${o.company_name}" excluída`,
+                                });
+                                toast.success("Oportunidade excluída");
+                                qc.invalidateQueries({ queryKey: ["opportunities"] });
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))}
