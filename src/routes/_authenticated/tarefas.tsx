@@ -268,6 +268,63 @@ function TarefasKanbanPage() {
                     <TaskCard
                       key={t.id} task={t}
                       onClick={() => { setDrawerId(t.id); setDrawerOpen(true); }}
+                      actions={
+                        <RowActionsMenu
+                          label={t.title}
+                          onView={() => { setDrawerId(t.id); setDrawerOpen(true); }}
+                          onEdit={
+                            canManage
+                              ? () => { setDrawerId(t.id); setDrawerOpen(true); }
+                              : undefined
+                          }
+                          onDuplicate={
+                            canManage
+                              ? async () => {
+                                  try {
+                                    const copy = await duplicateRow<{ id: string }>(
+                                      "tasks",
+                                      t.id,
+                                      {
+                                        labelField: "title",
+                                        excludeFields: ["completed_at", "position"],
+                                        overrides: { kanban_column: "backlog", status: "aberta" },
+                                      },
+                                    );
+                                    await logActivity({
+                                      action: "task_duplicated",
+                                      entity_type: "task",
+                                      entity_id: copy.id,
+                                      description: `Tarefa "${t.title}" duplicada`,
+                                    });
+                                    toast.success("Tarefa duplicada");
+                                    qc.invalidateQueries({ queryKey: ["tasks"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                          onDelete={
+                            canManage
+                              ? async () => {
+                                  try {
+                                    await deleteTaskCascade(t.id);
+                                    await logActivity({
+                                      action: "task_deleted",
+                                      entity_type: "task",
+                                      entity_id: t.id,
+                                      description: `Tarefa "${t.title}" excluída`,
+                                    });
+                                    toast.success("Tarefa excluída");
+                                    qc.invalidateQueries({ queryKey: ["tasks"] });
+                                  } catch (e) {
+                                    toast.error((e as Error).message);
+                                  }
+                                }
+                              : undefined
+                          }
+                        />
+                      }
                     />
                   ))}
                 </Column>
