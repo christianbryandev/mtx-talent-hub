@@ -46,7 +46,7 @@ export function AppTopbar() {
             className="h-9 w-64 rounded-full border-white/10 bg-white/[0.03] pl-8 focus-visible:ring-primary/40"
           />
         </div>
-        <div data-tour="notification-bell"><NotificationBell /></div>
+        <NotificationBell />
         <Avatar className="h-8 w-8 border border-white/10">
           <AvatarFallback className="bg-gradient-mtx text-xs font-semibold text-white">
             {initials}

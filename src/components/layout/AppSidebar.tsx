@@ -74,7 +74,7 @@ export function AppSidebar() {
     .toUpperCase();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border" data-tour="sidebar">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2">
           {collapsed ? (
@@ -100,7 +100,7 @@ export function AppSidebar() {
               {mainItems.map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
                 return (
-                  <SidebarMenuItem key={item.url} data-tour={item.tour}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive(item.url)}
@@ -146,7 +146,7 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem data-tour="nav-users">
+                <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive("/users")}
