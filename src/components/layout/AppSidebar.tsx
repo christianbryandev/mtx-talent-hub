@@ -73,7 +73,7 @@ export function AppSidebar() {
     .toUpperCase();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" data-tour="sidebar">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2">
           {collapsed ? (
