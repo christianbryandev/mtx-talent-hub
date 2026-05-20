@@ -674,10 +674,12 @@ export type Database = {
         Row: {
           agenda: string | null
           created_at: string
+          created_by: string | null
           date: string
           decisions: string | null
           end_time: string | null
           id: string
+          is_personal: boolean
           is_recurring: boolean | null
           link_client_id: string | null
           link_opportunity_id: string | null
@@ -696,10 +698,12 @@ export type Database = {
         Insert: {
           agenda?: string | null
           created_at?: string
+          created_by?: string | null
           date: string
           decisions?: string | null
           end_time?: string | null
           id?: string
+          is_personal?: boolean
           is_recurring?: boolean | null
           link_client_id?: string | null
           link_opportunity_id?: string | null
@@ -718,10 +722,12 @@ export type Database = {
         Update: {
           agenda?: string | null
           created_at?: string
+          created_by?: string | null
           date?: string
           decisions?: string | null
           end_time?: string | null
           id?: string
+          is_personal?: boolean
           is_recurring?: boolean | null
           link_client_id?: string | null
           link_opportunity_id?: string | null

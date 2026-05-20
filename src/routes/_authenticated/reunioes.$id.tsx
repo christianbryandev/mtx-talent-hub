@@ -34,6 +34,7 @@ import {
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/reunioes/$id")({
   head: () => ({ meta: [{ title: "Reunião — MTX Hub" }] }),
@@ -45,6 +46,7 @@ function MeetingDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: meeting, isLoading } = useQuery({
@@ -163,6 +165,8 @@ function MeetingDetailPage() {
     );
   }
 
+  const canManage = isAdmin || (!!meeting && meeting.is_personal && meeting.created_by === user?.id);
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/reunioes" })}>
@@ -179,6 +183,11 @@ function MeetingDetailPage() {
                   {MEETING_TYPE_LABELS[meeting.type]}
                 </Badge>
                 <Badge variant="secondary">{MEETING_STATUS_LABELS[meeting.status]}</Badge>
+                {meeting.is_personal && (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-500">
+                    Pessoal
+                  </Badge>
+                )}
               </div>
               <h2 className="text-2xl font-bold tracking-tight">{meeting.title}</h2>
               <p className="text-sm text-muted-foreground">
@@ -188,41 +197,43 @@ function MeetingDetailPage() {
                 {meeting.location && ` · ${meeting.location}`}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <Edit className="mr-1.5 h-4 w-4" /> Editar
-              </Button>
-              {meeting.status === "agendada" && (
-                <>
-                  <Button
-                    size="sm"
-                    onClick={() => statusMutation.mutate("realizada")}
-                    disabled={statusMutation.isPending}
-                  >
-                    <CheckCircle2 className="mr-1.5 h-4 w-4" /> Marcar como realizada
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => statusMutation.mutate("cancelada")}
-                    disabled={statusMutation.isPending}
-                  >
-                    <XCircle className="mr-1.5 h-4 w-4" /> Cancelar
-                  </Button>
-                </>
-              )}
-            </div>
+            {canManage && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                  <Edit className="mr-1.5 h-4 w-4" /> Editar
+                </Button>
+                {meeting.status === "agendada" && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => statusMutation.mutate("realizada")}
+                      disabled={statusMutation.isPending}
+                    >
+                      <CheckCircle2 className="mr-1.5 h-4 w-4" /> Marcar como realizada
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => statusMutation.mutate("cancelada")}
+                      disabled={statusMutation.isPending}
+                    >
+                      <XCircle className="mr-1.5 h-4 w-4" /> Cancelar
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <AgendaSection meetingId={id} items={agenda} />
-          <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} />
+          <AgendaSection meetingId={id} items={agenda} canManage={canManage} />
+          <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} canManage={canManage} />
         </div>
         <div className="space-y-4">
-          <ParticipantsSection meetingId={id} participants={participants} />
+          <ParticipantsSection meetingId={id} participants={participants} canManage={canManage} />
         </div>
       </div>
 
@@ -234,9 +245,11 @@ function MeetingDetailPage() {
 function AgendaSection({
   meetingId,
   items,
+  canManage = true,
 }: {
   meetingId: string;
   items: MeetingAgendaItem[];
+  canManage?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [newTitle, setNewTitle] = useState("");
@@ -295,8 +308,9 @@ function AgendaSection({
               >
                 <Checkbox
                   checked={it.completed}
+                  disabled={!canManage}
                   onCheckedChange={(v) =>
-                    toggleMutation.mutate({ id: it.id, completed: !!v })
+                    canManage && toggleMutation.mutate({ id: it.id, completed: !!v })
                   }
                   className="mt-0.5"
                 />
@@ -318,14 +332,16 @@ function AgendaSection({
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                  onClick={() => deleteMutation.mutate(it.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteMutation.mutate(it.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </li>
             ))}
           </ul>
@@ -359,10 +375,12 @@ function AtaSection({
   meeting,
   onSave,
   saving,
+  canManage = true,
 }: {
   meeting: Meeting;
   onSave: (v: Partial<Meeting>) => void;
   saving: boolean;
+  canManage?: boolean;
 }) {
   const [objectives, setObjectives] = useState(meeting.objectives ?? "");
   const [decisions, setDecisions] = useState(meeting.decisions ?? "");
@@ -393,23 +411,25 @@ function AtaSection({
           <label className="text-xs font-medium text-muted-foreground">Observações</label>
           <Textarea rows={2} value={observations} onChange={(e) => setObservations(e.target.value)} />
         </div>
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            disabled={saving}
-            onClick={() =>
-              onSave({
-                objectives: objectives || null,
-                decisions: decisions || null,
-                next_steps: nextSteps || null,
-                observations: observations || null,
-              })
-            }
-          >
-            {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-            Salvar ata
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              disabled={saving}
+              onClick={() =>
+                onSave({
+                  objectives: objectives || null,
+                  decisions: decisions || null,
+                  next_steps: nextSteps || null,
+                  observations: observations || null,
+                })
+              }
+            >
+              {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Salvar ata
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -418,12 +438,14 @@ function AtaSection({
 function ParticipantsSection({
   meetingId,
   participants,
+  canManage = true,
 }: {
   meetingId: string;
   participants: (MeetingParticipant & {
     young?: { full_name: string } | null;
     profile?: { full_name: string | null; email: string | null } | null;
   })[];
+  canManage?: boolean;
 }) {
   const queryClient = useQueryClient();
   const { data: youngPeople = [] } = useQuery({

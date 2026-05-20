@@ -67,6 +67,8 @@ export interface Meeting {
   status: MeetingStatus;
   link_opportunity_id: string | null;
   link_client_id: string | null;
+  created_by: string | null;
+  is_personal: boolean;
   created_at: string;
   updated_at: string;
 }
