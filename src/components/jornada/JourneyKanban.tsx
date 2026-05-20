@@ -60,9 +60,11 @@ import {
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 import { logActivity } from "@/lib/activity-log";
 import { cn } from "@/lib/utils";
+import { normalizeExternalUrl, externalLinkProps } from "@/lib/external-url";
 
 import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSelect";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type CardStatus = "pendente" | "em_andamento" | "concluida";
 
@@ -125,6 +127,48 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
         checklist: Array.isArray(d.checklist) ? d.checklist : [],
         training_links: Array.isArray(d.training_links) ? d.training_links : [],
       })) as unknown as JourneyCard[];
+    },
+  });
+
+  const phaseIds = cards.map((c) => c.id);
+  const { data: assigneesByPhase = {} } = useQuery({
+    queryKey: ["journey-assignees", youngId, phaseIds.join(",")],
+    enabled: phaseIds.length > 0,
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("journey_phase_assignees")
+        .select("phase_id, young_id")
+        .in("phase_id", phaseIds);
+      const youngIds = Array.from(new Set((rows ?? []).map((r) => r.young_id as string)));
+      if (youngIds.length === 0) return {} as Record<string, { id: string; name: string; avatar_url: string | null }[]>;
+      const { data: youngs } = await supabase
+        .from("young_people")
+        .select("id, full_name, profile_id")
+        .in("id", youngIds);
+      const profileIds = (youngs ?? []).map((y) => y.profile_id).filter(Boolean) as string[];
+      const { data: profiles } = profileIds.length
+        ? await supabase.from("profiles").select("id, avatar_url").in("id", profileIds)
+        : { data: [] as { id: string; avatar_url: string | null }[] };
+      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.avatar_url]));
+      const youngMap = new Map(
+        (youngs ?? []).map((y) => [
+          y.id as string,
+          {
+            id: y.id as string,
+            name: (y.full_name as string) ?? "Jovem",
+            avatar_url: y.profile_id ? profileMap.get(y.profile_id) ?? null : null,
+          },
+        ]),
+      );
+      const map: Record<string, { id: string; name: string; avatar_url: string | null }[]> = {};
+      (rows ?? []).forEach((r) => {
+        const phaseId = r.phase_id as string;
+        const info = youngMap.get(r.young_id as string);
+        if (!info) return;
+        if (!map[phaseId]) map[phaseId] = [];
+        map[phaseId].push(info);
+      });
+      return map;
     },
   });
 
@@ -267,6 +311,7 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
               phase={phase}
               cards={cardsByPhase[phase]}
               canEdit={canEdit}
+              assigneesByPhase={assigneesByPhase}
               onOpenCard={(id) => setOpenCardId(id)}
               onAddCard={() => setShowNew(phase)}
             />
@@ -284,9 +329,10 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
           canEdit={canEdit}
           canReassign={canReassign}
           onClose={() => setOpenCardId(null)}
-          onUpdated={() =>
-            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
-          }
+          onUpdated={() => {
+            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] });
+            qc.invalidateQueries({ queryKey: ["journey-assignees", youngId] });
+          }}
         />
       )}
 
@@ -297,9 +343,10 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
           nextPosition={cardsByPhase[showNew].length}
           canReassign={canReassign}
           onClose={() => setShowNew(null)}
-          onCreated={() =>
-            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
-          }
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] });
+            qc.invalidateQueries({ queryKey: ["journey-assignees", youngId] });
+          }}
         />
       )}
     </div>
@@ -307,16 +354,20 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
 }
 
 /* -------------------- Phase Column -------------------- */
+type AssigneeInfo = { id: string; name: string; avatar_url: string | null };
+
 function PhaseColumn({
   phase,
   cards,
   canEdit,
+  assigneesByPhase,
   onOpenCard,
   onAddCard,
 }: {
   phase: TrailPhase;
   cards: JourneyCard[];
   canEdit: boolean;
+  assigneesByPhase: Record<string, AssigneeInfo[]>;
   onOpenCard: (id: string) => void;
   onAddCard: () => void;
 }) {
@@ -349,7 +400,12 @@ function PhaseColumn({
       >
         <div className="space-y-2 flex-1">
           {cards.map((c) => (
-            <SortableCard key={c.id} card={c} onOpen={() => onOpenCard(c.id)} />
+            <SortableCard
+              key={c.id}
+              card={c}
+              assignees={assigneesByPhase[c.id] ?? []}
+              onOpen={() => onOpenCard(c.id)}
+            />
           ))}
           {cards.length === 0 && (
             <p className="text-xs text-muted-foreground italic py-6 text-center">
@@ -369,7 +425,15 @@ function PhaseColumn({
 }
 
 /* -------------------- Sortable Card -------------------- */
-function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void }) {
+function SortableCard({
+  card,
+  assignees,
+  onOpen,
+}: {
+  card: JourneyCard;
+  assignees: AssigneeInfo[];
+  onOpen: () => void;
+}) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
   } = useSortable({ id: card.id });
@@ -382,6 +446,9 @@ function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void 
 
   const done = card.checklist.filter((i) => i.done).length;
   const total = card.checklist.length;
+  const maxVisible = 3;
+  const visible = assignees.slice(0, maxVisible);
+  const extra = assignees.length - visible.length;
 
   return (
     <div
@@ -417,6 +484,30 @@ function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void 
             </span>
           )}
         </div>
+        {assignees.length > 0 && (
+          <div className="flex items-center gap-1 mt-2 flex-wrap">
+            {visible.map((a) => (
+              <span
+                key={a.id}
+                className="flex items-center gap-1 rounded-full bg-muted/60 pl-0.5 pr-2 py-0.5 text-[10px] max-w-[8rem]"
+                title={a.name}
+              >
+                <Avatar className="h-4 w-4">
+                  <AvatarImage src={a.avatar_url ?? undefined} alt={a.name} />
+                  <AvatarFallback className="text-[8px]">
+                    {a.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">{a.name.split(" ")[0]}</span>
+              </span>
+            ))}
+            {extra > 0 && (
+              <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+                +{extra}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -685,9 +776,8 @@ function CardDrawer({
               {links.map((l, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={normalizeExternalUrl(l.url)}
+                    {...externalLinkProps}
                     className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                   >
                     <ExternalLink className="h-3 w-3" /> {l.label}
@@ -951,9 +1041,8 @@ function NewCardDialog({
               {links.map((l, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={normalizeExternalUrl(l.url)}
+                    {...externalLinkProps}
                     className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                   >
                     <ExternalLink className="h-3 w-3" /> {l.label}
