@@ -312,8 +312,9 @@ function AgendaSection({
               >
                 <Checkbox
                   checked={it.completed}
+                  disabled={!canManage}
                   onCheckedChange={(v) =>
-                    toggleMutation.mutate({ id: it.id, completed: !!v })
+                    canManage && toggleMutation.mutate({ id: it.id, completed: !!v })
                   }
                   className="mt-0.5"
                 />
@@ -335,14 +336,16 @@ function AgendaSection({
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                  onClick={() => deleteMutation.mutate(it.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteMutation.mutate(it.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </li>
             ))}
           </ul>
