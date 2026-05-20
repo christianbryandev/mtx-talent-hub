@@ -35,6 +35,7 @@ import {
   type MeetingType,
 } from "@/types/meetings";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const schema = z.object({
   title: z.string().min(2, "Informe um título"),
