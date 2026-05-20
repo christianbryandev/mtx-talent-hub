@@ -436,12 +436,14 @@ function AtaSection({
 function ParticipantsSection({
   meetingId,
   participants,
+  canManage = true,
 }: {
   meetingId: string;
   participants: (MeetingParticipant & {
     young?: { full_name: string } | null;
     profile?: { full_name: string | null; email: string | null } | null;
   })[];
+  canManage?: boolean;
 }) {
   const queryClient = useQueryClient();
   const { data: youngPeople = [] } = useQuery({
