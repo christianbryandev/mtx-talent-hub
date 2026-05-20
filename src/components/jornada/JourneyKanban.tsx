@@ -311,6 +311,7 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
               phase={phase}
               cards={cardsByPhase[phase]}
               canEdit={canEdit}
+              assigneesByPhase={assigneesByPhase}
               onOpenCard={(id) => setOpenCardId(id)}
               onAddCard={() => setShowNew(phase)}
             />
