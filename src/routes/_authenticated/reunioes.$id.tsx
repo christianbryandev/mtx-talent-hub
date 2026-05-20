@@ -411,23 +411,25 @@ function AtaSection({
           <label className="text-xs font-medium text-muted-foreground">Observações</label>
           <Textarea rows={2} value={observations} onChange={(e) => setObservations(e.target.value)} />
         </div>
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            disabled={saving}
-            onClick={() =>
-              onSave({
-                objectives: objectives || null,
-                decisions: decisions || null,
-                next_steps: nextSteps || null,
-                observations: observations || null,
-              })
-            }
-          >
-            {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-            Salvar ata
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              disabled={saving}
+              onClick={() =>
+                onSave({
+                  objectives: objectives || null,
+                  decisions: decisions || null,
+                  next_steps: nextSteps || null,
+                  observations: observations || null,
+                })
+              }
+            >
+              {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Salvar ata
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
