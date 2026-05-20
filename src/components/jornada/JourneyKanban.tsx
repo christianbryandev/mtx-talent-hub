@@ -60,9 +60,11 @@ import {
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 import { logActivity } from "@/lib/activity-log";
 import { cn } from "@/lib/utils";
+import { normalizeExternalUrl, externalLinkProps } from "@/lib/external-url";
 
 import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSelect";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type CardStatus = "pendente" | "em_andamento" | "concluida";
 
