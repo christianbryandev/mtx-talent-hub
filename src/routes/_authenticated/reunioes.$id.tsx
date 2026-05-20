@@ -249,9 +249,11 @@ function MeetingDetailPage() {
 function AgendaSection({
   meetingId,
   items,
+  canManage = true,
 }: {
   meetingId: string;
   items: MeetingAgendaItem[];
+  canManage?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [newTitle, setNewTitle] = useState("");
