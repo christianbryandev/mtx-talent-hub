@@ -46,7 +46,11 @@ function MeetingDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
+  const isOwner = !!user && !!meeting_owner_match(user.id);
   const [editOpen, setEditOpen] = useState(false);
+  // Helper inline para evitar nova função
+  function meeting_owner_match(_: string) { return false; }
 
   const { data: meeting, isLoading } = useQuery({
     queryKey: ["meeting", id],
