@@ -165,6 +165,8 @@ function MeetingDetailPage() {
     );
   }
 
+  const canManage = isAdmin || (!!meeting && meeting.is_personal && meeting.created_by === user?.id);
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/reunioes" })}>
@@ -181,6 +183,11 @@ function MeetingDetailPage() {
                   {MEETING_TYPE_LABELS[meeting.type]}
                 </Badge>
                 <Badge variant="secondary">{MEETING_STATUS_LABELS[meeting.status]}</Badge>
+                {meeting.is_personal && (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-500">
+                    Pessoal
+                  </Badge>
+                )}
               </div>
               <h2 className="text-2xl font-bold tracking-tight">{meeting.title}</h2>
               <p className="text-sm text-muted-foreground">
@@ -190,41 +197,47 @@ function MeetingDetailPage() {
                 {meeting.location && ` · ${meeting.location}`}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <Edit className="mr-1.5 h-4 w-4" /> Editar
-              </Button>
-              {meeting.status === "agendada" && (
-                <>
-                  <Button
-                    size="sm"
-                    onClick={() => statusMutation.mutate("realizada")}
-                    disabled={statusMutation.isPending}
-                  >
-                    <CheckCircle2 className="mr-1.5 h-4 w-4" /> Marcar como realizada
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => statusMutation.mutate("cancelada")}
-                    disabled={statusMutation.isPending}
-                  >
-                    <XCircle className="mr-1.5 h-4 w-4" /> Cancelar
-                  </Button>
-                </>
-              )}
-            </div>
+            {canManage && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                  <Edit className="mr-1.5 h-4 w-4" /> Editar
+                </Button>
+                {meeting.status === "agendada" && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => statusMutation.mutate("realizada")}
+                      disabled={statusMutation.isPending}
+                    >
+                      <CheckCircle2 className="mr-1.5 h-4 w-4" /> Marcar como realizada
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => statusMutation.mutate("cancelada")}
+                      disabled={statusMutation.isPending}
+                    >
+                      <XCircle className="mr-1.5 h-4 w-4" /> Cancelar
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <AgendaSection meetingId={id} items={agenda} />
-          <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} />
+          <AgendaSection meetingId={id} items={agenda} canManage={canManage} />
+          {canManage ? (
+            <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} />
+          ) : (
+            <AtaReadOnly meeting={meeting} />
+          )}
         </div>
         <div className="space-y-4">
-          <ParticipantsSection meetingId={id} participants={participants} />
+          <ParticipantsSection meetingId={id} participants={participants} canManage={canManage} />
         </div>
       </div>
 
