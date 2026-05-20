@@ -329,9 +329,10 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
           canEdit={canEdit}
           canReassign={canReassign}
           onClose={() => setOpenCardId(null)}
-          onUpdated={() =>
-            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
-          }
+          onUpdated={() => {
+            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] });
+            qc.invalidateQueries({ queryKey: ["journey-assignees", youngId] });
+          }}
         />
       )}
 
@@ -342,9 +343,10 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
           nextPosition={cardsByPhase[showNew].length}
           canReassign={canReassign}
           onClose={() => setShowNew(null)}
-          onCreated={() =>
-            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] })
-          }
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ["journey-phases", youngId] });
+            qc.invalidateQueries({ queryKey: ["journey-assignees", youngId] });
+          }}
         />
       )}
     </div>
