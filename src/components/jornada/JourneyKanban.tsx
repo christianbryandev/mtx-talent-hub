@@ -774,9 +774,8 @@ function CardDrawer({
               {links.map((l, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={normalizeExternalUrl(l.url)}
+                    {...externalLinkProps}
                     className="text-sm text-primary hover:underline flex items-center gap-1 flex-1 truncate"
                   >
                     <ExternalLink className="h-3 w-3" /> {l.label}
