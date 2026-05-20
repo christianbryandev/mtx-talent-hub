@@ -423,7 +423,15 @@ function PhaseColumn({
 }
 
 /* -------------------- Sortable Card -------------------- */
-function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void }) {
+function SortableCard({
+  card,
+  assignees,
+  onOpen,
+}: {
+  card: JourneyCard;
+  assignees: AssigneeInfo[];
+  onOpen: () => void;
+}) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
   } = useSortable({ id: card.id });
@@ -436,6 +444,9 @@ function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void 
 
   const done = card.checklist.filter((i) => i.done).length;
   const total = card.checklist.length;
+  const maxVisible = 3;
+  const visible = assignees.slice(0, maxVisible);
+  const extra = assignees.length - visible.length;
 
   return (
     <div
@@ -471,6 +482,30 @@ function SortableCard({ card, onOpen }: { card: JourneyCard; onOpen: () => void 
             </span>
           )}
         </div>
+        {assignees.length > 0 && (
+          <div className="flex items-center gap-1 mt-2 flex-wrap">
+            {visible.map((a) => (
+              <span
+                key={a.id}
+                className="flex items-center gap-1 rounded-full bg-muted/60 pl-0.5 pr-2 py-0.5 text-[10px] max-w-[8rem]"
+                title={a.name}
+              >
+                <Avatar className="h-4 w-4">
+                  <AvatarImage src={a.avatar_url ?? undefined} alt={a.name} />
+                  <AvatarFallback className="text-[8px]">
+                    {a.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">{a.name.split(" ")[0]}</span>
+              </span>
+            ))}
+            {extra > 0 && (
+              <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+                +{extra}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
