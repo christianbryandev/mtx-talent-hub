@@ -69,6 +69,7 @@ interface Props {
 export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const isEdit = !!meeting;
 
   const form = useForm<FormValues>({
