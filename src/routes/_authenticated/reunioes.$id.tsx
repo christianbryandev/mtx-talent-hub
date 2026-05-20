@@ -34,6 +34,7 @@ import {
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/reunioes/$id")({
   head: () => ({ meta: [{ title: "Reunião — MTX Hub" }] }),
