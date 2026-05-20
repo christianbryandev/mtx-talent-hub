@@ -352,16 +352,20 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
 }
 
 /* -------------------- Phase Column -------------------- */
+type AssigneeInfo = { id: string; name: string; avatar_url: string | null };
+
 function PhaseColumn({
   phase,
   cards,
   canEdit,
+  assigneesByPhase,
   onOpenCard,
   onAddCard,
 }: {
   phase: TrailPhase;
   cards: JourneyCard[];
   canEdit: boolean;
+  assigneesByPhase: Record<string, AssigneeInfo[]>;
   onOpenCard: (id: string) => void;
   onAddCard: () => void;
 }) {
@@ -394,7 +398,12 @@ function PhaseColumn({
       >
         <div className="space-y-2 flex-1">
           {cards.map((c) => (
-            <SortableCard key={c.id} card={c} onOpen={() => onOpenCard(c.id)} />
+            <SortableCard
+              key={c.id}
+              card={c}
+              assignees={assigneesByPhase[c.id] ?? []}
+              onOpen={() => onOpenCard(c.id)}
+            />
           ))}
           {cards.length === 0 && (
             <p className="text-xs text-muted-foreground italic py-6 text-center">
