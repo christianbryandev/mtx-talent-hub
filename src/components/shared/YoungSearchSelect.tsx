@@ -4,6 +4,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
   PopoverContent,
@@ -27,9 +28,18 @@ interface Props {
   excludeId?: string;
 }
 
+interface YoungOption {
+  id: string;
+  full_name: string;
+  status: string | null;
+  trail_phase: string | null;
+  avatar_url: string | null;
+  email: string | null;
+}
+
 /**
  * Select com busca filtrável de jovens cadastrados.
- * Reutilizável em qualquer formulário que precise vincular um jovem.
+ * Mostra avatar + email para diferenciar jovens com nomes iguais.
  */
 export function YoungSearchSelect({
   value,
@@ -40,15 +50,38 @@ export function YoungSearchSelect({
 }: Props) {
   const [open, setOpen] = useState(false);
 
-  const { data: youngs = [] } = useQuery({
-    queryKey: ["young-people-min"],
+  const { data: youngs = [] } = useQuery<YoungOption[]>({
+    queryKey: ["young-people-search-select"],
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("young_people")
-        .select("id, full_name, status, trail_phase")
+        .select("id, full_name, status, trail_phase, profile_id")
         .order("full_name");
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      const profileIds = rows.map((r) => r.profile_id).filter(Boolean) as string[];
+      const { data: profiles } = profileIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id, avatar_url, email")
+            .in("id", profileIds)
+        : { data: [] as { id: string; avatar_url: string | null; email: string | null }[] };
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id, { avatar_url: p.avatar_url, email: p.email }]),
+      );
+      return rows.map((r) => {
+        const prof = r.profile_id ? profileMap.get(r.profile_id) : undefined;
+        return {
+          id: r.id as string,
+          full_name: (r.full_name as string) ?? "Sem nome",
+          status: (r.status as string | null) ?? null,
+          trail_phase: (r.trail_phase as string | null) ?? null,
+          avatar_url: prof?.avatar_url ?? null,
+          email: prof?.email ?? null,
+        };
+      });
     },
   });
 
@@ -65,7 +98,19 @@ export function YoungSearchSelect({
           disabled={disabled}
           className="w-full justify-between font-normal"
         >
-          {current ? current.full_name : placeholder}
+          {current ? (
+            <span className="flex items-center gap-2 min-w-0">
+              <Avatar className="h-5 w-5 shrink-0">
+                <AvatarImage src={current.avatar_url ?? undefined} alt={current.full_name} />
+                <AvatarFallback className="text-[9px]">
+                  {current.full_name.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate">{current.full_name}</span>
+            </span>
+          ) : (
+            placeholder
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -80,7 +125,7 @@ export function YoungSearchSelect({
                 return (
                   <CommandItem
                     key={y.id}
-                    value={`${y.full_name} ${y.status ?? ""}`}
+                    value={`${y.full_name} ${y.email ?? ""} ${y.status ?? ""} ${y.id}`}
                     onSelect={() => {
                       onChange(isSel ? null : y.id);
                       setOpen(false);
@@ -88,12 +133,23 @@ export function YoungSearchSelect({
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        "mr-2 h-4 w-4 shrink-0",
                         isSel ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <div className="flex flex-col">
-                      <span className="text-sm">{y.full_name}</span>
+                    <Avatar className="h-6 w-6 mr-2 shrink-0">
+                      <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
+                      <AvatarFallback className="text-[10px]">
+                        {y.full_name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm truncate">{y.full_name}</span>
+                      {y.email && (
+                        <span className="text-[10px] text-muted-foreground truncate">
+                          {y.email}
+                        </span>
+                      )}
                       {(y.status || y.trail_phase) && (
                         <span className="text-[10px] text-muted-foreground">
                           {[y.status, y.trail_phase].filter(Boolean).join(" · ")}
