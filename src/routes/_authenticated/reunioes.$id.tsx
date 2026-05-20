@@ -375,10 +375,12 @@ function AtaSection({
   meeting,
   onSave,
   saving,
+  canManage = true,
 }: {
   meeting: Meeting;
   onSave: (v: Partial<Meeting>) => void;
   saving: boolean;
+  canManage?: boolean;
 }) {
   const [objectives, setObjectives] = useState(meeting.objectives ?? "");
   const [decisions, setDecisions] = useState(meeting.decisions ?? "");
