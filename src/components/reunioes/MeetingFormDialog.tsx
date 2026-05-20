@@ -179,6 +179,11 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
           values.link_kind === "opportunity" ? values.link_opportunity_id || null : null,
         link_client_id:
           values.link_kind === "client" ? values.link_client_id || null : null,
+        // Não-admins só podem criar reuniões pessoais
+        ...(isEdit ? {} : {
+          created_by: user?.id ?? null,
+          is_personal: !isAdmin,
+        }),
       };
 
       if (isEdit && meeting) {
