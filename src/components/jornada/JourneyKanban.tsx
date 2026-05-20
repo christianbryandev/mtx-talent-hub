@@ -130,6 +130,48 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
     },
   });
 
+  const phaseIds = cards.map((c) => c.id);
+  const { data: assigneesByPhase = {} } = useQuery({
+    queryKey: ["journey-assignees", youngId, phaseIds.join(",")],
+    enabled: phaseIds.length > 0,
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("journey_phase_assignees")
+        .select("phase_id, young_id")
+        .in("phase_id", phaseIds);
+      const youngIds = Array.from(new Set((rows ?? []).map((r) => r.young_id as string)));
+      if (youngIds.length === 0) return {} as Record<string, { id: string; name: string; avatar_url: string | null }[]>;
+      const { data: youngs } = await supabase
+        .from("young_people")
+        .select("id, full_name, profile_id")
+        .in("id", youngIds);
+      const profileIds = (youngs ?? []).map((y) => y.profile_id).filter(Boolean) as string[];
+      const { data: profiles } = profileIds.length
+        ? await supabase.from("profiles").select("id, avatar_url").in("id", profileIds)
+        : { data: [] as { id: string; avatar_url: string | null }[] };
+      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.avatar_url]));
+      const youngMap = new Map(
+        (youngs ?? []).map((y) => [
+          y.id as string,
+          {
+            id: y.id as string,
+            name: (y.full_name as string) ?? "Jovem",
+            avatar_url: y.profile_id ? profileMap.get(y.profile_id) ?? null : null,
+          },
+        ]),
+      );
+      const map: Record<string, { id: string; name: string; avatar_url: string | null }[]> = {};
+      (rows ?? []).forEach((r) => {
+        const phaseId = r.phase_id as string;
+        const info = youngMap.get(r.young_id as string);
+        if (!info) return;
+        if (!map[phaseId]) map[phaseId] = [];
+        map[phaseId].push(info);
+      });
+      return map;
+    },
+  });
+
   const cardsByPhase = useMemo(() => {
     const map: Record<TrailPhase, JourneyCard[]> = {
       fase_1: [], fase_2: [], fase_3: [], fase_4: [], fase_5: [],
