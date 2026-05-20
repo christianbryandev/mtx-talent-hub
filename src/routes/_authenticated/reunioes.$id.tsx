@@ -230,11 +230,7 @@ function MeetingDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <AgendaSection meetingId={id} items={agenda} canManage={canManage} />
-          {canManage ? (
-            <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} />
-          ) : (
-            <AtaReadOnly meeting={meeting} />
-          )}
+          <AtaSection meeting={meeting} onSave={(v) => ataMutation.mutate(v)} saving={ataMutation.isPending} canManage={canManage} />
         </div>
         <div className="space-y-4">
           <ParticipantsSection meetingId={id} participants={participants} canManage={canManage} />
