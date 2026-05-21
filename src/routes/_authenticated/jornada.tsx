@@ -15,9 +15,14 @@ import {
   Zap,
   GraduationCap,
   ArrowRight,
+  Rocket,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { useJourney } from "@/hooks/useJourney";
+import { startUserJourney } from "@/utils/journeySeed";
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
