@@ -2545,6 +2545,7 @@ export type Database = {
         Args: { _client_service_id: string }
         Returns: Json
       }
+      admin_get_journey_tracking: { Args: never; Returns: Json }
       daily_notifications_job: { Args: never; Returns: undefined }
       get_invite_by_token: {
         Args: { _token: string }
