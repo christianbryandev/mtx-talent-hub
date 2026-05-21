@@ -464,7 +464,7 @@ function OptionEditor({
         type={o.media_type}
         pathPrefix={`options/${o.id}`}
         label="Mídia da alternativa"
-        onChange={async (patch) => { await onSaveOption(o.id, patch); }}
+        onChange={async (patch) => { await onSave(patch); }}
       />
     </div>
   );
