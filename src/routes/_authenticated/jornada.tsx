@@ -44,7 +44,7 @@ const STATUS_META: Record<
 
 function JourneyPage() {
   const { isAdmin } = usePermissions();
-  const { data, isLoading, isError, error, isFetching, markItem, submitQuiz } = useJourney();
+  const { data, isLoading, isError, error, isFetching, toggleItem, submitQuiz } = useJourney();
 
   if (isLoading) return <Skeleton className="h-96 w-full" />;
   if (isError)
@@ -89,8 +89,8 @@ function JourneyPage() {
           <PhaseCard
             key={phase.id}
             phase={phase}
-            pending={markItem.isPending || submitQuiz.isPending}
-            onMark={(itemId) => markItem.mutate(itemId)}
+            pending={toggleItem.isPending || submitQuiz.isPending}
+            onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
             onSubmitQuiz={(score) => submitQuiz.mutate({ phaseId: phase.id, score })}
           />
         ))}
@@ -102,12 +102,12 @@ function JourneyPage() {
 function PhaseCard({
   phase,
   pending,
-  onMark,
+  onToggle,
   onSubmitQuiz,
 }: {
   phase: JourneyPhase;
   pending: boolean;
-  onMark: (itemId: string) => void;
+  onToggle: (itemId: string, completed: boolean) => void;
   onSubmitQuiz: (score: number) => void;
 }) {
   const meta = STATUS_META[phase.status];
@@ -217,8 +217,8 @@ function PhaseCard({
                   >
                     <Checkbox
                       checked={item.completed}
-                      disabled={item.completed || pending}
-                      onCheckedChange={() => !item.completed && onMark(item.id)}
+                      disabled={pending}
+                      onCheckedChange={(v) => onToggle(item.id, v === true)}
                     />
                     <span className={item.completed ? "line-through text-muted-foreground" : ""}>
                       {item.title}
