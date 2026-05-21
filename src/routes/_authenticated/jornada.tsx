@@ -10,8 +10,13 @@ import {
   ExternalLink,
   Paperclip,
   BookOpen,
+  Target,
+  Trophy,
+  Zap,
+  GraduationCap,
+  ArrowRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useJourney } from "@/hooks/useJourney";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Card } from "@/components/ui/card";
@@ -23,7 +28,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
-import type { JourneyPhase, PhaseStatus } from "@/services/journeyService";
+import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+
 
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({ meta: [{ title: "Jornada — MTX Hub" }] }),
@@ -32,26 +38,85 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 
 const STATUS_META: Record<
   PhaseStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: typeof Lock }
+  {
+    label: string;
+    variant: "default" | "secondary" | "outline" | "destructive";
+    icon: typeof Lock;
+    accent: string;
+  }
 > = {
-  bloqueada: { label: "Bloqueada", variant: "outline", icon: Lock },
-  reprovada: { label: "Reprovada", variant: "destructive", icon: XCircle },
-  aguardando_quiz: { label: "Aguardando quiz", variant: "secondary", icon: HelpCircle },
-  nao_iniciada: { label: "Não iniciada", variant: "outline", icon: Circle },
-  em_andamento: { label: "Em andamento", variant: "default", icon: Sparkles },
-  concluida: { label: "Concluída", variant: "secondary", icon: CheckCircle2 },
+  bloqueada: { label: "Bloqueada", variant: "outline", icon: Lock, accent: "text-muted-foreground" },
+  reprovada: { label: "Reprovada", variant: "destructive", icon: XCircle, accent: "text-destructive" },
+  aguardando_quiz: { label: "Aguardando quiz", variant: "secondary", icon: HelpCircle, accent: "text-amber-500" },
+  nao_iniciada: { label: "Não iniciada", variant: "outline", icon: Circle, accent: "text-muted-foreground" },
+  em_andamento: { label: "Em andamento", variant: "default", icon: Sparkles, accent: "text-sky-500" },
+  concluida: { label: "Concluída", variant: "secondary", icon: CheckCircle2, accent: "text-emerald-500" },
 };
+
+interface NextMission {
+  phase: JourneyPhase;
+  kind: "checklist" | "quiz" | "locked" | "done";
+  label: string;
+  cta: string;
+}
+
+function detectNextMission(j: UserJourney): NextMission | null {
+  if (!j.phases.length) return null;
+  // First non-completed phase
+  const active = j.phases.find((p) => p.status !== "concluida");
+  if (!active) {
+    return { phase: j.phases[j.phases.length - 1], kind: "done", label: "Jornada concluída", cta: "Revisar fases" };
+  }
+  if (active.status === "bloqueada") {
+    return { phase: active, kind: "locked", label: "Aguardando desbloqueio", cta: "Aguarde" };
+  }
+  if (active.status === "aguardando_quiz" || (active.has_quiz && active.cards_done >= active.cards_total && active.cards_total > 0)) {
+    return { phase: active, kind: "quiz", label: "Próximo: fazer o quiz da fase", cta: "Ir para o Quiz" };
+  }
+  return {
+    phase: active,
+    kind: "checklist",
+    label: active.status === "reprovada" ? "Refaça o quiz" : "Continuar tarefa",
+    cta: "Abrir fase",
+  };
+}
+
 
 function JourneyPage() {
   const { isAdmin } = usePermissions();
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
+  const [openPhaseId, setOpenPhaseId] = useState<string | null>(null);
 
-  if (isLoading) return <Skeleton className="h-96 w-full" />;
+  const mission = useMemo(() => (data ? detectNextMission(data) : null), [data]);
+  const quizzesApproved = useMemo(
+    () => (data ? data.phases.filter((p) => p.has_quiz && p.status === "concluida").length : 0),
+    [data],
+  );
+  const quizzesTotal = useMemo(
+    () => (data ? data.phases.filter((p) => p.has_quiz).length : 0),
+    [data],
+  );
+  const phasesDone = useMemo(
+    () => (data ? data.phases.filter((p) => p.status === "concluida").length : 0),
+    [data],
+  );
+
+  if (isLoading)
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   if (isError)
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Não foi possível carregar a jornada. {(error as Error)?.message}
+          Não foi possível carregar a jornada. Tente novamente em instantes.
+          {error instanceof Error && (
+            <span className="block text-xs opacity-70 mt-1">{error.message}</span>
+          )}
         </AlertDescription>
       </Alert>
     );
@@ -84,12 +149,24 @@ function JourneyPage() {
         </div>
       </header>
 
+      <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
+
+      <IndicatorsRow
+        xp={data.total_xp}
+        progress={data.overall_progress}
+        phasesDone={phasesDone}
+        phasesTotal={data.phases.length}
+        quizzesApproved={quizzesApproved}
+        quizzesTotal={quizzesTotal}
+      />
+
       <div className="space-y-4">
         {data.phases.map((phase) => (
           <PhaseCard
             key={phase.id}
             phase={phase}
             pending={toggleItem.isPending}
+            forceOpen={openPhaseId === phase.id}
             onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
           />
         ))}
@@ -98,13 +175,173 @@ function JourneyPage() {
   );
 }
 
+function NextMissionBlock({
+  mission,
+  onOpenPhase,
+}: {
+  mission: NextMission | null;
+  onOpenPhase: (id: string) => void;
+}) {
+  if (!mission) {
+    return (
+      <Card className="p-5 bg-gradient-to-br from-muted/40 to-background border-border/60">
+        <p className="text-sm text-muted-foreground">Nenhuma fase configurada ainda.</p>
+      </Card>
+    );
+  }
+  const isDone = mission.kind === "done";
+  const isLocked = mission.kind === "locked";
+  return (
+    <Card
+      className={`p-5 border-border/60 bg-gradient-to-br ${
+        isDone
+          ? "from-emerald-500/10 via-background to-background"
+          : isLocked
+            ? "from-muted/40 to-background"
+            : "from-primary/10 via-background to-background"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-start gap-3 min-w-0">
+          <div
+            className={`rounded-md p-2 shrink-0 ${
+              isDone
+                ? "bg-emerald-500/15 text-emerald-500"
+                : isLocked
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-primary/15 text-primary"
+            }`}
+          >
+            {isDone ? (
+              <Trophy className="h-5 w-5" />
+            ) : isLocked ? (
+              <Lock className="h-5 w-5" />
+            ) : mission.kind === "quiz" ? (
+              <GraduationCap className="h-5 w-5" />
+            ) : (
+              <Target className="h-5 w-5" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              Próxima missão
+            </div>
+            <div className="font-semibold truncate">{mission.label}</div>
+            <div className="text-xs text-muted-foreground truncate">
+              Fase {mission.phase.order_index}: {mission.phase.title}
+              {mission.kind === "checklist" && mission.phase.cards_total > 0 && (
+                <> · {mission.phase.cards_done}/{mission.phase.cards_total} cards</>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="shrink-0">
+          {mission.kind === "quiz" ? (
+            <Button asChild>
+              <Link to="/jornada/quiz/$phaseId" params={{ phaseId: mission.phase.id }}>
+                {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          ) : isLocked ? (
+            <Button variant="outline" disabled>
+              <Lock className="mr-1 h-4 w-4" /> {mission.cta}
+            </Button>
+          ) : (
+            <Button
+              variant={isDone ? "outline" : "default"}
+              onClick={() => {
+                onOpenPhase(mission.phase.id);
+                if (typeof document !== "undefined") {
+                  document
+                    .getElementById(`phase-${mission.phase.id}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            >
+              {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function IndicatorsRow({
+  xp,
+  progress,
+  phasesDone,
+  phasesTotal,
+  quizzesApproved,
+  quizzesTotal,
+}: {
+  xp: number;
+  progress: number;
+  phasesDone: number;
+  phasesTotal: number;
+  quizzesApproved: number;
+  quizzesTotal: number;
+}) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <IndicatorCard icon={Zap} label="XP acumulado" value={`${xp}`} accent="text-amber-500" />
+      <IndicatorCard
+        icon={Sparkles}
+        label="Progresso geral"
+        value={`${progress}%`}
+        accent="text-sky-500"
+      />
+      <IndicatorCard
+        icon={CheckCircle2}
+        label="Fases concluídas"
+        value={`${phasesDone}/${phasesTotal}`}
+        accent="text-emerald-500"
+      />
+      <IndicatorCard
+        icon={GraduationCap}
+        label="Quizzes aprovados"
+        value={`${quizzesApproved}/${quizzesTotal}`}
+        accent="text-primary"
+      />
+    </div>
+  );
+}
+
+function IndicatorCard({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: typeof Lock;
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <Card className="p-3 flex items-center gap-3 border-border/60 hover:border-border transition-colors">
+      <div className={`rounded-md bg-muted/50 p-2 ${accent}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground truncate">
+          {label}
+        </div>
+        <div className="font-semibold text-sm truncate">{value}</div>
+      </div>
+    </Card>
+  );
+}
+
 function PhaseCard({
   phase,
   pending,
+  forceOpen,
   onToggle,
 }: {
   phase: JourneyPhase;
   pending: boolean;
+  forceOpen?: boolean;
   onToggle: (itemId: string, completed: boolean) => void;
 }) {
   const meta = STATUS_META[phase.status];
@@ -113,16 +350,25 @@ function PhaseCard({
     phase.status === "em_andamento" || phase.status === "aguardando_quiz" || phase.status === "reprovada",
   );
   const locked = phase.status === "bloqueada";
+  // Open imperatively when "Próxima missão" focuses this phase
+  useEffect(() => {
+    if (forceOpen && !locked) setOpen(true);
+  }, [forceOpen, locked]);
+
 
   const phasePct =
     phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
 
   return (
-    <Card className={`p-5 ${locked ? "opacity-60" : ""}`}>
+    <Card
+      id={`phase-${phase.id}`}
+      className={`p-5 transition-opacity scroll-mt-20 ${locked ? "opacity-60" : ""}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Icon className="h-5 w-5 text-primary shrink-0" />
+          <Icon className={`h-5 w-5 shrink-0 ${meta.accent}`} />
           <div className="min-w-0">
+
             <div className="font-semibold truncate">
               {phase.order_index}. {phase.title}
             </div>
