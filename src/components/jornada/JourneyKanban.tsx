@@ -711,11 +711,24 @@ function CardDrawer({
                 <div key={idx} className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (!canEdit) return;
-                      const next = [...checklist];
-                      next[idx] = { ...item, done: !item.done };
-                      setChecklist(next);
+                      const prev = checklist;
+                      const next = prev.map((it, i) =>
+                        i === idx ? { ...it, done: !it.done } : it,
+                      );
+                      setChecklist(next); // otimista
+                      const { error } = await supabase
+                        .from("journey_phases")
+                        .update({ checklist: next } as never)
+                        .eq("id", card.id);
+                      if (error) {
+                        setChecklist(prev); // rollback
+                        toast.error(`Falha ao salvar checklist: ${error.message}`);
+                        console.error("[checklist] update failed", error);
+                        return;
+                      }
+                      onUpdated();
                     }}
                     className="text-muted-foreground"
                   >
@@ -731,7 +744,22 @@ function CardDrawer({
                   {canEdit && (
                     <button
                       type="button"
-                      onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
+                      onClick={async () => {
+                        const prev = checklist;
+                        const next = prev.filter((_, i) => i !== idx);
+                        setChecklist(next);
+                        const { error } = await supabase
+                          .from("journey_phases")
+                          .update({ checklist: next } as never)
+                          .eq("id", card.id);
+                        if (error) {
+                          setChecklist(prev);
+                          toast.error(`Falha ao remover item: ${error.message}`);
+                          console.error("[checklist] remove failed", error);
+                          return;
+                        }
+                        onUpdated();
+                      }}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <X className="h-3 w-3" />
