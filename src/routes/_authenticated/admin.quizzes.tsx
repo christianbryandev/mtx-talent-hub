@@ -413,7 +413,7 @@ function QuestionEditor({
           type={q.media_type}
           pathPrefix={`questions/${q.id}`}
           label="Mídia da pergunta"
-          onChange={async (patch) => { await onSaveOption(o.id, patch); }}
+          onChange={async (patch) => { await onSave(patch); }}
         />
       </div>
       <div className="space-y-3 pl-6">
