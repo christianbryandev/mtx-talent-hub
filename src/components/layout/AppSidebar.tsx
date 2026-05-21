@@ -66,6 +66,8 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
+  const isColaborador = role === "colaborador";
+  const { data: journey } = useJourney(isColaborador ? undefined : "__disabled__");
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["pending-applications-count"],
