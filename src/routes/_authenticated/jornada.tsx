@@ -517,29 +517,13 @@ function PhaseCard({
             </div>
           ))}
 
-          {phase.has_quiz && phase.status !== "concluida" && (
-            <div className="rounded-md border border-dashed border-primary/40 p-3 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold">Quiz da fase</div>
-                <p className="text-xs text-muted-foreground">
-                  Aprovação ≥ 80%. {phase.cards_done < phase.cards_total
-                    ? "Conclua todos os cards antes de iniciar."
-                    : "Você pode iniciar o quiz agora."}
-                </p>
-              </div>
-              <Button
-                disabled={phase.cards_done < phase.cards_total || pending}
-                asChild={phase.cards_done >= phase.cards_total}
-              >
-                {phase.cards_done >= phase.cards_total ? (
-                  <Link to="/jornada/quiz/$phaseId" params={{ phaseId: phase.id }}>
-                    Fazer quiz
-                  </Link>
-                ) : (
-                  <span>Fazer quiz</span>
-                )}
-              </Button>
-            </div>
+          {phase.has_quiz && (
+            <QuizCard
+              phaseId={phase.id}
+              phaseStatus={phase.status}
+              cardsDone={phase.cards_done}
+              cardsTotal={phase.cards_total}
+            />
           )}
         </div>
       )}
