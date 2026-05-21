@@ -38,15 +38,49 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 
 const STATUS_META: Record<
   PhaseStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: typeof Lock }
+  {
+    label: string;
+    variant: "default" | "secondary" | "outline" | "destructive";
+    icon: typeof Lock;
+    accent: string;
+  }
 > = {
-  bloqueada: { label: "Bloqueada", variant: "outline", icon: Lock },
-  reprovada: { label: "Reprovada", variant: "destructive", icon: XCircle },
-  aguardando_quiz: { label: "Aguardando quiz", variant: "secondary", icon: HelpCircle },
-  nao_iniciada: { label: "Não iniciada", variant: "outline", icon: Circle },
-  em_andamento: { label: "Em andamento", variant: "default", icon: Sparkles },
-  concluida: { label: "Concluída", variant: "secondary", icon: CheckCircle2 },
+  bloqueada: { label: "Bloqueada", variant: "outline", icon: Lock, accent: "text-muted-foreground" },
+  reprovada: { label: "Reprovada", variant: "destructive", icon: XCircle, accent: "text-destructive" },
+  aguardando_quiz: { label: "Aguardando quiz", variant: "secondary", icon: HelpCircle, accent: "text-amber-500" },
+  nao_iniciada: { label: "Não iniciada", variant: "outline", icon: Circle, accent: "text-muted-foreground" },
+  em_andamento: { label: "Em andamento", variant: "default", icon: Sparkles, accent: "text-sky-500" },
+  concluida: { label: "Concluída", variant: "secondary", icon: CheckCircle2, accent: "text-emerald-500" },
 };
+
+interface NextMission {
+  phase: JourneyPhase;
+  kind: "checklist" | "quiz" | "locked" | "done";
+  label: string;
+  cta: string;
+}
+
+function detectNextMission(j: UserJourney): NextMission | null {
+  if (!j.phases.length) return null;
+  // First non-completed phase
+  const active = j.phases.find((p) => p.status !== "concluida");
+  if (!active) {
+    return { phase: j.phases[j.phases.length - 1], kind: "done", label: "Jornada concluída", cta: "Revisar fases" };
+  }
+  if (active.status === "bloqueada") {
+    return { phase: active, kind: "locked", label: "Aguardando desbloqueio", cta: "Aguarde" };
+  }
+  if (active.status === "aguardando_quiz" || (active.has_quiz && active.cards_done >= active.cards_total && active.cards_total > 0)) {
+    return { phase: active, kind: "quiz", label: "Próximo: fazer o quiz da fase", cta: "Ir para o Quiz" };
+  }
+  return {
+    phase: active,
+    kind: "checklist",
+    label: active.status === "reprovada" ? "Refaça o quiz" : "Continuar tarefa",
+    cta: "Abrir fase",
+  };
+}
+
 
 function JourneyPage() {
   const { isAdmin } = usePermissions();
