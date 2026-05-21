@@ -1,91 +1,77 @@
+# Sistema de Quizzes por Fase
 
-# Plano — CRM + Serviços (Prompt A)
+## Objetivo
+Adicionar quizzes interativos por fase da jornada, com nota mínima 80%, retries permitidos apenas em caso de falha, e XP concedido apenas ao passar (uma única vez por quiz). Backend permanece como SSOT.
 
-Vou dividir em **4 fases**. Cada fase é entregável de forma independente e você pode validar antes de eu seguir para a próxima.
+## 1. Banco de dados (migration)
 
----
+Novas tabelas:
 
-## Fase 1 — CRM: Funil reduzido para 6 etapas
+- **`quiz_templates`** — `id`, `phase_id` (FK `journey_phase_catalog`), `title`, `description`, `passing_score` (default 80), `is_active` (default true), `version` (default 1), `created_at`. UNIQUE parcial em `(phase_id) WHERE is_active`.
+- **`quiz_questions`** — `id`, `quiz_id`, `question`, `type` (default `multiple_choice`), `order_index`.
+- **`quiz_options`** — `id`, `question_id`, `text`, `is_correct`, `order_index`.
 
-**Banco (migration):**
-- Renomear/consolidar `funnel_stage` para 6 valores: `prospeccao`, `contato`, `qualificacao`, `diagnostico`, `proposta`, `fechamento`
-- Mapeamento dos dados existentes:
-  - `icp_definido`, `segmentacao` → `prospeccao`
-  - `contato_realizado`, `follow_up` → `contato`
-  - `proposta_enviada`, `negociacao` → `proposta`
-  - `onboarding` → remove (oportunidades viram clientes)
-- Adicionar colunas em `opportunities`: `city`, `is_icp` (bool), `segment_validated` (bool), `temperature` (frio/morno/quente), `has_demand`, `has_budget`, `has_urgency`, `qualification_score` (0–10), `problem_identified`, `improvement_needed`, `solution_opportunity`, `proposal_value`, `proposal_sent_date`, `proposal_status`
+Extensão de `journey_quiz_attempts` (já existe — não recriar):
+- Adicionar coluna `quiz_id uuid` (nullable, FK para `quiz_templates`)
+- Adicionar coluna `attempt_number int default 1`
+- Manter `phase_id`, `score`, `passed`, `user_id` intactos (compat com `submit_quiz_attempt` atual).
 
-**Frontend:**
-- Atualizar `src/types/crm.ts` (`FUNNEL_STAGES` com 6 etapas)
-- `crm.index.tsx`: kanban com 6 colunas
-- `crm.lista.tsx`: filtros atualizados
-- Adicionar filtros novos no topo do kanban: responsável, temperatura, segmento, mês de criação, botão limpar
-- Métricas do dashboard: já existem 4, adicionar **Ticket médio** e **Tempo médio de fechamento**
+**RLS:**
+- `quiz_templates`, `quiz_questions`, `quiz_options`: SELECT para `authenticated`; ALL para admin/super_admin.
+- `journey_quiz_attempts`: já tem policy `jqa_self` adequada.
 
----
+## 2. Backend — RPCs
 
-## Fase 2 — CRM: Card de oportunidade detalhado (8 blocos)
+- **`get_phase_quiz(_phase_id)`** — retorna quiz ativo com perguntas e opções (sem `is_correct`) + flag `already_passed` para o usuário corrente.
+- **`submit_phase_quiz(_phase_id, _answers jsonb)`** — `_answers` = `[{question_id, option_id}]`. SECURITY DEFINER:
+  1. Bloqueia se já passou (`passed=true` em qualquer tentativa anterior do `quiz_id` ativo).
+  2. Calcula score = `correct/total * 100`.
+  3. Determina `passed = score >= passing_score`.
+  4. Calcula `attempt_number = MAX(attempt_number)+1` para o `(user_id, quiz_id)`.
+  5. Insere em `journey_quiz_attempts` (com `quiz_id` e `attempt_number`).
+  6. Se passou: reusa fluxo já existente — atualiza `user_phase_status` para `concluido` (apenas se cards completos, igual ao `submit_quiz_attempt`), chama `process_xp_event('phase_completed', phase_id, xp)` (idempotente — XP nunca duplica), desbloqueia próxima fase.
+  7. Retorna `{score, passed, attempt_number, already_passed_before}`.
 
-**Refatorar `OpportunityFormDialog.tsx` e `crm.$id.tsx`** em painel lateral (`Sheet`) com seções colapsáveis:
+**Importante:** `submit_quiz_attempt` antigo (entrada manual de nota) permanece intacto para não quebrar o admin/legacy.
 
-- Bloco 1: Dados básicos
-- Bloco 2: Classificação (ICP, segmento validado, origem, responsável)
-- Bloco 3: Status (etapa read-only + temperatura com botões 🔵🟡🔴)
-- Bloco 4: Interação (datas + histórico cronológico — já existe `opportunity_interactions`, vamos reusar como log)
-- Bloco 5: Qualificação (3 toggles + slider 0–10)
-- Bloco 6: Diagnóstico (3 textareas)
-- Bloco 7: Proposta (multi-serviços via `opportunity_services` já existente, valor, data, status)
-- Bloco 8: Fechamento (ganha/perdida + motivo + botão "Mover para Clientes" se ganha)
+## 3. Frontend
 
-Botão "copiar" no telefone/WhatsApp.
+**Serviço (`src/services/quizService.ts`)** — `getPhaseQuiz`, `submitPhaseQuiz`.
 
----
+**Hook (`src/hooks/useQuiz.ts`)** — `useQuiz(phaseId)` retorna quiz + mutation `submit`. Invalida `["user-journey"]` em sucesso.
 
-## Fase 3 — Aba Serviços: Lista + Formulário expandido
+**Rota `/jornada/quiz/$phaseId` (`src/routes/_authenticated/jornada.quiz.$phaseId.tsx`)**:
+- `QuizPlayer` — renderiza perguntas (radio group por pergunta), valida que todas foram respondidas, botão enviar.
+- `QuizResult` — mostra score, passou/falhou. Se passou: badge "Concluído", link voltar. Se falhou: botão "Tentar novamente".
+- Se `already_passed` no fetch inicial → mostra apenas estado bloqueado.
 
-**Banco (migration):**
-- Adicionar em `services`: `service_type` (recorrente/pontual/consultoria), `responsible_area` (social_media/trafego/design/dev/comercial), `executor_profile`, `frequency` (semanal/quinzenal/mensal/projeto_unico), `frequency_note`, `pct_mtx` (default 10), `pct_commercial` (default 10), `pct_executor` (default 80)
-- Nova tabela `service_task_templates`: `id`, `service_id`, `name`, `task_type` (onboarding/recorrente), `responsible_area`, `default_deadline` (texto livre tipo "D+3", "Semanal", "Todo dia 28"), `position`
-- Nova tabela `service_onboarding_checklist`: `id`, `service_id`, `item`, `position`
+**Integração com `/jornada`**: substituir o input manual de nota dentro de `PhaseCard` por um botão `Fazer quiz` que navega para a rota acima, **apenas quando existe quiz_template ativo para a fase**. Quando não existe template, mantém o input legado (compatibilidade). Para isso, `get_user_journey` já retorna `has_quiz`; adicionamos no payload da fase um flag `has_quiz_template` (consulta a `quiz_templates`).
 
-**Frontend:**
-- `servicos.index.tsx`: lista com colunas (nome, categoria, tipo, preço, área, status toggle inline, clientes em uso — count)
-- Filtros: busca, tipo, área
-- `ServiceFormDialog.tsx`: 6 blocos
-  - Bloco 4 (template): lista drag-and-drop com + adicionar tarefa
-  - Bloco 5: cálculo de distribuição em tempo real
-  - Bloco 6: checklist de onboarding editável
-- **Seed**: inserir templates pré-cadastrados para "Gestão de Redes Sociais" e "Gestão de Tráfego" (via migration condicional — só insere se o serviço existir; senão, deixo helper para criar)
+## 4. Admin (`/admin/quizzes` ou aba em `/minha-jornada`)
 
----
+**Rota `src/routes/_authenticated/admin.quizzes.tsx`** (apenas admin/super_admin):
+- Lista fases do catálogo.
+- Para cada fase: criar/editar quiz (título, descrição, passing_score), gerenciar perguntas (texto + opções com flag correta), ativar/desativar.
+- CRUD via `supabase.from('quiz_templates'/'quiz_questions'/'quiz_options')` — RLS admin já cobre.
 
-## Fase 4 — Ativação automática: Serviço → Tarefas
+Link no sidebar admin (se houver) ou botão na página `/minha-jornada`.
 
-**Banco:**
-- Trigger ou função RPC `activate_client_service(client_service_id)` que:
-  1. Valida responsável e template (raise exception com mensagem clara)
-  2. Lê `service_task_templates` do serviço
-  3. Insere em `tasks` cada item, vinculando `client_id`, `service_id`, calculando `due_date` a partir de `start_date` + parsing de `default_deadline` (`D+N`, `Semanal`, `Todo dia X`)
-  4. Tarefas recorrentes: cria a primeira ocorrência agora; geração contínua via `daily_notifications_job` estendido (ou job separado)
-- Coluna em `client_services`: `recurrence_paused` (bool) para pausa/cancelamento
+## Detalhes técnicos
 
-**Frontend:**
-- Em `clientes.$id.tsx` (vínculo de serviços), botão "Ativar serviço" chama o RPC e trata erros
-- Toggle pausar/cancelar com a regra: pausa suspende futuras, cancela mantém histórico
+- Tipos do Supabase serão regenerados após a migration.
+- Idempotência de XP: já garantida pelo `UNIQUE (user_id, event_type, reference_id)` em `xp_events` — reaproveitada via `process_xp_event`.
+- Não tocar em: `mark_checklist_item`, `toggle_checklist_item`, `submit_quiz_attempt`, `get_user_journey` (apenas leitura adicional via novo RPC), fluxo de auth, fluxo de XP existente.
+- Bloqueio de retry após aprovação: garantido no backend (RPC bloqueia) **e** na UI (estado `already_passed`).
 
-**Distribuição financeira:**
-- Ao ativar, registrar em uma nova tabela `service_revenue_distribution` (client_service_id, mtx_value, commercial_value, executor_value, period) — base para indicadores futuros
+## Arquivos
 
----
+Criar:
+- `supabase/migrations/<timestamp>_quiz_system.sql`
+- `src/services/quizService.ts`
+- `src/hooks/useQuiz.ts`
+- `src/routes/_authenticated/jornada.quiz.$phaseId.tsx`
+- `src/routes/_authenticated/admin.quizzes.tsx`
 
-## Itens fora deste escopo (confirmo no final)
-- Geração automática contínua de tarefas recorrentes mês após mês: implemento a **primeira** ocorrência na ativação; a geração mensal/semanal recorrente via cron exige `pg_cron` — posso adicionar se você confirmar, ou deixar como "próximo passo".
-- Reordenação drag-and-drop do template: implemento com `@dnd-kit` (já usado no projeto).
-
----
-
-## Como prefiro entregar
-Sugiro fazer **Fase 1 + Fase 2** num primeiro turno (CRM completo), e **Fase 3 + Fase 4** num segundo turno (Serviços + automação). Cada fase termina com migration aprovada por você antes do código.
-
-**Posso começar pela Fase 1?**
+Editar (cirúrgico):
+- `src/routes/_authenticated/jornada.tsx` — botão "Fazer quiz" condicional.
+- `src/services/journeyService.ts` — tipo `JourneyPhase` ganha `has_quiz_template?: boolean`.
