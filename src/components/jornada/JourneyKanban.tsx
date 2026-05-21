@@ -585,7 +585,7 @@ function CardDrawer({
       }
       const { error } = await supabase.rpc("update_phase_fields", {
         _phase_id: card.id,
-        _data: payload,
+        _data: payload as unknown as Json,
       });
       if (error) throw error;
 
@@ -721,7 +721,7 @@ function CardDrawer({
                       setChecklist(next); // otimista
                       const { error } = await supabase.rpc("update_phase_checklist", {
                         _phase_id: card.id,
-                        _checklist: next,
+                        _checklist: next as unknown as Json,
                       });
                       if (error) {
                         setChecklist(prev); // rollback local
@@ -752,7 +752,7 @@ function CardDrawer({
                         setChecklist(next);
                         const { error } = await supabase.rpc("update_phase_checklist", {
                           _phase_id: card.id,
-                          _checklist: next,
+                          _checklist: next as unknown as Json,
                         });
                         if (error) {
                           setChecklist(prev);
