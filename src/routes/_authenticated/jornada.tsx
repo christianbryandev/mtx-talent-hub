@@ -10,8 +10,13 @@ import {
   ExternalLink,
   Paperclip,
   BookOpen,
+  Target,
+  Trophy,
+  Zap,
+  GraduationCap,
+  ArrowRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useJourney } from "@/hooks/useJourney";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Card } from "@/components/ui/card";
@@ -23,7 +28,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
-import type { JourneyPhase, PhaseStatus } from "@/services/journeyService";
+import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+
 
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({ meta: [{ title: "Jornada — MTX Hub" }] }),
