@@ -80,6 +80,11 @@ function JourneyAnalyticsPage() {
       </section>
 
       <ConversionMiniCards />
+
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold tracking-tight">Tracking Individual</h3>
+        <JourneyTalentTable />
+      </section>
     </div>
   );
 }
