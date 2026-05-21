@@ -15,6 +15,7 @@ import {
   LogOut,
   UserCircle,
   Zap,
+  BarChart2,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
