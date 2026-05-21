@@ -12,12 +12,40 @@ export function useJourney(targetUserId?: string) {
     queryKey: ["user-journey", userId],
     enabled: !!userId,
     queryFn: () => journeyService.getUserJourney(userId!),
+    // Estado crítico: sempre buscar fresco; nada de cache persistente.
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const markItem = useMutation({
     mutationFn: (itemId: string) => journeyService.markChecklistItem(userId!, itemId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["user-journey", userId] }),
-    onError: (e: Error) => toast.error(e.message),
+    // Otimismo apenas na UI — backend é a fonte de verdade.
+    onMutate: async (itemId: string) => {
+      await qc.cancelQueries({ queryKey: ["user-journey", userId] });
+      const prev = qc.getQueryData<UserJourney>(["user-journey", userId]);
+      if (prev) {
+        const next: UserJourney = {
+          ...prev,
+          phases: prev.phases.map((ph) => ({
+            ...ph,
+            cards: ph.cards.map((c) => ({
+              ...c,
+              items: c.items.map((i) =>
+                i.id === itemId ? { ...i, completed: true } : i,
+              ),
+            })),
+          })),
+        };
+        qc.setQueryData(["user-journey", userId], next);
+      }
+      return { prev };
+    },
+    onError: (e: Error, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["user-journey", userId], ctx.prev);
+      toast.error(e.message);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["user-journey", userId] }),
   });
 
   const submitQuiz = useMutation({
