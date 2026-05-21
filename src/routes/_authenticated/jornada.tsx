@@ -83,7 +83,7 @@ function detectNextMission(j: UserJourney): NextMission | null {
 
 
 function JourneyPage() {
-  const { isAdmin } = usePermissions();
+  
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
   const [openPhaseId, setOpenPhaseId] = useState<string | null>(null);
 
