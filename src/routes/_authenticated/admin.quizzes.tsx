@@ -53,7 +53,7 @@ interface Quiz {
 }
 
 function AdminQuizzesPage() {
-  const { isAdmin, isLoading: permLoading } = usePermissions();
+  const { isAdmin, loading: permLoading } = usePermissions();
   const qc = useQueryClient();
   const [selectedPhase, setSelectedPhase] = useState<string>("");
 
