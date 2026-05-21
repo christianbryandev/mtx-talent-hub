@@ -49,16 +49,5 @@ export function useJourney(targetUserId?: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: ["user-journey", userId] }),
   });
 
-  const submitQuiz = useMutation({
-    mutationFn: (vars: { phaseId: string; score: number }) =>
-      journeyService.submitQuizAttempt(userId!, vars.phaseId, vars.score),
-    onSuccess: (res: any) => {
-      qc.invalidateQueries({ queryKey: ["user-journey", userId] });
-      if (res?.passed) toast.success("Quiz aprovado!");
-      else toast.error("Nota insuficiente. Revise e tente novamente.");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return { ...query, toggleItem, submitQuiz };
+  return { ...query, toggleItem };
 }
