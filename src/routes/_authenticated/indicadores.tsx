@@ -121,18 +121,22 @@ interface AlertCardProps {
 function AlertCard({ title, count, to, icon }: AlertCardProps) {
   const tone = count === 0 ? "border-border" : "border-warning/40 bg-warning/5";
   const body = (
-    <Card className={`transition-colors hover:bg-muted/40 ${tone}`}>
-      <CardContent className="flex items-center gap-3 p-4">
-        <div className="rounded-md bg-muted p-2 text-warning">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-xl font-semibold">{count}</p>
+    <Card className={`h-full transition-colors hover:bg-muted/40 ${tone}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="rounded-md bg-muted p-2 text-warning shrink-0">{icon}</div>
+          {count > 0 && (
+            <Badge variant="outline" className="text-warning border-warning/40 shrink-0">
+              Ação
+            </Badge>
+          )}
         </div>
-        {count > 0 && <Badge variant="outline" className="text-warning border-warning/40">Ação</Badge>}
+        <p className="mt-3 text-sm text-muted-foreground leading-tight">{title}</p>
+        <p className="mt-1 text-2xl font-semibold">{count}</p>
       </CardContent>
     </Card>
   );
-  return to ? <Link to={to as any}>{body}</Link> : body;
+  return to ? <Link to={to as any} className="block h-full">{body}</Link> : body;
 }
 
 function IndicadoresPage() {
