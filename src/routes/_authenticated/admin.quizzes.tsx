@@ -272,13 +272,13 @@ function QuizEditor({
   quiz: Quiz;
   questions: Question[];
   loadingQ: boolean;
-  onSaveQuiz: (p: Partial<Quiz>) => Promise<void>;
-  onAddQuestion: () => Promise<void>;
-  onDeleteQuestion: (id: string) => Promise<void>;
-  onSaveQuestion: (id: string, text: string) => Promise<void>;
-  onSaveOption: (id: string, p: Partial<Option>, questionId?: string) => Promise<void>;
-  onAddOption: (qid: string, count: number) => Promise<void>;
-  onDeleteOption: (id: string) => Promise<void>;
+  onSaveQuiz: (p: Partial<Quiz>) => Promise<unknown>;
+  onAddQuestion: () => Promise<unknown>;
+  onDeleteQuestion: (id: string) => Promise<unknown>;
+  onSaveQuestion: (id: string, text: string) => Promise<unknown>;
+  onSaveOption: (id: string, p: Partial<Option>, questionId?: string) => Promise<unknown>;
+  onAddOption: (qid: string, count: number) => Promise<unknown>;
+  onDeleteOption: (id: string) => Promise<unknown>;
 }) {
   const [title, setTitle] = useState(quiz.title);
   const [desc, setDesc] = useState(quiz.description ?? "");
@@ -378,10 +378,10 @@ function QuestionEditor({
   index: number;
   q: Question;
   onDelete: () => void;
-  onSave: (text: string) => Promise<void>;
-  onSaveOption: (oid: string, p: Partial<Option>) => Promise<void>;
-  onAddOption: () => Promise<void>;
-  onDeleteOption: (oid: string) => Promise<void>;
+  onSave: (text: string) => Promise<unknown>;
+  onSaveOption: (oid: string, p: Partial<Option>) => Promise<unknown>;
+  onAddOption: () => Promise<unknown>;
+  onDeleteOption: (oid: string) => Promise<unknown>;
 }) {
   const [text, setText] = useState(q.question);
   useEffect(() => setText(q.question), [q.question]);
@@ -423,7 +423,7 @@ function OptionEditor({
   onDelete,
 }: {
   o: Option;
-  onSave: (p: Partial<Option>) => Promise<void>;
+  onSave: (p: Partial<Option>) => Promise<unknown>;
   onDelete: () => void;
 }) {
   const [text, setText] = useState(o.text);
