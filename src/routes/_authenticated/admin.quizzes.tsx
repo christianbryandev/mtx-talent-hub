@@ -413,7 +413,7 @@ function QuestionEditor({
           type={q.media_type}
           pathPrefix={`questions/${q.id}`}
           label="Mídia da pergunta"
-          onChange={async (patch) => { await onSave(patch); }}
+          onChange={async (patch) => { await onSaveOption(o.id, patch); }}
         />
       </div>
       <div className="space-y-3 pl-6">
@@ -464,7 +464,7 @@ function OptionEditor({
         type={o.media_type}
         pathPrefix={`options/${o.id}`}
         label="Mídia da alternativa"
-        onChange={async (patch) => { await onSave(patch); }}
+        onChange={async (patch) => { await onSaveOption(o.id, patch); }}
       />
     </div>
   );
