@@ -472,9 +472,13 @@ export type Database = {
       }
       journey_cards: {
         Row: {
+          attachments: Json
           created_at: string
           description: string | null
           id: string
+          links: Json
+          materials: string | null
+          notes: string | null
           order_index: number
           phase_id: string
           title: string
@@ -482,9 +486,13 @@ export type Database = {
           xp_reward: number
         }
         Insert: {
+          attachments?: Json
           created_at?: string
           description?: string | null
           id?: string
+          links?: Json
+          materials?: string | null
+          notes?: string | null
           order_index?: number
           phase_id: string
           title: string
@@ -492,9 +500,13 @@ export type Database = {
           xp_reward?: number
         }
         Update: {
+          attachments?: Json
           created_at?: string
           description?: string | null
           id?: string
+          links?: Json
+          materials?: string | null
+          notes?: string | null
           order_index?: number
           phase_id?: string
           title?: string
