@@ -149,6 +149,24 @@ function JourneyPage() {
     );
   if (!data) return <p className="text-muted-foreground">Sem dados.</p>;
 
+  const notStarted =
+    data.phases.length > 0 &&
+    data.done_items === 0 &&
+    data.phases.every((p) => p.status === "nao_iniciada" || p.status === "bloqueada");
+
+  if (data.phases.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
+        <p className="text-sm text-muted-foreground">
+          Peça a um administrador para popular o catálogo de fases.
+        </p>
+      </Card>
+    );
+  }
+
+  if (notStarted) return <WelcomeHero />;
+
   return (
     <div className="space-y-6">
       <header className="flex items-end justify-between flex-wrap gap-3">
