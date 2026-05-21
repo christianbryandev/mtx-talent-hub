@@ -2623,6 +2623,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      seed_journey_demo: { Args: never; Returns: Json }
+      start_user_journey: { Args: never; Returns: Json }
       submit_phase_quiz: {
         Args: { _answers: Json; _phase_id: string }
         Returns: Json
