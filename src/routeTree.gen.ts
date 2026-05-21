@@ -45,6 +45,7 @@ import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
+import { Route as AuthenticatedAdminJourneyMonitorRouteImport } from './routes/_authenticated/admin.journey-monitor'
 import { Route as AuthenticatedAdminJourneyAnalyticsRouteImport } from './routes/_authenticated/admin.journey-analytics'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
@@ -237,6 +238,12 @@ const AuthenticatedAdminQuizzesRoute =
     path: '/admin/quizzes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminJourneyMonitorRoute =
+  AuthenticatedAdminJourneyMonitorRouteImport.update({
+    id: '/admin/journey-monitor',
+    path: '/admin/journey-monitor',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminJourneyAnalyticsRoute =
   AuthenticatedAdminJourneyAnalyticsRouteImport.update({
     id: '/admin/journey-analytics',
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -315,6 +323,7 @@ export interface FileRoutesByTo {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/_authenticated/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/_authenticated/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/admin/journey-analytics'
+    | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/admin/journey-analytics'
+    | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -475,6 +487,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/_authenticated/admin/journey-analytics'
+    | '/_authenticated/admin/journey-monitor'
     | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
     | '/_authenticated/crm/$id'
@@ -757,6 +770,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminQuizzesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/journey-monitor': {
+      id: '/_authenticated/admin/journey-monitor'
+      path: '/admin/journey-monitor'
+      fullPath: '/admin/journey-monitor'
+      preLoaderRoute: typeof AuthenticatedAdminJourneyMonitorRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/journey-analytics': {
       id: '/_authenticated/admin/journey-analytics'
       path: '/admin/journey-analytics'
@@ -897,6 +917,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedAdminJourneyAnalyticsRoute: typeof AuthenticatedAdminJourneyAnalyticsRoute
+  AuthenticatedAdminJourneyMonitorRoute: typeof AuthenticatedAdminJourneyMonitorRoute
   AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
 
@@ -918,6 +939,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedAdminJourneyAnalyticsRoute:
     AuthenticatedAdminJourneyAnalyticsRoute,
+  AuthenticatedAdminJourneyMonitorRoute: AuthenticatedAdminJourneyMonitorRoute,
   AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }
 
