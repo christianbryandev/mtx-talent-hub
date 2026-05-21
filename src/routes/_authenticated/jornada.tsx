@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useJourney } from "@/hooks/useJourney";
-import { usePermissions } from "@/hooks/usePermissions";
+
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
