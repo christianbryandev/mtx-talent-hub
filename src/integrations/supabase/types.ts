@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string
@@ -443,6 +470,82 @@ export type Database = {
           },
         ]
       }
+      journey_cards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          phase_id: string
+          title: string
+          updated_at: string
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase_id: string
+          title: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase_id?: string
+          title?: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_cards_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phase_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_checklist_items: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          order_index: number
+          required: boolean
+          title: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          required?: boolean
+          title: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          required?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_checklist_items_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "journey_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_phase_assignees: {
         Row: {
           created_at: string
@@ -478,6 +581,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      journey_phase_catalog: {
+        Row: {
+          created_at: string
+          description: string | null
+          has_quiz: boolean
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          has_quiz?: boolean
+          id?: string
+          order_index: number
+          title: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          has_quiz?: boolean
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Relationships: []
       }
       journey_phases: {
         Row: {
@@ -525,6 +661,41 @@ export type Database = {
             columns: ["young_id"]
             isOneToOne: false
             referencedRelation: "young_people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_quiz_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          passed: boolean
+          phase_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          passed: boolean
+          phase_id: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          passed?: boolean
+          phase_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_quiz_attempts_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phase_catalog"
             referencedColumns: ["id"]
           },
         ]
@@ -1540,6 +1711,99 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_card_progress: {
+        Row: {
+          card_id: string
+          completed: boolean
+          completed_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_card_progress_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "journey_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_checklist_progress: {
+        Row: {
+          checklist_item_id: string
+          completed: boolean
+          completed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checklist_item_id: string
+          completed?: boolean
+          completed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checklist_item_id?: string
+          completed?: boolean
+          completed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_checklist_progress_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "journey_checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_invites: {
         Row: {
           created_at: string
@@ -1587,6 +1851,44 @@ export type Database = {
           },
         ]
       }
+      user_phase_status: {
+        Row: {
+          completed_at: string | null
+          id: string
+          phase_id: string
+          status: string
+          unlocked: boolean
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          phase_id: string
+          status?: string
+          unlocked?: boolean
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          phase_id?: string
+          status?: string
+          unlocked?: boolean
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_phase_status_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phase_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1605,6 +1907,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          reference_id: string
+          user_id: string
+          xp_amount: number
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          reference_id: string
+          user_id: string
+          xp_amount: number
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          reference_id?: string
+          user_id?: string
+          xp_amount?: number
         }
         Relationships: []
       }
@@ -2018,12 +2347,17 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_user_journey: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_checklist_item: {
+        Args: { _item_id: string; _user_id: string }
+        Returns: Json
       }
       notify_admins: {
         Args: {
@@ -2045,6 +2379,19 @@ export type Database = {
           _type: string
         }
         Returns: undefined
+      }
+      process_xp_event: {
+        Args: {
+          _event_type: string
+          _reference_id: string
+          _user_id: string
+          _xp_amount: number
+        }
+        Returns: boolean
+      }
+      submit_quiz_attempt: {
+        Args: { _phase_id: string; _score: number; _user_id: string }
+        Returns: Json
       }
     }
     Enums: {

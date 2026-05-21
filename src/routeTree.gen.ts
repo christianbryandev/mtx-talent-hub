@@ -27,6 +27,7 @@ import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authent
 import { Route as AuthenticatedMinhaJornadaRouteImport } from './routes/_authenticated/minha-jornada'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedJovensRouteImport } from './routes/_authenticated/jovens'
+import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
@@ -136,6 +137,11 @@ const AuthenticatedJovensRoute = AuthenticatedJovensRouteImport.update({
   path: '/jovens',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
+  id: '/jornada',
+  path: '/jornada',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedIndicadoresRoute =
   AuthenticatedIndicadoresRouteImport.update({
     id: '/indicadores',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/jornada': typeof AuthenticatedJornadaRoute
   '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/jornada': typeof AuthenticatedJornadaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
@@ -346,6 +355,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/dashboard'
     | '/indicadores'
+    | '/jornada'
     | '/jovens'
     | '/meu-perfil'
     | '/minha-jornada'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard'
     | '/indicadores'
+    | '/jornada'
     | '/meu-perfil'
     | '/minha-jornada'
     | '/notificacoes'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm'
     | '/_authenticated/dashboard'
     | '/_authenticated/indicadores'
+    | '/_authenticated/jornada'
     | '/_authenticated/jovens'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/minha-jornada'
@@ -578,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/jovens'
       fullPath: '/jovens'
       preLoaderRoute: typeof AuthenticatedJovensRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/jornada': {
+      id: '/_authenticated/jornada'
+      path: '/jornada'
+      fullPath: '/jornada'
+      preLoaderRoute: typeof AuthenticatedJornadaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/indicadores': {
@@ -795,6 +814,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
+  AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMinhaJornadaRoute: typeof AuthenticatedMinhaJornadaRoute
@@ -812,6 +832,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
+  AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMinhaJornadaRoute: AuthenticatedMinhaJornadaRoute,
