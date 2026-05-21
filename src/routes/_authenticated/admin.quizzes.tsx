@@ -171,7 +171,7 @@ function AdminQuizzesPage() {
     invalidateAll();
   }
 
-  async function saveQuestion(id: string, patch: Partial<Question>) {
+  async function saveQuestion(id: string, patch: Partial<Omit<Question, "options">>) {
     const { error } = await supabase
       .from("quiz_questions")
       .update(patch)
