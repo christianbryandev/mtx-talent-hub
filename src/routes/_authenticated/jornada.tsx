@@ -35,6 +35,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
 import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
 import { QuizCard } from "@/components/jornada/QuizCard";
+import {
+  AchievementsSection,
+  JourneyCompletedBanner,
+} from "@/components/jornada/AchievementsSection";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
