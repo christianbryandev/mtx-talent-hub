@@ -2405,6 +2405,14 @@ export type Database = {
         Args: { _phase_id: string; _score: number; _user_id: string }
         Returns: Json
       }
+      update_phase_checklist: {
+        Args: { _checklist: Json; _phase_id: string }
+        Returns: undefined
+      }
+      update_phase_fields: {
+        Args: { _data: Json; _phase_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
