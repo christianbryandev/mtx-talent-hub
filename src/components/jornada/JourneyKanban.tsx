@@ -715,23 +715,53 @@ function CardDrawer({
                     onClick={async () => {
                       // Dono da fase (jovem) pode marcar/desmarcar — RLS + RPC validam permissão.
                       const prev = checklist;
+                      const prevStatus = status;
                       const next = prev.map((it, i) =>
                         i === idx ? { ...it, done: !it.done } : it,
                       );
                       setChecklist(next); // otimista
+
+                      // Auto-status derivado do checklist
+                      const total = next.length;
+                      const done = next.filter((i) => i.done).length;
+                      const derivedStatus: CardStatus =
+                        total > 0 && done === total
+                          ? "concluida"
+                          : done > 0
+                            ? "em_andamento"
+                            : "pendente";
+                      const statusChanged = derivedStatus !== prevStatus;
+                      if (statusChanged) setStatus(derivedStatus);
+
                       const { error } = await supabase.rpc("update_phase_checklist", {
                         _phase_id: card.id,
                         _checklist: next as unknown as Json,
                       });
                       if (error) {
                         setChecklist(prev); // rollback local
+                        if (statusChanged) setStatus(prevStatus);
                         toast.error(`Falha ao salvar checklist: ${error.message}`);
                         console.error("[checklist] update failed", error);
                         onUpdated(); // re-fetch real do banco
                         return;
                       }
+
+                      if (statusChanged) {
+                        const { error: statusErr } = await supabase.rpc("update_phase_fields", {
+                          _phase_id: card.id,
+                          _data: { status: derivedStatus } as unknown as Json,
+                        });
+                        if (statusErr) {
+                          setStatus(prevStatus);
+                          toast.error(`Falha ao atualizar status: ${statusErr.message}`);
+                          console.error("[status] update failed", statusErr);
+                          onUpdated();
+                          return;
+                        }
+                      }
                       onUpdated();
                     }}
+
                     className="text-muted-foreground"
                   >
                     {item.done ? (
