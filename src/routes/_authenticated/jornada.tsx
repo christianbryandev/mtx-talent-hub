@@ -552,3 +552,47 @@ function PhaseCard({
     </Card>
   );
 }
+
+function WelcomeHero() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  async function handleStart() {
+    setLoading(true);
+    try {
+      const res = await startUserJourney();
+      if (!res.started) {
+        toast.error("Não foi possível iniciar. Verifique se há fases configuradas.");
+        return;
+      }
+      toast.success("Bora! Sua jornada começou.");
+      await qc.invalidateQueries({ queryKey: ["user-journey", user?.id] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao iniciar a jornada.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="p-10 text-center bg-gradient-to-br from-primary/10 via-background to-background border-border/60">
+      <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Rocket className="h-7 w-7" />
+      </div>
+      <h2 className="text-2xl font-bold tracking-tight mb-2">Bem-vindo à Jornada MTX</h2>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        Sua trilha de evolução está pronta. Conclua cards, ganhe XP e libere
+        novas fases conforme avança.
+      </p>
+      <Button size="lg" onClick={handleStart} disabled={loading}>
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Rocket className="mr-2 h-4 w-4" />
+        )}
+        Iniciar Minha Jornada
+      </Button>
+    </Card>
+  );
+}
