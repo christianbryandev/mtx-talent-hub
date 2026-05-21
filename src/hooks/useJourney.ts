@@ -44,8 +44,9 @@ export function useJourney(targetUserId?: string) {
     },
     onError: (e: Error, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["user-journey", userId], ctx.prev);
-      toast.error(e.message);
+      toast.error(e.message || "Não foi possível salvar. Tente novamente.");
     },
+
     onSettled: () => qc.invalidateQueries({ queryKey: ["user-journey", userId] }),
   });
 

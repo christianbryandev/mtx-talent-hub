@@ -59,21 +59,44 @@ export interface UserJourney {
   done_items: number;
 }
 
+export class ServiceError extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "ServiceError";
+  }
+}
+
+function normalize(error: unknown, fallbackCode: string): ServiceError {
+  if (error instanceof ServiceError) return error;
+  const msg = error instanceof Error ? error.message : "Erro inesperado.";
+  return new ServiceError(fallbackCode, msg);
+}
+
 export const journeyService = {
   async getUserJourney(userId: string): Promise<UserJourney> {
-    const { data, error } = await supabase.rpc("get_user_journey", { _user_id: userId });
-    if (error) throw error;
-    return data as unknown as UserJourney;
+    try {
+      const { data, error } = await supabase.rpc("get_user_journey", { _user_id: userId });
+      if (error) throw new ServiceError("rpc_error", error.message);
+      return data as unknown as UserJourney;
+    } catch (e) {
+      throw normalize(e, "get_user_journey_failed");
+    }
   },
 
   async toggleChecklistItem(userId: string, itemId: string, completed: boolean) {
-    const { data, error } = await supabase.rpc("toggle_checklist_item", {
-      _user_id: userId,
-      _item_id: itemId,
-      _completed: completed,
-    });
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase.rpc("toggle_checklist_item", {
+        _user_id: userId,
+        _item_id: itemId,
+        _completed: completed,
+      });
+      if (error) throw new ServiceError("rpc_error", error.message);
+      return data;
+    } catch (e) {
+      throw normalize(e, "toggle_checklist_item_failed");
+    }
   },
-
 };
+
