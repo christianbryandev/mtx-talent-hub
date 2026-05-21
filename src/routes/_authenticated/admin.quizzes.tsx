@@ -385,7 +385,7 @@ function QuestionEditor({
   index: number;
   q: Question;
   onDelete: () => void;
-  onSave: (text: string) => Promise<unknown>;
+  onSave: (patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
   onSaveOption: (oid: string, p: Partial<Option>) => Promise<unknown>;
   onAddOption: () => Promise<unknown>;
   onDeleteOption: (oid: string) => Promise<unknown>;
@@ -399,7 +399,7 @@ function QuestionEditor({
         <span className="text-sm font-semibold pt-2">{index + 1}.</span>
         <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} />
         <div className="flex flex-col gap-1">
-          <Button size="sm" variant="outline" onClick={() => onSave(text)}>
+          <Button size="sm" variant="outline" onClick={() => onSave({ question: text })}>
             <Save className="h-3 w-3" />
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete}>
@@ -407,7 +407,16 @@ function QuestionEditor({
           </Button>
         </div>
       </div>
-      <div className="space-y-1 pl-6">
+      <div className="pl-6">
+        <QuizMediaUpload
+          url={q.media_url}
+          type={q.media_type}
+          pathPrefix={`questions/${q.id}`}
+          label="Mídia da pergunta"
+          onChange={(patch) => onSave(patch)}
+        />
+      </div>
+      <div className="space-y-3 pl-6">
         {q.options.map((o) => (
           <OptionEditor
             key={o.id}
@@ -436,18 +445,27 @@ function OptionEditor({
   const [text, setText] = useState(o.text);
   useEffect(() => setText(o.text), [o.text]);
   return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        checked={o.is_correct}
-        onCheckedChange={(v) => onSave({ is_correct: v === true })}
+    <div className="space-y-2 rounded border border-dashed p-2">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={o.is_correct}
+          onCheckedChange={(v) => onSave({ is_correct: v === true })}
+        />
+        <Input value={text} onChange={(e) => setText(e.target.value)} />
+        <Button size="sm" variant="outline" onClick={() => onSave({ text })}>
+          <Save className="h-3 w-3" />
+        </Button>
+        <Button size="sm" variant="outline" onClick={onDelete}>
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+      <QuizMediaUpload
+        url={o.media_url}
+        type={o.media_type}
+        pathPrefix={`options/${o.id}`}
+        label="Mídia da alternativa"
+        onChange={(patch) => onSave(patch)}
       />
-      <Input value={text} onChange={(e) => setText(e.target.value)} />
-      <Button size="sm" variant="outline" onClick={() => onSave({ text })}>
-        <Save className="h-3 w-3" />
-      </Button>
-      <Button size="sm" variant="outline" onClick={onDelete}>
-        <Trash2 className="h-3 w-3" />
-      </Button>
     </div>
   );
 }
