@@ -102,12 +102,12 @@ function JourneyPage() {
 function PhaseCard({
   phase,
   pending,
-  onMark,
+  onToggle,
   onSubmitQuiz,
 }: {
   phase: JourneyPhase;
   pending: boolean;
-  onMark: (itemId: string) => void;
+  onToggle: (itemId: string, completed: boolean) => void;
   onSubmitQuiz: (score: number) => void;
 }) {
   const meta = STATUS_META[phase.status];
