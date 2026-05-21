@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { seedJourneyDemo } from "@/utils/journeySeed";
+import { JourneyTalentTable } from "@/components/admin/JourneyTalentTable";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-analytics")({
   head: () => ({ meta: [{ title: "Admin · Analytics Jornada — MTX Hub" }] }),
@@ -80,6 +81,11 @@ function JourneyAnalyticsPage() {
       </section>
 
       <ConversionMiniCards />
+
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold tracking-tight">Tracking Individual</h3>
+        <JourneyTalentTable />
+      </section>
     </div>
   );
 }
