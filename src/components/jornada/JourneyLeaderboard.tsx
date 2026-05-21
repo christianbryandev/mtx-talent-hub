@@ -109,6 +109,9 @@ export function JourneyLeaderboard() {
                 <div className={`text-lg font-bold tabular-nums ${style.text}`}>
                   {row.total_xp} XP
                 </div>
+                <div className="text-[10px] text-muted-foreground tabular-nums">
+                  {row.progress_percentage}% concluído
+                </div>
                 <Badge variant="outline" className="mt-1 text-[10px]">
                   #{row.rank_position}
                 </Badge>
