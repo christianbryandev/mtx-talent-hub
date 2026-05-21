@@ -45,7 +45,6 @@ import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
-import { Route as AuthenticatedAdminJornadaDashboardRouteImport } from './routes/_authenticated/admin.jornada-dashboard'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
 
@@ -237,12 +236,6 @@ const AuthenticatedAdminQuizzesRoute =
     path: '/admin/quizzes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminJornadaDashboardRoute =
-  AuthenticatedAdminJornadaDashboardRouteImport.update({
-    id: '/admin/jornada-dashboard',
-    path: '/admin/jornada-dashboard',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedJovensIdJornadaRoute =
   AuthenticatedJovensIdJornadaRouteImport.update({
     id: '/jornada',
@@ -279,7 +272,6 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -314,7 +306,6 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -356,7 +347,6 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/_authenticated/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
   '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -398,7 +388,6 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/admin/jornada-dashboard'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -433,7 +422,6 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/admin/jornada-dashboard'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -474,7 +462,6 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/_authenticated/admin/jornada-dashboard'
     | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
     | '/_authenticated/crm/$id'
@@ -757,13 +744,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminQuizzesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/jornada-dashboard': {
-      id: '/_authenticated/admin/jornada-dashboard'
-      path: '/admin/jornada-dashboard'
-      fullPath: '/admin/jornada-dashboard'
-      preLoaderRoute: typeof AuthenticatedAdminJornadaDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/jovens/$id/jornada': {
       id: '/_authenticated/jovens/$id/jornada'
       path: '/jornada'
@@ -896,7 +876,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
-  AuthenticatedAdminJornadaDashboardRoute: typeof AuthenticatedAdminJornadaDashboardRoute
   AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
 
@@ -916,8 +895,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
-  AuthenticatedAdminJornadaDashboardRoute:
-    AuthenticatedAdminJornadaDashboardRoute,
   AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }
 
@@ -938,3 +915,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
