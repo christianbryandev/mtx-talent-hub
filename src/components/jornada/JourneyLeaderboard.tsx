@@ -13,13 +13,14 @@ interface RankingRow {
   first_name: string | null;
   avatar_url: string | null;
   total_xp: number;
+  progress_percentage: number;
   rank_position: number;
 }
 
 async function fetchRanking(): Promise<RankingRow[]> {
   const { data, error } = await supabase
     .from("vw_journey_ranking" as never)
-    .select("user_id, full_name, first_name, avatar_url, total_xp, rank_position")
+    .select("user_id, full_name, first_name, avatar_url, total_xp, progress_percentage, rank_position")
     .order("rank_position", { ascending: true })
     .limit(200);
   if (error) throw new Error(error.message);
@@ -108,6 +109,9 @@ export function JourneyLeaderboard() {
                 <div className={`text-lg font-bold tabular-nums ${style.text}`}>
                   {row.total_xp} XP
                 </div>
+                <div className="text-[10px] text-muted-foreground tabular-nums">
+                  {row.progress_percentage}% concluído
+                </div>
                 <Badge variant="outline" className="mt-1 text-[10px]">
                   #{row.rank_position}
                 </Badge>
@@ -161,6 +165,7 @@ function RankRow({
       className={`flex items-center gap-3 px-4 py-3 ${
         isMe && !highlight ? "bg-primary/5" : ""
       }`}
+      aria-current={isMe ? "true" : undefined}
     >
       <div className="w-8 text-center text-sm font-semibold tabular-nums text-muted-foreground">
         #{row.rank_position}
@@ -179,6 +184,9 @@ function RankRow({
               Você
             </Badge>
           )}
+        </div>
+        <div className="text-xs text-muted-foreground tabular-nums" aria-label={`Progresso ${row.progress_percentage}%`}>
+          {row.progress_percentage}% concluído
         </div>
       </div>
       <div className="text-sm font-bold tabular-nums">{row.total_xp} XP</div>
