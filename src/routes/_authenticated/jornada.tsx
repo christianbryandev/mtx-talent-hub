@@ -15,9 +15,14 @@ import {
   Zap,
   GraduationCap,
   ArrowRight,
+  Rocket,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { useJourney } from "@/hooks/useJourney";
+import { startUserJourney } from "@/utils/journeySeed";
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -143,6 +148,24 @@ function JourneyPage() {
       </Alert>
     );
   if (!data) return <p className="text-muted-foreground">Sem dados.</p>;
+
+  const notStarted =
+    data.phases.length > 0 &&
+    data.done_items === 0 &&
+    data.phases.every((p) => p.status === "nao_iniciada" || p.status === "bloqueada");
+
+  if (data.phases.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
+        <p className="text-sm text-muted-foreground">
+          Peça a um administrador para popular o catálogo de fases.
+        </p>
+      </Card>
+    );
+  }
+
+  if (notStarted) return <WelcomeHero />;
 
   return (
     <div className="space-y-6">
@@ -526,6 +549,50 @@ function PhaseCard({
           <Lock className="h-3 w-3" /> Conclua a fase anterior para desbloquear.
         </p>
       )}
+    </Card>
+  );
+}
+
+function WelcomeHero() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  async function handleStart() {
+    setLoading(true);
+    try {
+      const res = await startUserJourney();
+      if (!res.started) {
+        toast.error("Não foi possível iniciar. Verifique se há fases configuradas.");
+        return;
+      }
+      toast.success("Bora! Sua jornada começou.");
+      await qc.invalidateQueries({ queryKey: ["user-journey", user?.id] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao iniciar a jornada.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="p-10 text-center bg-gradient-to-br from-primary/10 via-background to-background border-border/60">
+      <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Rocket className="h-7 w-7" />
+      </div>
+      <h2 className="text-2xl font-bold tracking-tight mb-2">Bem-vindo à Jornada MTX</h2>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        Sua trilha de evolução está pronta. Conclua cards, ganhe XP e libere
+        novas fases conforme avança.
+      </p>
+      <Button size="lg" onClick={handleStart} disabled={loading}>
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Rocket className="mr-2 h-4 w-4" />
+        )}
+        Iniciar Minha Jornada
+      </Button>
     </Card>
   );
 }

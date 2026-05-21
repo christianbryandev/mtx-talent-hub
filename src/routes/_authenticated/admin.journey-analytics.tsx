@@ -8,7 +8,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Users, Activity, Trophy, Sparkles } from "lucide-react";
+import { Users, Activity, Trophy, Sparkles, Database, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useJourneyKPIs,
@@ -17,6 +20,8 @@ import {
 } from "@/hooks/useJourneyAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { seedJourneyDemo } from "@/utils/journeySeed";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-analytics")({
   head: () => ({ meta: [{ title: "Admin · Analytics Jornada — MTX Hub" }] }),
@@ -25,17 +30,46 @@ export const Route = createFileRoute("/_authenticated/admin/journey-analytics")(
 
 function JourneyAnalyticsPage() {
   const { isAdmin, loading: permLoading } = usePermissions();
+  const qc = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
 
   if (permLoading) return <Skeleton className="h-64 w-full" />;
   if (!isAdmin) return <Navigate to="/dashboard" />;
 
+  async function handleSeed() {
+    setSeeding(true);
+    try {
+      const res = await seedJourneyDemo();
+      if (res.seeded) {
+        toast.success(`Jornada populada com ${res.phases ?? 3} fases de exemplo.`);
+        await qc.invalidateQueries();
+      } else {
+        toast.info("O catálogo da Jornada já contém fases. Nada a fazer.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao popular dados.");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Analytics da Jornada</h1>
-        <p className="text-sm text-muted-foreground">
-          Métricas agregadas calculadas no backend.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Analytics da Jornada</h1>
+          <p className="text-sm text-muted-foreground">
+            Métricas agregadas calculadas no backend.
+          </p>
+        </div>
+        <Button onClick={handleSeed} disabled={seeding} variant="outline">
+          {seeding ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Database className="mr-2 h-4 w-4" />
+          )}
+          Popular Dados de Exemplo (Seed)
+        </Button>
       </header>
 
       <KpiRow />
