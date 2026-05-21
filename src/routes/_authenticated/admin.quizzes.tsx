@@ -171,10 +171,10 @@ function AdminQuizzesPage() {
     invalidateAll();
   }
 
-  async function saveQuestion(id: string, text: string) {
+  async function saveQuestion(id: string, patch: Partial<Question>) {
     const { error } = await supabase
       .from("quiz_questions")
-      .update({ question: text })
+      .update(patch)
       .eq("id", id);
     if (error) { toast.error(error.message); return; }
     invalidateAll();
