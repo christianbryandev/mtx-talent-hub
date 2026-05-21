@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Papa from "papaparse";
-import { Download, BarChart3 } from "lucide-react";
+import {
+  Download,
+  BarChart3,
+  TrendingUp,
+  Users,
+  Target,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Wallet,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -18,12 +29,11 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { format, parseISO, subMonths, startOfMonth } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -33,14 +43,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { useIndicadores } from "@/hooks/useIndicadores";
+import type { AreaFilter, RangeOption } from "@/services/analyticsService";
 
 export const Route = createFileRoute("/_authenticated/indicadores")({
   head: () => ({ meta: [{ title: "Indicadores — MTX Hub" }] }),
   component: IndicadoresPage,
 });
 
-const COLORS = [
+const CHART_COLORS = [
   "hsl(var(--primary))",
   "hsl(var(--info))",
   "hsl(var(--success))",
@@ -50,11 +63,9 @@ const COLORS = [
   "#f472b6",
 ];
 
-type RangeOption = "3m" | "6m" | "12m";
-
-function rangeMonths(range: RangeOption): number {
-  return range === "3m" ? 3 : range === "6m" ? 6 : 12;
-}
+const fmtBRL = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 
 function downloadCSV(filename: string, rows: Record<string, unknown>[]) {
   if (!rows.length) {
@@ -71,120 +82,123 @@ function downloadCSV(filename: string, rows: Record<string, unknown>[]) {
   toast.success("CSV exportado");
 }
 
+interface KpiHeroProps {
+  label: string;
+  value: string;
+  hint?: string;
+  icon: React.ReactNode;
+  tone?: "default" | "success" | "warning" | "info";
+}
+function KpiHero({ label, value, hint, icon, tone = "default" }: KpiHeroProps) {
+  const toneClass = {
+    default: "text-foreground",
+    success: "text-success",
+    warning: "text-warning",
+    info: "text-info",
+  }[tone];
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className={`mt-1 text-2xl font-bold truncate ${toneClass}`}>{value}</p>
+            {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+          </div>
+          <div className="rounded-md bg-muted p-2 text-muted-foreground">{icon}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface AlertCardProps {
+  title: string;
+  count: number;
+  to?: string;
+  icon: React.ReactNode;
+}
+function AlertCard({ title, count, to, icon }: AlertCardProps) {
+  const tone = count === 0 ? "border-border" : "border-warning/40 bg-warning/5";
+  const body = (
+    <Card className={`transition-colors hover:bg-muted/40 ${tone}`}>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="rounded-md bg-muted p-2 text-warning">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-xl font-semibold">{count}</p>
+        </div>
+        {count > 0 && <Badge variant="outline" className="text-warning border-warning/40">Ação</Badge>}
+      </CardContent>
+    </Card>
+  );
+  return to ? <Link to={to as any}>{body}</Link> : body;
+}
+
 function IndicadoresPage() {
   const [range, setRange] = useState<RangeOption>("6m");
-  const months = rangeMonths(range);
-  const since = startOfMonth(subMonths(new Date(), months - 1)).toISOString();
+  const [area, setArea] = useState<AreaFilter>("geral");
+  const [responsavelId, setResponsavelId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["indicadores", range],
+  const { data: responsaveis } = useQuery({
+    queryKey: ["indicadores", "responsaveis"],
     queryFn: async () => {
-      const [clients, opps, tasks, youngs, meetings, services] = await Promise.all([
-        supabase.from("clients").select("id, status, monthly_value, created_at, niche"),
-        supabase.from("opportunities").select("id, status, funnel_stage, estimated_value, created_at, loss_reason"),
-        supabase.from("tasks").select("id, status, priority, kanban_column, created_at, completed_at, due_date"),
-        supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, created_at"),
-        supabase.from("meetings").select("id, type, status, date"),
-        supabase.from("client_services").select("id, service_name, monthly_value, status"),
-      ]);
-      return {
-        clients: clients.data ?? [],
-        opps: opps.data ?? [],
-        tasks: tasks.data ?? [],
-        youngs: youngs.data ?? [],
-        meetings: meetings.data ?? [],
-        services: services.data ?? [],
-      };
+      const { data } = await supabase.from("profiles").select("id, full_name").eq("is_active", true).order("full_name");
+      return data ?? [];
     },
+    staleTime: 5 * 60_000,
   });
 
-  const charts = useMemo(() => {
-    if (!data) return null;
-    const buckets: Record<string, { month: string; clients: number; opps: number; tasks: number }> = {};
-    for (let i = months - 1; i >= 0; i--) {
-      const d = startOfMonth(subMonths(new Date(), i));
-      const key = format(d, "yyyy-MM");
-      buckets[key] = { month: format(d, "MMM", { locale: ptBR }), clients: 0, opps: 0, tasks: 0 };
-    }
-    data.clients.forEach((c: any) => {
-      const k = c.created_at?.slice(0, 7);
-      if (buckets[k]) buckets[k].clients++;
-    });
-    data.opps.forEach((o: any) => {
-      const k = o.created_at?.slice(0, 7);
-      if (buckets[k]) buckets[k].opps++;
-    });
-    data.tasks.forEach((t: any) => {
-      const k = t.created_at?.slice(0, 7);
-      if (buckets[k]) buckets[k].tasks++;
-    });
-    const evolution = Object.values(buckets);
+  const filters = useMemo(() => ({ range, area, responsavelId }), [range, area, responsavelId]);
+  const { analytics, isLoading } = useIndicadores(filters);
 
-    const funnelOrder = ["prospeccao", "qualificacao", "proposta", "negociacao", "ganha", "perdida"];
-    const funnel = funnelOrder.map((stage) => ({
-      stage,
-      total: data.opps.filter((o: any) => o.funnel_stage === stage).length,
-      valor: data.opps
-        .filter((o: any) => o.funnel_stage === stage)
-        .reduce((acc: number, o: any) => acc + Number(o.estimated_value ?? 0), 0),
-    }));
-
-    const trailOrder = ["formacao", "estagio", "atendimento", "ativo", "graduado"];
-    const trails = trailOrder.map((phase) => ({
-      phase,
-      total: data.youngs.filter((y: any) => y.trail_phase === phase).length,
-    }));
-
-    const tasksByStatus = ["backlog", "fazendo", "revisao", "concluida"].map((col) => ({
-      name: col,
-      total: data.tasks.filter((t: any) => t.kanban_column === col).length,
-    }));
-
-    const meetingsByType = ["geral_jovens", "mentoria", "operacional", "comercial", "alinhamento_entrega"].map(
-      (type) => ({
-        type,
-        total: data.meetings.filter((m: any) => m.type === type).length,
-      }),
-    );
-
-    const totalMRR = data.clients
-      .filter((c: any) => c.status === "ativo")
-      .reduce((acc: number, c: any) => acc + Number(c.monthly_value ?? 0), 0);
-
-    const lossReasons: Record<string, number> = {};
-    data.opps
-      .filter((o: any) => o.status === "perdida" && o.loss_reason)
-      .forEach((o: any) => {
-        lossReasons[o.loss_reason] = (lossReasons[o.loss_reason] ?? 0) + 1;
-      });
-    const lossData = Object.entries(lossReasons).map(([name, value]) => ({ name, value }));
-
-    return { evolution, funnel, trails, tasksByStatus, meetingsByType, totalMRR, lossData };
-  }, [data, months]);
-
-  if (isLoading || !charts) {
+  if (isLoading || !analytics) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-12 w-72" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-80" />
-          <Skeleton className="h-80" />
+        <div className="grid gap-4 md:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-28" />
+          ))}
         </div>
+        <Skeleton className="h-80" />
       </div>
     );
   }
 
+  const { kpisTop, funnel, bottleneck, alerts, operacao, social, evolution, lossData, reunioes } = analytics;
+
   return (
     <div className="space-y-6">
+      {/* Header + filtros */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <BarChart3 className="h-6 w-6 text-primary" />
             Indicadores
           </h1>
-          <p className="text-sm text-muted-foreground">Métricas e relatórios estratégicos do MTX Hub.</p>
+          <p className="text-sm text-muted-foreground">Painel executivo do MTX Hub — visão de 5 minutos.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={area} onValueChange={(v) => setArea(v as AreaFilter)}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="geral">Geral</SelectItem>
+              <SelectItem value="comercial">Comercial</SelectItem>
+              <SelectItem value="operacional">Operacional</SelectItem>
+              <SelectItem value="social">Impacto Social</SelectItem>
+              <SelectItem value="reunioes">Reuniões</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={responsavelId ?? "all"} onValueChange={(v) => setResponsavelId(v === "all" ? null : v)}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Responsável" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos responsáveis</SelectItem>
+              {(responsaveis ?? []).map((r: any) => (
+                <SelectItem key={r.id} value={r.id}>{r.full_name ?? "—"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={range} onValueChange={(v) => setRange(v as RangeOption)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -196,7 +210,33 @@ function IndicadoresPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="comercial">
+      {/* 1) TOPO — VISÃO EXECUTIVA */}
+      {(area === "geral" || area === "comercial") && (
+        <section className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+          <KpiHero label="MRR Ativo" value={fmtBRL(kpisTop.mrr)} icon={<Wallet className="h-4 w-4" />} tone="success" />
+          <KpiHero label="Novos clientes (mês)" value={String(kpisTop.newClientsMonth)} icon={<Users className="h-4 w-4" />} />
+          <KpiHero label="Taxa de conversão" value={fmtPct(kpisTop.conversionRate)} hint="Ganhas / fechadas" icon={<Target className="h-4 w-4" />} tone="info" />
+          <KpiHero label="Ticket médio" value={fmtBRL(kpisTop.ticketMedio)} icon={<DollarSign className="h-4 w-4" />} />
+          <KpiHero label="Receita prevista" value={fmtBRL(kpisTop.receitaPrevista)} hint="Propostas abertas" icon={<TrendingUp className="h-4 w-4" />} tone="info" />
+        </section>
+      )}
+
+      {/* 3) ALERTAS OPERACIONAIS */}
+      {(area === "geral" || area === "operacional") && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-warning" /> Alertas — o que precisa de ação
+          </h2>
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <AlertCard title="Tarefas atrasadas" count={alerts.tasksLate} icon={<Clock className="h-4 w-4" />} to="/tarefas" />
+            <AlertCard title="Follow-ups vencidos" count={alerts.followupsLate} icon={<Target className="h-4 w-4" />} to="/crm" />
+            <AlertCard title="Jovens inativos (30d)" count={alerts.inactiveYoungs} icon={<Users className="h-4 w-4" />} to="/jovens" />
+            <AlertCard title="Clientes em pendência" count={alerts.clientsPending} icon={<AlertTriangle className="h-4 w-4" />} to="/clientes" />
+          </div>
+        </section>
+      )}
+
+      <Tabs defaultValue={area === "geral" ? "comercial" : area === "social" ? "social" : area}>
         <TabsList>
           <TabsTrigger value="comercial">Comercial</TabsTrigger>
           <TabsTrigger value="operacional">Operacional</TabsTrigger>
@@ -204,184 +244,139 @@ function IndicadoresPage() {
           <TabsTrigger value="reunioes">Reuniões</TabsTrigger>
         </TabsList>
 
+        {/* COMERCIAL — Funil + Evolução + Perdas */}
         <TabsContent value="comercial" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">MRR Ativo</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {charts.totalMRR.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Oportunidades abertas</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data!.opps.filter((o: any) => o.status === "aberta").length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Clientes ativos</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data!.clients.filter((c: any) => c.status === "ativo").length}</div>
-              </CardContent>
-            </Card>
-          </div>
-
+          {/* 2) FUNIL */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Funil de Vendas</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => downloadCSV("funil.csv", charts.funnel)}>
+              <div>
+                <CardTitle>Funil de Vendas</CardTitle>
+                {bottleneck && (
+                  <p className="mt-1 text-xs text-warning">Gargalo identificado: {bottleneck}</p>
+                )}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => downloadCSV("funil.csv", funnel)}>
                 <Download className="h-4 w-4 mr-2" />CSV
               </Button>
             </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.funnel}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="stage" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" name="Qtd" />
-                  <Bar dataKey="valor" fill="hsl(var(--info))" name="Valor R$" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader><CardTitle>Evolução mensal</CardTitle></CardHeader>
-              <CardContent className="h-72">
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 md:grid-cols-6">
+                {funnel.map((f) => (
+                  <div key={f.stage} className="rounded-lg border border-border bg-card/60 p-3">
+                    <p className="text-xs text-muted-foreground">{f.label}</p>
+                    <p className="text-lg font-semibold">{f.qtd}</p>
+                    <p className="text-xs text-muted-foreground">{fmtBRL(f.valor)}</p>
+                    {f.conversao !== null && (
+                      <p className={`mt-1 text-xs ${f.conversao < 50 ? "text-warning" : "text-success"}`}>
+                        ↳ {fmtPct(f.conversao)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={charts.evolution}>
+                  <BarChart data={funnel}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="month" />
+                    <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="clients" stroke="hsl(var(--primary))" name="Clientes" />
-                    <Line type="monotone" dataKey="opps" stroke="hsl(var(--info))" name="Oportunidades" />
-                  </LineChart>
+                    <Bar dataKey="qtd" fill="hsl(var(--primary))" name="Qtd" />
+                    <Bar dataKey="valor" fill="hsl(var(--info))" name="Valor R$" />
+                  </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Motivos de perda</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => downloadCSV("perdas.csv", charts.lossData)}>
-                  <Download className="h-4 w-4 mr-2" />CSV
-                </Button>
-              </CardHeader>
-              <CardContent className="h-72">
-                {charts.lossData.length === 0 ? (
-                  <div className="grid h-full place-items-center text-sm text-muted-foreground">Sem perdas registradas</div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={charts.lossData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
-                        {charts.lossData.map((_, i) => (
-                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="operacional" className="space-y-4">
+          {/* 6) EVOLUÇÃO */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Tarefas por coluna do Kanban</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => downloadCSV("tarefas.csv", charts.tasksByStatus)}>
+              <CardTitle>Evolução mensal</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => downloadCSV("evolucao.csv", evolution)}>
                 <Download className="h-4 w-4 mr-2" />CSV
               </Button>
             </CardHeader>
             <CardContent className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.tasksByStatus}>
+                <LineChart data={evolution}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
                   <Tooltip />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" />
-                </BarChart>
+                  <Legend />
+                  <Line yAxisId="left" type="monotone" dataKey="clientes" stroke="hsl(var(--primary))" name="Clientes" />
+                  <Line yAxisId="left" type="monotone" dataKey="oportunidades" stroke="hsl(var(--info))" name="Oportunidades" />
+                  <Line yAxisId="right" type="monotone" dataKey="receita" stroke="hsl(var(--success))" name="Receita (R$)" />
+                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="social" className="space-y-4">
+          {/* 7) MOTIVOS DE PERDA */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Jovens por fase da trilha</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => downloadCSV("trilha.csv", charts.trails)}>
+              <CardTitle>Motivos de perda</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => downloadCSV("perdas.csv", lossData)}>
                 <Download className="h-4 w-4 mr-2" />CSV
               </Button>
             </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.trails}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="phase" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="total" fill="hsl(var(--success))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Jovens com CNPJ</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data!.youngs.filter((y: any) => y.has_cnpj).length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Jovens</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data!.youngs.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Renda gerada (total)</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {data!.youngs
-                    .reduce((a: number, y: any) => a + Number(y.total_income_generated ?? 0), 0)
-                    .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            <CardContent className="h-72">
+              {lossData.length === 0 ? (
+                <div className="grid h-full place-items-center text-sm text-muted-foreground">
+                  Sem perdas registradas no período.
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={lossData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                      {lossData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 4) OPERACIONAL */}
+        <TabsContent value="operacional" className="space-y-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+            <KpiHero label="Concluídas (7d)" value={String(operacao.tasksDoneWeek)} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" />
+            <KpiHero label="Atrasadas" value={String(operacao.tasksLate)} icon={<Clock className="h-4 w-4" />} tone="warning" />
+            <KpiHero label="No prazo" value={fmtPct(operacao.onTimeRate)} icon={<Target className="h-4 w-4" />} tone="info" />
+            <KpiHero label="Projetos ativos" value={String(operacao.projetosAndamento)} icon={<BarChart3 className="h-4 w-4" />} />
+            <KpiHero label="Projetos em risco" value={String(operacao.projetosRisco)} icon={<AlertTriangle className="h-4 w-4" />} tone="warning" />
           </div>
         </TabsContent>
 
+        {/* 5) IMPACTO SOCIAL */}
+        <TabsContent value="social" className="space-y-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <KpiHero label="Jovens ativos" value={String(social.ativos)} icon={<Users className="h-4 w-4" />} tone="success" />
+            <KpiHero label="Em formação" value={String(social.formacao)} icon={<Users className="h-4 w-4" />} />
+            <KpiHero label="Em prática" value={String(social.pratica)} icon={<Users className="h-4 w-4" />} />
+            <KpiHero label="Gerando renda" value={String(social.gerandoRenda)} icon={<DollarSign className="h-4 w-4" />} tone="success" />
+            <KpiHero label="1º cliente" value={String(social.primeiroCliente)} icon={<Target className="h-4 w-4" />} />
+            <KpiHero label="Renda total" value={fmtBRL(social.rendaTotal)} icon={<Wallet className="h-4 w-4" />} tone="success" />
+            <KpiHero label="Renda média/jovem" value={fmtBRL(social.rendaMedia)} hint="entre jovens com renda" icon={<DollarSign className="h-4 w-4" />} />
+          </div>
+        </TabsContent>
+
+        {/* 8) REUNIÕES */}
         <TabsContent value="reunioes" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Reuniões por tipo</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => downloadCSV("reunioes.csv", charts.meetingsByType)}>
-                <Download className="h-4 w-4 mr-2" />CSV
-              </Button>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={charts.meetingsByType}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="total" fill="hsl(var(--info))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <KpiHero label="Realizadas" value={String(reunioes.realizadas)} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" />
+            <KpiHero label="Presença média" value={fmtPct(reunioes.presencaMedia)} icon={<Users className="h-4 w-4" />} tone="info" />
+            <KpiHero label="Tarefas geradas" value={String(reunioes.tarefasGeradas)} icon={<Target className="h-4 w-4" />} />
+            <KpiHero label="Tarefas concluídas" value={String(reunioes.tarefasConcluidas)} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
