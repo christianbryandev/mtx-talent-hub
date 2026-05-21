@@ -225,6 +225,19 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
+        {isColaborador && journey && !collapsed && (
+          <Link
+            to="/jornada"
+            className="mx-2 mt-2 flex items-center justify-between rounded-md border border-border/60 bg-gradient-to-r from-primary/10 to-transparent px-2 py-1.5 transition-colors hover:border-primary/40"
+            title="Ver minha jornada"
+          >
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <Zap className="h-3.5 w-3.5 text-amber-500" />
+              XP
+            </span>
+            <span className="text-xs font-semibold tabular-nums">{journey.total_xp}</span>
+          </Link>
+        )}
         <div className="flex items-center gap-2 p-2">
           <Link
             to="/perfil"
