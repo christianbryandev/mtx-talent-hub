@@ -713,7 +713,7 @@ function CardDrawer({
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!canEdit) return;
+                      // Dono da fase (jovem) pode marcar/desmarcar — RLS + RPC validam permissão.
                       const prev = checklist;
                       const next = prev.map((it, i) =>
                         i === idx ? { ...it, done: !it.done } : it,
