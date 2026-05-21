@@ -18,10 +18,11 @@ export function useJourney(targetUserId?: string) {
     refetchOnWindowFocus: true,
   });
 
-  const markItem = useMutation({
-    mutationFn: (itemId: string) => journeyService.markChecklistItem(userId!, itemId),
+  const toggleItem = useMutation({
+    mutationFn: (vars: { itemId: string; completed: boolean }) =>
+      journeyService.toggleChecklistItem(userId!, vars.itemId, vars.completed),
     // Otimismo apenas na UI — backend é a fonte de verdade.
-    onMutate: async (itemId: string) => {
+    onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ["user-journey", userId] });
       const prev = qc.getQueryData<UserJourney>(["user-journey", userId]);
       if (prev) {
@@ -32,7 +33,7 @@ export function useJourney(targetUserId?: string) {
             cards: ph.cards.map((c) => ({
               ...c,
               items: c.items.map((i) =>
-                i.id === itemId ? { ...i, completed: true } : i,
+                i.id === vars.itemId ? { ...i, completed: vars.completed } : i,
               ),
             })),
           })),
