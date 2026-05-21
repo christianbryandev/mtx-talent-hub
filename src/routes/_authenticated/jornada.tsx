@@ -55,30 +55,40 @@ const STATUS_META: Record<
 
 interface NextMission {
   phase: JourneyPhase;
-  kind: "checklist" | "quiz" | "locked" | "done";
+  kind: "checklist" | "quiz" | "locked" | "done" | "start";
   label: string;
   cta: string;
 }
 
 function detectNextMission(j: UserJourney): NextMission | null {
   if (!j.phases.length) return null;
-  // First non-completed phase
-  const active = j.phases.find((p) => p.status !== "concluida");
-  if (!active) {
-    return { phase: j.phases[j.phases.length - 1], kind: "done", label: "Jornada concluída", cta: "Revisar fases" };
-  }
-  if (active.status === "bloqueada") {
-    return { phase: active, kind: "locked", label: "Aguardando desbloqueio", cta: "Aguarde" };
-  }
-  if (active.status === "aguardando_quiz" || (active.has_quiz && active.cards_done >= active.cards_total && active.cards_total > 0)) {
-    return { phase: active, kind: "quiz", label: "Próximo: fazer o quiz da fase", cta: "Ir para o Quiz" };
-  }
-  return {
-    phase: active,
-    kind: "checklist",
-    label: active.status === "reprovada" ? "Refaça o quiz" : "Continuar tarefa",
-    cta: "Abrir fase",
-  };
+  const byOrder = [...j.phases].sort((a, b) => a.order_index - b.order_index);
+
+  // Prioridade: 1) reprovada  2) aguardando_quiz  3) em_andamento  4) nao_iniciada
+  const reprovada = byOrder.find((p) => p.status === "reprovada");
+  if (reprovada) return { phase: reprovada, kind: "checklist", label: "Refaça o quiz", cta: "Abrir fase" };
+
+  const aguardando = byOrder.find(
+    (p) =>
+      p.status === "aguardando_quiz" ||
+      (p.has_quiz && p.cards_total > 0 && p.cards_done >= p.cards_total && p.status !== "concluida"),
+  );
+  if (aguardando) return { phase: aguardando, kind: "quiz", label: "Próximo: fazer o quiz da fase", cta: "Ir para o Quiz" };
+
+  const emAndamento = byOrder.find((p) => p.status === "em_andamento");
+  if (emAndamento) return { phase: emAndamento, kind: "checklist", label: "Continuar tarefa", cta: "Abrir fase" };
+
+  const naoIniciada = byOrder.find((p) => p.status === "nao_iniciada");
+  if (naoIniciada) return { phase: naoIniciada, kind: "start", label: "Iniciar fase", cta: "Iniciar Fase" };
+
+  // Bloqueada (caso só sobre fase travada) ou tudo concluído
+  const bloqueada = byOrder.find((p) => p.status === "bloqueada");
+  if (bloqueada) return { phase: bloqueada, kind: "locked", label: "Aguardando desbloqueio", cta: "Aguarde" };
+
+  const allDone = byOrder.every((p) => p.status === "concluida");
+  if (allDone) return { phase: byOrder[byOrder.length - 1], kind: "done", label: "Jornada concluída", cta: "Revisar fases" };
+
+  return null;
 }
 
 
