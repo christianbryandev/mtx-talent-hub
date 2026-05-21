@@ -1317,6 +1317,8 @@ export type Database = {
           created_at: string
           id: string
           is_correct: boolean
+          media_type: string | null
+          media_url: string | null
           order_index: number
           question_id: string
           text: string
@@ -1325,6 +1327,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_correct?: boolean
+          media_type?: string | null
+          media_url?: string | null
           order_index?: number
           question_id: string
           text: string
@@ -1333,6 +1337,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_correct?: boolean
+          media_type?: string | null
+          media_url?: string | null
           order_index?: number
           question_id?: string
           text?: string
@@ -1351,6 +1357,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           order_index: number
           question: string
           quiz_id: string
@@ -1359,6 +1367,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           order_index?: number
           question: string
           quiz_id: string
@@ -1367,6 +1377,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           order_index?: number
           question?: string
           quiz_id?: string
