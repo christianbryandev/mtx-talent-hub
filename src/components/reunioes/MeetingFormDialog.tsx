@@ -67,6 +67,32 @@ interface Props {
   meeting?: Meeting | null;
 }
 
+async function syncParticipants(meetingId: string, youngIds: string[]) {
+  const { data: existing } = await supabase
+    .from("meeting_participants")
+    .select("id, young_id")
+    .eq("meeting_id", meetingId)
+    .not("young_id", "is", null);
+  const existingRows = (existing ?? []) as { id: string; young_id: string }[];
+  const existingIds = new Set(existingRows.map((r) => r.young_id));
+  const toAdd = youngIds.filter((id) => !existingIds.has(id));
+  const toRemove = existingRows.filter((r) => !youngIds.includes(r.young_id));
+  if (toAdd.length) {
+    await supabase
+      .from("meeting_participants")
+      .insert(toAdd.map((young_id) => ({ meeting_id: meetingId, young_id })) as never);
+  }
+  if (toRemove.length) {
+    await supabase
+      .from("meeting_participants")
+      .delete()
+      .in(
+        "id",
+        toRemove.map((r) => r.id),
+      );
+  }
+}
+
 export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
