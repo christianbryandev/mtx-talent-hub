@@ -14,7 +14,9 @@ import {
   Route as RouteIcon,
   LogOut,
   UserCircle,
+  Zap,
 } from "lucide-react";
+import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
 
 import {
