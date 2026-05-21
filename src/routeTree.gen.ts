@@ -45,7 +45,7 @@ import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
-import { Route as AuthenticatedAdminJornadaDashboardRouteImport } from './routes/_authenticated/admin.jornada-dashboard'
+import { Route as AuthenticatedAdminJourneyAnalyticsRouteImport } from './routes/_authenticated/admin.journey-analytics'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
 
@@ -237,10 +237,10 @@ const AuthenticatedAdminQuizzesRoute =
     path: '/admin/quizzes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminJornadaDashboardRoute =
-  AuthenticatedAdminJornadaDashboardRouteImport.update({
-    id: '/admin/jornada-dashboard',
-    path: '/admin/jornada-dashboard',
+const AuthenticatedAdminJourneyAnalyticsRoute =
+  AuthenticatedAdminJourneyAnalyticsRouteImport.update({
+    id: '/admin/journey-analytics',
+    path: '/admin/journey-analytics',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedJovensIdJornadaRoute =
@@ -279,7 +279,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
+  '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -314,7 +314,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
+  '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -356,7 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
-  '/_authenticated/admin/jornada-dashboard': typeof AuthenticatedAdminJornadaDashboardRoute
+  '/_authenticated/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
@@ -398,7 +398,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/admin/jornada-dashboard'
+    | '/admin/journey-analytics'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -433,7 +433,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/admin/jornada-dashboard'
+    | '/admin/journey-analytics'
     | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
@@ -474,7 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/briefing/$clientId'
     | '/convite/$token'
-    | '/_authenticated/admin/jornada-dashboard'
+    | '/_authenticated/admin/journey-analytics'
     | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
     | '/_authenticated/crm/$id'
@@ -757,11 +757,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminQuizzesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/jornada-dashboard': {
-      id: '/_authenticated/admin/jornada-dashboard'
-      path: '/admin/jornada-dashboard'
-      fullPath: '/admin/jornada-dashboard'
-      preLoaderRoute: typeof AuthenticatedAdminJornadaDashboardRouteImport
+    '/_authenticated/admin/journey-analytics': {
+      id: '/_authenticated/admin/journey-analytics'
+      path: '/admin/journey-analytics'
+      fullPath: '/admin/journey-analytics'
+      preLoaderRoute: typeof AuthenticatedAdminJourneyAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/jovens/$id/jornada': {
@@ -896,7 +896,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
-  AuthenticatedAdminJornadaDashboardRoute: typeof AuthenticatedAdminJornadaDashboardRoute
+  AuthenticatedAdminJourneyAnalyticsRoute: typeof AuthenticatedAdminJourneyAnalyticsRoute
   AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
 
@@ -916,8 +916,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
-  AuthenticatedAdminJornadaDashboardRoute:
-    AuthenticatedAdminJornadaDashboardRoute,
+  AuthenticatedAdminJourneyAnalyticsRoute:
+    AuthenticatedAdminJourneyAnalyticsRoute,
   AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }
 

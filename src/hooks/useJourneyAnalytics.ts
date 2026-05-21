@@ -28,34 +28,40 @@ export interface JourneyConversion {
   quiz_attempts_passed: number;
 }
 
-async function rpc<T>(name: "get_journey_kpis" | "get_journey_phase_distribution" | "get_journey_conversion"): Promise<T> {
+type RpcName =
+  | "get_journey_kpis"
+  | "get_journey_phase_distribution"
+  | "get_journey_conversion";
+
+async function callRpc<T>(name: RpcName): Promise<T> {
   const { data, error } = await supabase.rpc(name);
   if (error) throw new Error(error.message);
   return data as unknown as T;
 }
 
-export function useJourneyAnalytics() {
-  const kpis = useQuery({
+export function useJourneyKPIs() {
+  const q = useQuery({
     queryKey: ["journey-analytics", "kpis"],
-    queryFn: () => rpc<JourneyKpis>("get_journey_kpis"),
+    queryFn: () => callRpc<JourneyKpis>("get_journey_kpis"),
     staleTime: 60_000,
   });
-  const distribution = useQuery({
-    queryKey: ["journey-analytics", "distribution"],
-    queryFn: () => rpc<JourneyPhaseDistribution[]>("get_journey_phase_distribution"),
-    staleTime: 60_000,
-  });
-  const conversion = useQuery({
-    queryKey: ["journey-analytics", "conversion"],
-    queryFn: () => rpc<JourneyConversion>("get_journey_conversion"),
-    staleTime: 60_000,
-  });
+  return { data: q.data, loading: q.isLoading, error: q.error as Error | null };
+}
 
-  return {
-    kpis,
-    distribution,
-    conversion,
-    isLoading: kpis.isLoading || distribution.isLoading || conversion.isLoading,
-    error: kpis.error || distribution.error || conversion.error,
-  };
+export function usePhaseFunnel() {
+  const q = useQuery({
+    queryKey: ["journey-analytics", "distribution"],
+    queryFn: () => callRpc<JourneyPhaseDistribution[]>("get_journey_phase_distribution"),
+    staleTime: 60_000,
+  });
+  return { data: q.data, loading: q.isLoading, error: q.error as Error | null };
+}
+
+export function useJourneyConversion() {
+  const q = useQuery({
+    queryKey: ["journey-analytics", "conversion"],
+    queryFn: () => callRpc<JourneyConversion>("get_journey_conversion"),
+    staleTime: 60_000,
+  });
+  return { data: q.data, loading: q.isLoading, error: q.error as Error | null };
 }
