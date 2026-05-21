@@ -18,11 +18,13 @@ export function useQuiz(phaseId: string | undefined) {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["phase-quiz", phaseId] });
       qc.invalidateQueries({ queryKey: ["user-journey"] });
-      if (res.passed) toast.success(`Aprovado! ${res.score}%`);
+      if (res.idempotent) toast.success("Quiz já concluído anteriormente.");
+      else if (res.passed) toast.success(`Aprovado! Nota ${res.score}%`);
       else toast.error(`Nota ${res.score}%. Tente novamente.`);
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(e.message || "Falha ao enviar quiz. Tente novamente."),
   });
+
 
   return { quiz, submit };
 }
