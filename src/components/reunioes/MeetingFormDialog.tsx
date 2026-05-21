@@ -36,6 +36,7 @@ import {
 } from "@/types/meetings";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSelect";
 
 const schema = z.object({
   title: z.string().min(2, "Informe um título"),
@@ -66,11 +67,38 @@ interface Props {
   meeting?: Meeting | null;
 }
 
+async function syncParticipants(meetingId: string, youngIds: string[]) {
+  const { data: existing } = await supabase
+    .from("meeting_participants")
+    .select("id, young_id")
+    .eq("meeting_id", meetingId)
+    .not("young_id", "is", null);
+  const existingRows = (existing ?? []) as { id: string; young_id: string }[];
+  const existingIds = new Set(existingRows.map((r) => r.young_id));
+  const toAdd = youngIds.filter((id) => !existingIds.has(id));
+  const toRemove = existingRows.filter((r) => !youngIds.includes(r.young_id));
+  if (toAdd.length) {
+    await supabase
+      .from("meeting_participants")
+      .insert(toAdd.map((young_id) => ({ meeting_id: meetingId, young_id })) as never);
+  }
+  if (toRemove.length) {
+    await supabase
+      .from("meeting_participants")
+      .delete()
+      .in(
+        "id",
+        toRemove.map((r) => r.id),
+      );
+  }
+}
+
 export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
   const isEdit = !!meeting;
+  const [youngIds, setYoungIds] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -131,6 +159,22 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               link_client_id: "",
             },
       );
+      // carrega jovens já vinculados (apenas em edição)
+      if (meeting?.id) {
+        supabase
+          .from("meeting_participants")
+          .select("young_id")
+          .eq("meeting_id", meeting.id)
+          .then(({ data }) => {
+            setYoungIds(
+              ((data ?? []) as { young_id: string | null }[])
+                .map((r) => r.young_id)
+                .filter(Boolean) as string[],
+            );
+          });
+      } else {
+        setYoungIds([]);
+      }
     }
   }, [open, meeting, form]);
 
@@ -201,6 +245,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
             description: `Reunião "${values.title}" atualizada`,
           });
         }
+        await syncParticipants(meeting.id, youngIds);
         return meeting.id;
       }
       const { data, error } = await supabase
@@ -218,10 +263,12 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
           description: `Reunião "${values.title}" criada`,
         });
       }
+      if (data) await syncParticipants(data.id, youngIds);
       return data!.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meetings"] });
+      queryClient.invalidateQueries({ queryKey: ["meeting-participants"] });
       toast.success(isEdit ? "Reunião atualizada" : "Reunião criada");
       onOpenChange(false);
     },
@@ -396,6 +443,18 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               placeholder="O que será discutido (pode adicionar itens detalhados depois)"
               {...form.register("agenda")}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Jovens participantes</Label>
+            <MultiYoungSearchSelect
+              value={youngIds}
+              onChange={setYoungIds}
+              placeholder="Atribuir jovens à reunião"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Os jovens selecionados poderão visualizar a reunião e a lista de participantes.
+            </p>
           </div>
 
           {isEdit && meeting && <ActionItemsSection meetingId={meeting.id} />}

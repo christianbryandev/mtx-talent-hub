@@ -514,8 +514,9 @@ function ParticipantsSection({
               >
                 <Checkbox
                   checked={!!p.present}
+                  disabled={!canManage}
                   onCheckedChange={(v) =>
-                    presenceMutation.mutate({ id: p.id, present: !!v })
+                    canManage && presenceMutation.mutate({ id: p.id, present: !!v })
                   }
                 />
                 <div className="min-w-0 flex-1">
@@ -523,37 +524,41 @@ function ParticipantsSection({
                     {p.young?.full_name ?? p.profile?.full_name ?? p.profile?.email ?? "—"}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                  onClick={() => removeMutation.mutate(p.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeMutation.mutate(p.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </li>
             ))}
           </ul>
         )}
-        <Separator />
-        {available.length > 0 ? (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Adicionar jovem</p>
-            <div className="max-h-40 space-y-1 overflow-y-auto">
-              {available.slice(0, 50).map((y) => (
-                <button
-                  key={y.id}
-                  type="button"
-                  onClick={() => addMutation.mutate(y.id)}
-                  className="block w-full rounded-md border border-border/40 bg-background/40 p-2 text-left text-sm hover:bg-accent/40"
-                >
-                  + {y.full_name}
-                </button>
-              ))}
+        {canManage && <Separator />}
+        {canManage && (
+          available.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Adicionar jovem</p>
+              <div className="max-h-40 space-y-1 overflow-y-auto">
+                {available.slice(0, 50).map((y) => (
+                  <button
+                    key={y.id}
+                    type="button"
+                    onClick={() => addMutation.mutate(y.id)}
+                    className="block w-full rounded-md border border-border/40 bg-background/40 p-2 text-left text-sm hover:bg-accent/40"
+                  >
+                    + {y.full_name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Todos os jovens já foram adicionados.</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Todos os jovens já foram adicionados.</p>
+          )
         )}
       </CardContent>
     </Card>
