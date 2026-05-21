@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useJourney } from "@/hooks/useJourney";
-import { usePermissions } from "@/hooks/usePermissions";
+
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,7 @@ function detectNextMission(j: UserJourney): NextMission | null {
 
 
 function JourneyPage() {
-  const { isAdmin } = usePermissions();
+  
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
   const [openPhaseId, setOpenPhaseId] = useState<string | null>(null);
 
@@ -135,11 +135,6 @@ function JourneyPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isAdmin && (
-            <Button asChild variant="outline" size="sm">
-              <Link to="/minha-jornada">Visão admin</Link>
-            </Button>
-          )}
           <div className="w-full sm:w-64">
             <Progress value={data.overall_progress} />
             <div className="text-xs text-muted-foreground mt-1 text-right">

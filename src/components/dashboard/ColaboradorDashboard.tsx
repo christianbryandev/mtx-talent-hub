@@ -158,7 +158,7 @@ export function ColaboradorDashboard() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Minha jornada</CardTitle>
           <Button asChild size="sm" variant="ghost">
-            <Link to="/minha-jornada">Abrir <ArrowRight className="h-3 w-3 ml-1" /></Link>
+            <Link to="/jornada">Abrir <ArrowRight className="h-3 w-3 ml-1" /></Link>
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
