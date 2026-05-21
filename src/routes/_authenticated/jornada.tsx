@@ -196,6 +196,8 @@ function JourneyPage() {
 
       <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
 
+      <JourneyCompletedBanner journey={data} />
+
       <IndicatorsRow
         xp={data.total_xp}
         progress={data.overall_progress}
@@ -204,6 +206,8 @@ function JourneyPage() {
         quizzesApproved={quizzesApproved}
         quizzesTotal={quizzesTotal}
       />
+
+      <AchievementsSection journey={data} />
 
       <div className="space-y-4">
         {data.phases.map((phase) => (
