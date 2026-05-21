@@ -135,11 +135,6 @@ function JourneyPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isAdmin && (
-            <Button asChild variant="outline" size="sm">
-              <Link to="/minha-jornada">Visão admin</Link>
-            </Button>
-          )}
           <div className="w-full sm:w-64">
             <Progress value={data.overall_progress} />
             <div className="text-xs text-muted-foreground mt-1 text-right">
