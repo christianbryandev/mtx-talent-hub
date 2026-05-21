@@ -97,6 +97,18 @@ function JourneyPage() {
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
   const [openPhaseId, setOpenPhaseId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!openPhaseId) return;
+    const t = setTimeout(() => {
+      if (typeof document !== "undefined") {
+        document
+          .getElementById(`phase-${openPhaseId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [openPhaseId]);
+
   const mission = useMemo(() => (data ? detectNextMission(data) : null), [data]);
   const quizzesApproved = useMemo(
     () => (data ? data.phases.filter((p) => p.has_quiz && p.status === "concluida").length : 0),
