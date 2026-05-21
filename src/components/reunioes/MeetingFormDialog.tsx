@@ -72,6 +72,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
   const isEdit = !!meeting;
+  const [youngIds, setYoungIds] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
