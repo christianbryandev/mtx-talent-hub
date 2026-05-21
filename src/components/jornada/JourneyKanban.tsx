@@ -67,12 +67,12 @@ import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSele
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type CardStatus = "pendente" | "em_andamento" | "concluida";
+type CardStatus = "pendente" | "em_andamento" | "concluido";
 
 const STATUS_META: Record<CardStatus, { label: string; color: string }> = {
   pendente: { label: "Pendente", color: "bg-zinc-500/15 text-zinc-300" },
   em_andamento: { label: "Em andamento", color: "bg-amber-500/15 text-amber-400" },
-  concluida: { label: "Concluída", color: "bg-emerald-500/15 text-emerald-400" },
+  concluido: { label: "Concluída", color: "bg-emerald-500/15 text-emerald-400" },
 };
 
 interface ChecklistItem {
@@ -726,7 +726,7 @@ function CardDrawer({
                       const done = next.filter((i) => i.done).length;
                       const derivedStatus: CardStatus =
                         total > 0 && done === total
-                          ? "concluida"
+                          ? "concluido"
                           : done > 0
                             ? "em_andamento"
                             : "pendente";
