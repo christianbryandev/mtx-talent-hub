@@ -278,10 +278,17 @@ function NextMissionBlock({
         </div>
         <div className="shrink-0">
           {mission.kind === "quiz" ? (
-            <Button asChild>
-              <Link to="/jornada/quiz/$phaseId" params={{ phaseId: mission.phase.id }}>
-                {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
+            <Button
+              onClick={() => {
+                onOpenPhase(mission.phase.id);
+                if (typeof document !== "undefined") {
+                  document
+                    .getElementById(`phase-${mission.phase.id}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            >
+              {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           ) : isLocked ? (
             <Button variant="outline" disabled>
