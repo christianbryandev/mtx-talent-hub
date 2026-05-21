@@ -236,41 +236,27 @@ function PhaseCard({
           ))}
 
           {phase.has_quiz && phase.status !== "concluida" && (
-            <div className="rounded-md border border-dashed border-primary/40 p-3">
-              <div className="text-sm font-semibold mb-2">
-                Quiz da fase (aprovação ≥ 80%)
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  placeholder="Nota 0–100"
-                  value={score}
-                  onChange={(e) => setScore(e.target.value)}
-                />
-                <Button
-                  disabled={
-                    score === "" ||
-                    phase.cards_done < phase.cards_total ||
-                    pending
-                  }
-                  onClick={() => {
-                    const n = Number(score);
-                    if (!Number.isNaN(n)) {
-                      onSubmitQuiz(n);
-                      setScore("");
-                    }
-                  }}
-                >
-                  Enviar
-                </Button>
-              </div>
-              {phase.cards_done < phase.cards_total && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Conclua todos os cards antes de enviar o quiz.
+            <div className="rounded-md border border-dashed border-primary/40 p-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold">Quiz da fase</div>
+                <p className="text-xs text-muted-foreground">
+                  Aprovação ≥ 80%. {phase.cards_done < phase.cards_total
+                    ? "Conclua todos os cards antes de iniciar."
+                    : "Você pode iniciar o quiz agora."}
                 </p>
-              )}
+              </div>
+              <Button
+                disabled={phase.cards_done < phase.cards_total || pending}
+                asChild={phase.cards_done >= phase.cards_total}
+              >
+                {phase.cards_done >= phase.cards_total ? (
+                  <Link to="/jornada/quiz/$phaseId" params={{ phaseId: phase.id }}>
+                    Fazer quiz
+                  </Link>
+                ) : (
+                  <span>Fazer quiz</span>
+                )}
+              </Button>
             </div>
           )}
         </div>
