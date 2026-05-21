@@ -17,6 +17,7 @@ import {
   Zap,
   BarChart2,
   GraduationCap,
+  Activity,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
