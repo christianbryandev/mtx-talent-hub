@@ -1,5 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type PhaseStatus =
+  | "bloqueada"
+  | "reprovada"
+  | "aguardando_quiz"
+  | "nao_iniciada"
+  | "em_andamento"
+  | "concluida";
+
 export interface JourneyChecklistItem {
   id: string;
   title: string;
@@ -7,10 +15,22 @@ export interface JourneyChecklistItem {
   order_index: number;
   completed: boolean;
 }
+export interface JourneyLink {
+  label: string;
+  url: string;
+}
+export interface JourneyAttachment {
+  label: string;
+  url: string;
+}
 export interface JourneyCard {
   id: string;
   title: string;
   description: string | null;
+  notes: string | null;
+  materials: string | null;
+  links: JourneyLink[];
+  attachments: JourneyAttachment[];
   order_index: number;
   xp_reward: number;
   completed: boolean;
@@ -23,10 +43,12 @@ export interface JourneyPhase {
   order_index: number;
   has_quiz: boolean;
   xp_reward: number;
-  status: "pendente" | "em_andamento" | "concluido";
+  status: PhaseStatus;
+  raw_status: "pendente" | "em_andamento" | "concluido";
   unlocked: boolean;
   cards_total: number;
   cards_done: number;
+  last_quiz_score: number | null;
   cards: JourneyCard[];
 }
 export interface UserJourney {
@@ -58,17 +80,6 @@ export const journeyService = {
       _user_id: userId,
       _phase_id: phaseId,
       _score: score,
-    });
-    if (error) throw error;
-    return data;
-  },
-
-  async processXpEvent(userId: string, eventType: string, referenceId: string, xpAmount: number) {
-    const { data, error } = await supabase.rpc("process_xp_event", {
-      _user_id: userId,
-      _event_type: eventType,
-      _reference_id: referenceId,
-      _xp_amount: xpAmount,
     });
     if (error) throw error;
     return data;
