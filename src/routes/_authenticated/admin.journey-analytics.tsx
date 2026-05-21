@@ -87,6 +87,16 @@ function JourneyAnalyticsPage() {
         <h3 className="text-lg font-semibold tracking-tight">Tracking Individual</h3>
         <JourneyTalentTable />
       </section>
+
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight">Acompanhamento Individual</h3>
+          <p className="text-sm text-muted-foreground">
+            Visão micro por jovem com notas de quizzes e cards concluídos.
+          </p>
+        </div>
+        <JourneyMonitor />
+      </section>
     </div>
   );
 }
