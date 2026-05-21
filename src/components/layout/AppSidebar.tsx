@@ -67,7 +67,8 @@ export function AppSidebar() {
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
   const isColaborador = role === "colaborador";
-  const { data: journey } = useJourney(isColaborador ? undefined : "__disabled__");
+  // XP only relevant for colaborador (journey owner). Hook is safe-noop for others.
+  const { data: journey } = useJourney(isColaborador ? undefined : "00000000-0000-0000-0000-000000000000");
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["pending-applications-count"],
