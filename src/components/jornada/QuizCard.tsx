@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QuizMediaPreview } from "@/components/jornada/QuizMediaPreview";
 import type { QuizSubmitResult } from "@/services/quizService";
 
 interface QuizCardProps {
