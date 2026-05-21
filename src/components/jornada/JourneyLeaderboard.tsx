@@ -13,13 +13,14 @@ interface RankingRow {
   first_name: string | null;
   avatar_url: string | null;
   total_xp: number;
+  progress_percentage: number;
   rank_position: number;
 }
 
 async function fetchRanking(): Promise<RankingRow[]> {
   const { data, error } = await supabase
     .from("vw_journey_ranking" as never)
-    .select("user_id, full_name, first_name, avatar_url, total_xp, rank_position")
+    .select("user_id, full_name, first_name, avatar_url, total_xp, progress_percentage, rank_position")
     .order("rank_position", { ascending: true })
     .limit(200);
   if (error) throw new Error(error.message);
