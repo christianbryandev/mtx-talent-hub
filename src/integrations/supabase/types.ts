@@ -1417,7 +1417,7 @@ export type Database = {
           {
             foreignKeyName: "quiz_templates_phase_id_fkey"
             columns: ["phase_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "journey_phase_catalog"
             referencedColumns: ["id"]
           },
