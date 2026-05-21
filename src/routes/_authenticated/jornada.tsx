@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   Lock,
   CheckCircle2,
@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
 import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+import { QuizCard } from "@/components/jornada/QuizCard";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
@@ -277,10 +278,17 @@ function NextMissionBlock({
         </div>
         <div className="shrink-0">
           {mission.kind === "quiz" ? (
-            <Button asChild>
-              <Link to="/jornada/quiz/$phaseId" params={{ phaseId: mission.phase.id }}>
-                {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
+            <Button
+              onClick={() => {
+                onOpenPhase(mission.phase.id);
+                if (typeof document !== "undefined") {
+                  document
+                    .getElementById(`phase-${mission.phase.id}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            >
+              {mission.cta} <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           ) : isLocked ? (
             <Button variant="outline" disabled>
@@ -517,29 +525,13 @@ function PhaseCard({
             </div>
           ))}
 
-          {phase.has_quiz && phase.status !== "concluida" && (
-            <div className="rounded-md border border-dashed border-primary/40 p-3 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold">Quiz da fase</div>
-                <p className="text-xs text-muted-foreground">
-                  Aprovação ≥ 80%. {phase.cards_done < phase.cards_total
-                    ? "Conclua todos os cards antes de iniciar."
-                    : "Você pode iniciar o quiz agora."}
-                </p>
-              </div>
-              <Button
-                disabled={phase.cards_done < phase.cards_total || pending}
-                asChild={phase.cards_done >= phase.cards_total}
-              >
-                {phase.cards_done >= phase.cards_total ? (
-                  <Link to="/jornada/quiz/$phaseId" params={{ phaseId: phase.id }}>
-                    Fazer quiz
-                  </Link>
-                ) : (
-                  <span>Fazer quiz</span>
-                )}
-              </Button>
-            </div>
+          {phase.has_quiz && (
+            <QuizCard
+              phaseId={phase.id}
+              phaseStatus={phase.status}
+              cardsDone={phase.cards_done}
+              cardsTotal={phase.cards_total}
+            />
           )}
         </div>
       )}
