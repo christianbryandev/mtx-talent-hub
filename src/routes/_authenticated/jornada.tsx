@@ -35,6 +35,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
 import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
 import { QuizCard } from "@/components/jornada/QuizCard";
+import {
+  AchievementsSection,
+  JourneyCompletedBanner,
+} from "@/components/jornada/AchievementsSection";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
@@ -192,6 +196,8 @@ function JourneyPage() {
 
       <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
 
+      <JourneyCompletedBanner journey={data} />
+
       <IndicatorsRow
         xp={data.total_xp}
         progress={data.overall_progress}
@@ -200,6 +206,8 @@ function JourneyPage() {
         quizzesApproved={quizzesApproved}
         quizzesTotal={quizzesTotal}
       />
+
+      <AchievementsSection journey={data} />
 
       <div className="space-y-4">
         {data.phases.map((phase) => (
