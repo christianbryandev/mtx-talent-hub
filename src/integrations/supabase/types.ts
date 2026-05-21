@@ -1607,6 +1607,69 @@ export type Database = {
         }
         Relationships: []
       }
+      system_events: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          payload: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          action: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          metadata: Json
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       task_attachments: {
         Row: {
           created_at: string
@@ -2506,6 +2569,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_system_event: {
+        Args: {
+          _action: string
+          _error_code: string
+          _error_message: string
+          _metadata: Json
+          _status: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       notify_admins: {
         Args: {
           _entity_id: string
@@ -2535,6 +2609,16 @@ export type Database = {
           _xp_amount: number
         }
         Returns: boolean
+      }
+      record_system_event: {
+        Args: {
+          _entity_id: string
+          _entity_type: string
+          _event_type: string
+          _payload: Json
+          _user_id: string
+        }
+        Returns: undefined
       }
       submit_phase_quiz: {
         Args: { _answers: Json; _phase_id: string }
