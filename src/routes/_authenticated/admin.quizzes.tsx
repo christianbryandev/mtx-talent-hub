@@ -20,11 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { QuizMediaUpload } from "@/components/admin/QuizMediaUpload";
+
 export const Route = createFileRoute("/_authenticated/admin/quizzes")({
   head: () => ({ meta: [{ title: "Admin · Quizzes — MTX Hub" }] }),
   component: AdminQuizzesPage,
 });
 
+type MediaType = "image" | "video";
 interface Phase {
   id: string;
   title: string;
@@ -35,11 +38,15 @@ interface Option {
   text: string;
   is_correct: boolean;
   order_index: number;
+  media_url: string | null;
+  media_type: MediaType | null;
 }
 interface Question {
   id: string;
   question: string;
   order_index: number;
+  media_url: string | null;
+  media_type: MediaType | null;
   options: Option[];
 }
 interface Quiz {
@@ -94,7 +101,7 @@ function AdminQuizzesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_questions")
-        .select("id,question,order_index, options:quiz_options(id,text,is_correct,order_index)")
+        .select("id,question,order_index,media_url,media_type, options:quiz_options(id,text,is_correct,order_index,media_url,media_type)")
         .eq("quiz_id", quiz.data!.id)
         .order("order_index");
       if (error) throw error;
@@ -164,10 +171,10 @@ function AdminQuizzesPage() {
     invalidateAll();
   }
 
-  async function saveQuestion(id: string, text: string) {
+  async function saveQuestion(id: string, patch: Partial<Omit<Question, "options">>) {
     const { error } = await supabase
       .from("quiz_questions")
-      .update({ question: text })
+      .update(patch)
       .eq("id", id);
     if (error) { toast.error(error.message); return; }
     invalidateAll();
@@ -275,7 +282,7 @@ function QuizEditor({
   onSaveQuiz: (p: Partial<Quiz>) => Promise<unknown>;
   onAddQuestion: () => Promise<unknown>;
   onDeleteQuestion: (id: string) => Promise<unknown>;
-  onSaveQuestion: (id: string, text: string) => Promise<unknown>;
+  onSaveQuestion: (id: string, patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
   onSaveOption: (id: string, p: Partial<Option>, questionId?: string) => Promise<unknown>;
   onAddOption: (qid: string, count: number) => Promise<unknown>;
   onDeleteOption: (id: string) => Promise<unknown>;
@@ -354,7 +361,7 @@ function QuizEditor({
               index={idx}
               q={q}
               onDelete={() => onDeleteQuestion(q.id)}
-              onSave={(text) => onSaveQuestion(q.id, text)}
+              onSave={(patch) => onSaveQuestion(q.id, patch)}
               onSaveOption={(oid, p) => onSaveOption(oid, p, q.id)}
               onAddOption={() => onAddOption(q.id, q.options.length)}
               onDeleteOption={onDeleteOption}
@@ -378,7 +385,7 @@ function QuestionEditor({
   index: number;
   q: Question;
   onDelete: () => void;
-  onSave: (text: string) => Promise<unknown>;
+  onSave: (patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
   onSaveOption: (oid: string, p: Partial<Option>) => Promise<unknown>;
   onAddOption: () => Promise<unknown>;
   onDeleteOption: (oid: string) => Promise<unknown>;
@@ -392,7 +399,7 @@ function QuestionEditor({
         <span className="text-sm font-semibold pt-2">{index + 1}.</span>
         <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} />
         <div className="flex flex-col gap-1">
-          <Button size="sm" variant="outline" onClick={() => onSave(text)}>
+          <Button size="sm" variant="outline" onClick={() => onSave({ question: text })}>
             <Save className="h-3 w-3" />
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete}>
@@ -400,7 +407,16 @@ function QuestionEditor({
           </Button>
         </div>
       </div>
-      <div className="space-y-1 pl-6">
+      <div className="pl-6">
+        <QuizMediaUpload
+          url={q.media_url}
+          type={q.media_type}
+          pathPrefix={`questions/${q.id}`}
+          label="Mídia da pergunta"
+          onChange={async (patch) => { await onSave(patch); }}
+        />
+      </div>
+      <div className="space-y-3 pl-6">
         {q.options.map((o) => (
           <OptionEditor
             key={o.id}
@@ -429,18 +445,27 @@ function OptionEditor({
   const [text, setText] = useState(o.text);
   useEffect(() => setText(o.text), [o.text]);
   return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        checked={o.is_correct}
-        onCheckedChange={(v) => onSave({ is_correct: v === true })}
+    <div className="space-y-2 rounded border border-dashed p-2">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={o.is_correct}
+          onCheckedChange={(v) => onSave({ is_correct: v === true })}
+        />
+        <Input value={text} onChange={(e) => setText(e.target.value)} />
+        <Button size="sm" variant="outline" onClick={() => onSave({ text })}>
+          <Save className="h-3 w-3" />
+        </Button>
+        <Button size="sm" variant="outline" onClick={onDelete}>
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+      <QuizMediaUpload
+        url={o.media_url}
+        type={o.media_type}
+        pathPrefix={`options/${o.id}`}
+        label="Mídia da alternativa"
+        onChange={async (patch) => { await onSave(patch); }}
       />
-      <Input value={text} onChange={(e) => setText(e.target.value)} />
-      <Button size="sm" variant="outline" onClick={() => onSave({ text })}>
-        <Save className="h-3 w-3" />
-      </Button>
-      <Button size="sm" variant="outline" onClick={onDelete}>
-        <Trash2 className="h-3 w-3" />
-      </Button>
     </div>
   );
 }

@@ -1,15 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type QuizMediaType = "image" | "video";
 export interface QuizOption {
   id: string;
   text: string;
   order_index: number;
+  media_url?: string | null;
+  media_type?: QuizMediaType | null;
 }
 export interface QuizQuestion {
   id: string;
   question: string;
   type: string;
   order_index: number;
+  media_url?: string | null;
+  media_type?: QuizMediaType | null;
   options: QuizOption[];
 }
 export interface PhaseQuiz {

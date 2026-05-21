@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QuizMediaPreview } from "@/components/jornada/QuizMediaPreview";
 import type { QuizSubmitResult } from "@/services/quizService";
 
 interface QuizCardProps {
@@ -188,16 +189,24 @@ export function QuizCard({ phaseId, phaseStatus, cardsDone, cardsTotal }: QuizCa
             <div className="text-sm font-medium">
               {idx + 1}. {q.question}
             </div>
+            {q.media_url && q.media_type && (
+              <QuizMediaPreview url={q.media_url} type={q.media_type} />
+            )}
             <RadioGroup
               value={answers[q.id] ?? ""}
               onValueChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))}
             >
               {q.options.map((o) => (
-                <div key={o.id} className="flex items-center gap-2">
-                  <RadioGroupItem value={o.id} id={`${q.id}-${o.id}`} />
-                  <Label htmlFor={`${q.id}-${o.id}`} className="cursor-pointer font-normal text-sm">
-                    {o.text}
-                  </Label>
+                <div key={o.id} className="flex items-start gap-2">
+                  <RadioGroupItem value={o.id} id={`${q.id}-${o.id}`} className="mt-1" />
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor={`${q.id}-${o.id}`} className="cursor-pointer font-normal text-sm block">
+                      {o.text}
+                    </Label>
+                    {o.media_url && o.media_type && (
+                      <QuizMediaPreview url={o.media_url} type={o.media_type} compact />
+                    )}
+                  </div>
                 </div>
               ))}
             </RadioGroup>
