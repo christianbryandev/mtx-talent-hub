@@ -2646,6 +2646,7 @@ export type Database = {
           avatar_url: string | null
           first_name: string | null
           full_name: string | null
+          progress_percentage: number | null
           rank_position: number | null
           total_xp: number | null
           user_id: string | null
