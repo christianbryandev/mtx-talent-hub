@@ -60,5 +60,5 @@ export function useJourney(targetUserId?: string) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  return { ...query, markItem, submitQuiz };
+  return { ...query, toggleItem, submitQuiz };
 }
