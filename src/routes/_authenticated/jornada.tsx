@@ -44,7 +44,7 @@ const STATUS_META: Record<
 
 function JourneyPage() {
   const { isAdmin } = usePermissions();
-  const { data, isLoading, isError, error, isFetching, toggleItem, submitQuiz } = useJourney();
+  const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
 
   if (isLoading) return <Skeleton className="h-96 w-full" />;
   if (isError)
