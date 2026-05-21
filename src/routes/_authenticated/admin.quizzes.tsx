@@ -282,7 +282,7 @@ function QuizEditor({
   onSaveQuiz: (p: Partial<Quiz>) => Promise<unknown>;
   onAddQuestion: () => Promise<unknown>;
   onDeleteQuestion: (id: string) => Promise<unknown>;
-  onSaveQuestion: (id: string, text: string) => Promise<unknown>;
+  onSaveQuestion: (id: string, patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
   onSaveOption: (id: string, p: Partial<Option>, questionId?: string) => Promise<unknown>;
   onAddOption: (qid: string, count: number) => Promise<unknown>;
   onDeleteOption: (id: string) => Promise<unknown>;
