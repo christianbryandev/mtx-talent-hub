@@ -101,7 +101,7 @@ function AdminQuizzesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_questions")
-        .select("id,question,order_index, options:quiz_options(id,text,is_correct,order_index)")
+        .select("id,question,order_index,media_url,media_type, options:quiz_options(id,text,is_correct,order_index,media_url,media_type)")
         .eq("quiz_id", quiz.data!.id)
         .order("order_index");
       if (error) throw error;
