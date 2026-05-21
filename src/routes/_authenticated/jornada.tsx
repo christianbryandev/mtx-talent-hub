@@ -91,7 +91,6 @@ function JourneyPage() {
             phase={phase}
             pending={toggleItem.isPending || submitQuiz.isPending}
             onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
-            onSubmitQuiz={(score) => submitQuiz.mutate({ phaseId: phase.id, score })}
           />
         ))}
       </div>
@@ -103,16 +102,13 @@ function PhaseCard({
   phase,
   pending,
   onToggle,
-  onSubmitQuiz,
 }: {
   phase: JourneyPhase;
   pending: boolean;
   onToggle: (itemId: string, completed: boolean) => void;
-  onSubmitQuiz: (score: number) => void;
 }) {
   const meta = STATUS_META[phase.status];
   const Icon = meta.icon;
-  const [score, setScore] = useState("");
   const [open, setOpen] = useState(
     phase.status === "em_andamento" || phase.status === "aguardando_quiz" || phase.status === "reprovada",
   );
