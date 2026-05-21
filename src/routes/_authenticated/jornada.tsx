@@ -89,8 +89,8 @@ function JourneyPage() {
           <PhaseCard
             key={phase.id}
             phase={phase}
-            pending={markItem.isPending || submitQuiz.isPending}
-            onMark={(itemId) => markItem.mutate(itemId)}
+            pending={toggleItem.isPending || submitQuiz.isPending}
+            onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
             onSubmitQuiz={(score) => submitQuiz.mutate({ phaseId: phase.id, score })}
           />
         ))}
