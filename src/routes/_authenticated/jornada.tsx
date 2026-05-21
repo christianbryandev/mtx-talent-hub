@@ -16,7 +16,7 @@ import {
   GraduationCap,
   ArrowRight,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useJourney } from "@/hooks/useJourney";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Card } from "@/components/ui/card";
@@ -351,7 +351,10 @@ function PhaseCard({
   );
   const locked = phase.status === "bloqueada";
   // Open imperatively when "Próxima missão" focuses this phase
-  if (forceOpen && !open && !locked) setOpen(true);
+  useEffect(() => {
+    if (forceOpen && !locked) setOpen(true);
+  }, [forceOpen, locked]);
+
 
   const phasePct =
     phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
