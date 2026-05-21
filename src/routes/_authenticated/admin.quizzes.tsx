@@ -20,11 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { QuizMediaUpload } from "@/components/admin/QuizMediaUpload";
+
 export const Route = createFileRoute("/_authenticated/admin/quizzes")({
   head: () => ({ meta: [{ title: "Admin · Quizzes — MTX Hub" }] }),
   component: AdminQuizzesPage,
 });
 
+type MediaType = "image" | "video";
 interface Phase {
   id: string;
   title: string;
@@ -35,11 +38,15 @@ interface Option {
   text: string;
   is_correct: boolean;
   order_index: number;
+  media_url: string | null;
+  media_type: MediaType | null;
 }
 interface Question {
   id: string;
   question: string;
   order_index: number;
+  media_url: string | null;
+  media_type: MediaType | null;
   options: Option[];
 }
 interface Quiz {
