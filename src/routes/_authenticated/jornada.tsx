@@ -39,6 +39,8 @@ import {
   AchievementsSection,
   JourneyCompletedBanner,
 } from "@/components/jornada/AchievementsSection";
+import { JourneyLeaderboard } from "@/components/jornada/JourneyLeaderboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
