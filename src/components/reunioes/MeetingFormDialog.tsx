@@ -445,6 +445,18 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Jovens participantes</Label>
+            <MultiYoungSearchSelect
+              value={youngIds}
+              onChange={setYoungIds}
+              placeholder="Atribuir jovens à reunião"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Os jovens selecionados poderão visualizar a reunião e a lista de participantes.
+            </p>
+          </div>
+
           {isEdit && meeting && <ActionItemsSection meetingId={meeting.id} />}
 
 
