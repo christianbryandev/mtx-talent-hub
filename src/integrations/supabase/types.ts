@@ -215,6 +215,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_history_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       client_services: {
@@ -395,6 +402,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clients_commercial_responsible_fkey"
+            columns: ["commercial_responsible"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "clients_young_responsible_fkey"
             columns: ["young_responsible"]
             isOneToOne: false
@@ -462,11 +476,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "edit_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "edit_requests_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edit_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -985,6 +1013,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1722,6 +1757,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "task_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       task_checklists: {
@@ -1791,6 +1833,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "task_comments_task_id_fkey"
@@ -1893,6 +1942,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "tasks_opportunity_id_fkey"
             columns: ["opportunity_id"]
             isOneToOne: false
@@ -1912,6 +1968,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "tasks_young_responsible_fkey"
@@ -2073,6 +2136,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2327,6 +2397,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "young_evolution_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "young_evolution_young_id_fkey"
             columns: ["young_id"]
             isOneToOne: false
@@ -2510,11 +2587,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "young_people_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "young_people_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "young_people_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2550,7 +2641,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_journey_ranking: {
+        Row: {
+          avatar_url: string | null
+          first_name: string | null
+          full_name: string | null
+          rank_position: number | null
+          total_xp: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       activate_client_service: {

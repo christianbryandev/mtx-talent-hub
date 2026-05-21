@@ -39,6 +39,8 @@ import {
   AchievementsSection,
   JourneyCompletedBanner,
 } from "@/components/jornada/AchievementsSection";
+import { JourneyLeaderboard } from "@/components/jornada/JourneyLeaderboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
@@ -194,32 +196,47 @@ function JourneyPage() {
         </div>
       </header>
 
-      <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
+      <Tabs defaultValue="trilha" className="w-full">
+        <TabsList>
+          <TabsTrigger value="trilha">Trilha</TabsTrigger>
+          <TabsTrigger value="ranking">
+            <Trophy className="h-3.5 w-3.5 mr-1.5" /> Ranking
+          </TabsTrigger>
+        </TabsList>
 
-      <JourneyCompletedBanner journey={data} />
+        <TabsContent value="trilha" className="space-y-6 mt-4">
+          <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
 
-      <IndicatorsRow
-        xp={data.total_xp}
-        progress={data.overall_progress}
-        phasesDone={phasesDone}
-        phasesTotal={data.phases.length}
-        quizzesApproved={quizzesApproved}
-        quizzesTotal={quizzesTotal}
-      />
+          <JourneyCompletedBanner journey={data} />
 
-      <AchievementsSection journey={data} />
-
-      <div className="space-y-4">
-        {data.phases.map((phase) => (
-          <PhaseCard
-            key={phase.id}
-            phase={phase}
-            pending={toggleItem.isPending}
-            forceOpen={openPhaseId === phase.id}
-            onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
+          <IndicatorsRow
+            xp={data.total_xp}
+            progress={data.overall_progress}
+            phasesDone={phasesDone}
+            phasesTotal={data.phases.length}
+            quizzesApproved={quizzesApproved}
+            quizzesTotal={quizzesTotal}
           />
-        ))}
-      </div>
+
+          <AchievementsSection journey={data} />
+
+          <div className="space-y-4">
+            {data.phases.map((phase) => (
+              <PhaseCard
+                key={phase.id}
+                phase={phase}
+                pending={toggleItem.isPending}
+                forceOpen={openPhaseId === phase.id}
+                onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ranking" className="mt-4">
+          <JourneyLeaderboard />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
