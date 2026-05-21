@@ -44,7 +44,9 @@ import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
+import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
+import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -228,11 +230,23 @@ const AuthenticatedClientesIdRoute = AuthenticatedClientesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedClientesRoute,
 } as any)
+const AuthenticatedAdminQuizzesRoute =
+  AuthenticatedAdminQuizzesRouteImport.update({
+    id: '/admin/quizzes',
+    path: '/admin/quizzes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedJovensIdJornadaRoute =
   AuthenticatedJovensIdJornadaRouteImport.update({
     id: '/jornada',
     path: '/jornada',
     getParentRoute: () => AuthenticatedJovensIdRoute,
+  } as any)
+const AuthenticatedJornadaQuizPhaseIdRoute =
+  AuthenticatedJornadaQuizPhaseIdRouteImport.update({
+    id: '/quiz/$phaseId',
+    path: '/quiz/$phaseId',
+    getParentRoute: () => AuthenticatedJornadaRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -245,7 +259,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/jornada': typeof AuthenticatedJornadaRoute
+  '/jornada': typeof AuthenticatedJornadaRouteWithChildren
   '/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
@@ -258,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -270,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/jovens/': typeof AuthenticatedJovensIndexRoute
   '/reunioes/': typeof AuthenticatedReunioesIndexRoute
   '/servicos/': typeof AuthenticatedServicosIndexRoute
+  '/jornada/quiz/$phaseId': typeof AuthenticatedJornadaQuizPhaseIdRoute
   '/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRoutesByTo {
@@ -280,7 +296,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/jornada': typeof AuthenticatedJornadaRoute
+  '/jornada': typeof AuthenticatedJornadaRouteWithChildren
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -290,6 +306,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/crm/$id': typeof AuthenticatedCrmIdRoute
   '/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -302,6 +319,7 @@ export interface FileRoutesByTo {
   '/jovens': typeof AuthenticatedJovensIndexRoute
   '/reunioes': typeof AuthenticatedReunioesIndexRoute
   '/servicos': typeof AuthenticatedServicosIndexRoute
+  '/jornada/quiz/$phaseId': typeof AuthenticatedJornadaQuizPhaseIdRoute
   '/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRoutesById {
@@ -316,7 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
-  '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/jornada': typeof AuthenticatedJornadaRouteWithChildren
   '/_authenticated/jovens': typeof AuthenticatedJovensRouteWithChildren
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
@@ -329,6 +347,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
+  '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
   '/_authenticated/crm/$id': typeof AuthenticatedCrmIdRoute
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
@@ -341,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/jovens/': typeof AuthenticatedJovensIndexRoute
   '/_authenticated/reunioes/': typeof AuthenticatedReunioesIndexRoute
   '/_authenticated/servicos/': typeof AuthenticatedServicosIndexRoute
+  '/_authenticated/jornada/quiz/$phaseId': typeof AuthenticatedJornadaQuizPhaseIdRoute
   '/_authenticated/jovens/$id/jornada': typeof AuthenticatedJovensIdJornadaRoute
 }
 export interface FileRouteTypes {
@@ -368,6 +388,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
+    | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
     | '/crm/lista'
@@ -380,6 +401,7 @@ export interface FileRouteTypes {
     | '/jovens/'
     | '/reunioes/'
     | '/servicos/'
+    | '/jornada/quiz/$phaseId'
     | '/jovens/$id/jornada'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -400,6 +422,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/briefing/$clientId'
     | '/convite/$token'
+    | '/admin/quizzes'
     | '/clientes/$id'
     | '/crm/$id'
     | '/crm/lista'
@@ -412,6 +435,7 @@ export interface FileRouteTypes {
     | '/jovens'
     | '/reunioes'
     | '/servicos'
+    | '/jornada/quiz/$phaseId'
     | '/jovens/$id/jornada'
   id:
     | '__root__'
@@ -438,6 +462,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/briefing/$clientId'
     | '/convite/$token'
+    | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
     | '/_authenticated/crm/$id'
     | '/_authenticated/crm/lista'
@@ -450,6 +475,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jovens/'
     | '/_authenticated/reunioes/'
     | '/_authenticated/servicos/'
+    | '/_authenticated/jornada/quiz/$phaseId'
     | '/_authenticated/jovens/$id/jornada'
   fileRoutesById: FileRoutesById
 }
@@ -711,12 +737,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesIdRouteImport
       parentRoute: typeof AuthenticatedClientesRoute
     }
+    '/_authenticated/admin/quizzes': {
+      id: '/_authenticated/admin/quizzes'
+      path: '/admin/quizzes'
+      fullPath: '/admin/quizzes'
+      preLoaderRoute: typeof AuthenticatedAdminQuizzesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/jovens/$id/jornada': {
       id: '/_authenticated/jovens/$id/jornada'
       path: '/jornada'
       fullPath: '/jovens/$id/jornada'
       preLoaderRoute: typeof AuthenticatedJovensIdJornadaRouteImport
       parentRoute: typeof AuthenticatedJovensIdRoute
+    }
+    '/_authenticated/jornada/quiz/$phaseId': {
+      id: '/_authenticated/jornada/quiz/$phaseId'
+      path: '/quiz/$phaseId'
+      fullPath: '/jornada/quiz/$phaseId'
+      preLoaderRoute: typeof AuthenticatedJornadaQuizPhaseIdRouteImport
+      parentRoute: typeof AuthenticatedJornadaRoute
     }
   }
 }
@@ -750,6 +790,17 @@ const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
 
 const AuthenticatedCrmRouteWithChildren =
   AuthenticatedCrmRoute._addFileChildren(AuthenticatedCrmRouteChildren)
+
+interface AuthenticatedJornadaRouteChildren {
+  AuthenticatedJornadaQuizPhaseIdRoute: typeof AuthenticatedJornadaQuizPhaseIdRoute
+}
+
+const AuthenticatedJornadaRouteChildren: AuthenticatedJornadaRouteChildren = {
+  AuthenticatedJornadaQuizPhaseIdRoute: AuthenticatedJornadaQuizPhaseIdRoute,
+}
+
+const AuthenticatedJornadaRouteWithChildren =
+  AuthenticatedJornadaRoute._addFileChildren(AuthenticatedJornadaRouteChildren)
 
 interface AuthenticatedJovensIdRouteChildren {
   AuthenticatedJovensIdJornadaRoute: typeof AuthenticatedJovensIdJornadaRoute
@@ -814,7 +865,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
-  AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
+  AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRouteWithChildren
   AuthenticatedJovensRoute: typeof AuthenticatedJovensRouteWithChildren
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMinhaJornadaRoute: typeof AuthenticatedMinhaJornadaRoute
@@ -825,6 +876,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -832,7 +884,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
-  AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
+  AuthenticatedJornadaRoute: AuthenticatedJornadaRouteWithChildren,
   AuthenticatedJovensRoute: AuthenticatedJovensRouteWithChildren,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMinhaJornadaRoute: AuthenticatedMinhaJornadaRoute,
@@ -843,6 +895,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

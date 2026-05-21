@@ -679,26 +679,32 @@ export type Database = {
       }
       journey_quiz_attempts: {
         Row: {
+          attempt_number: number
           created_at: string
           id: string
           passed: boolean
           phase_id: string
+          quiz_id: string | null
           score: number
           user_id: string
         }
         Insert: {
+          attempt_number?: number
           created_at?: string
           id?: string
           passed: boolean
           phase_id: string
+          quiz_id?: string | null
           score: number
           user_id: string
         }
         Update: {
+          attempt_number?: number
           created_at?: string
           id?: string
           passed?: boolean
           phase_id?: string
+          quiz_id?: string | null
           score?: number
           user_id?: string
         }
@@ -708,6 +714,13 @@ export type Database = {
             columns: ["phase_id"]
             isOneToOne: false
             referencedRelation: "journey_phase_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -1295,6 +1308,117 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          order_index: number
+          question_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          order_index?: number
+          question_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          order_index?: number
+          question_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          question: string
+          quiz_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question: string
+          quiz_id: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          question?: string
+          quiz_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          passing_score: number
+          phase_id: string
+          title: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          passing_score?: number
+          phase_id: string
+          title: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          passing_score?: number
+          phase_id?: string
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_templates_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phase_catalog"
             referencedColumns: ["id"]
           },
         ]
@@ -2355,6 +2479,7 @@ export type Database = {
           used: boolean
         }[]
       }
+      get_phase_quiz: { Args: { _phase_id: string }; Returns: Json }
       get_primary_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -2400,6 +2525,10 @@ export type Database = {
           _xp_amount: number
         }
         Returns: boolean
+      }
+      submit_phase_quiz: {
+        Args: { _answers: Json; _phase_id: string }
+        Returns: Json
       }
       submit_quiz_attempt: {
         Args: { _phase_id: string; _score: number; _user_id: string }
