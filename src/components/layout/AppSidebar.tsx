@@ -16,6 +16,7 @@ import {
   UserCircle,
   Zap,
   BarChart2,
+  GraduationCap,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
@@ -214,6 +215,18 @@ export function AppSidebar() {
                     <Link to="/admin/journey-analytics" className="flex items-center gap-2">
                       <BarChart2 className="h-4 w-4" />
                       <span>Analytics Jornada</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/quizzes")}
+                    tooltip="Catálogo Jornada (Quizzes)"
+                  >
+                    <Link to="/admin/quizzes" className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>Catálogo Jornada</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
