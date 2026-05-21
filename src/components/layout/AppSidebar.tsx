@@ -205,6 +205,18 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/journey-analytics")}
+                    tooltip="Analytics Jornada"
+                  >
+                    <Link to="/admin/journey-analytics" className="flex items-center gap-2">
+                      <BarChart2 className="h-4 w-4" />
+                      <span>Analytics Jornada</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {isSuperAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
