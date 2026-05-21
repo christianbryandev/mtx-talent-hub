@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
 import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+import { QuizCard } from "@/components/jornada/QuizCard";
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
