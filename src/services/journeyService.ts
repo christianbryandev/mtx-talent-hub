@@ -66,10 +66,11 @@ export const journeyService = {
     return data as unknown as UserJourney;
   },
 
-  async markChecklistItem(userId: string, itemId: string) {
-    const { data, error } = await supabase.rpc("mark_checklist_item", {
+  async toggleChecklistItem(userId: string, itemId: string, completed: boolean) {
+    const { data, error } = await supabase.rpc("toggle_checklist_item", {
       _user_id: userId,
       _item_id: itemId,
+      _completed: completed,
     });
     if (error) throw error;
     return data;
