@@ -336,10 +336,12 @@ function IndicatorCard({
 function PhaseCard({
   phase,
   pending,
+  forceOpen,
   onToggle,
 }: {
   phase: JourneyPhase;
   pending: boolean;
+  forceOpen?: boolean;
   onToggle: (itemId: string, completed: boolean) => void;
 }) {
   const meta = STATUS_META[phase.status];
@@ -348,16 +350,22 @@ function PhaseCard({
     phase.status === "em_andamento" || phase.status === "aguardando_quiz" || phase.status === "reprovada",
   );
   const locked = phase.status === "bloqueada";
+  // Open imperatively when "Próxima missão" focuses this phase
+  if (forceOpen && !open && !locked) setOpen(true);
 
   const phasePct =
     phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
 
   return (
-    <Card className={`p-5 ${locked ? "opacity-60" : ""}`}>
+    <Card
+      id={`phase-${phase.id}`}
+      className={`p-5 transition-opacity scroll-mt-20 ${locked ? "opacity-60" : ""}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Icon className="h-5 w-5 text-primary shrink-0" />
+          <Icon className={`h-5 w-5 shrink-0 ${meta.accent}`} />
           <div className="min-w-0">
+
             <div className="font-semibold truncate">
               {phase.order_index}. {phase.title}
             </div>
