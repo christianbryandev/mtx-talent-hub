@@ -2556,6 +2556,9 @@ export type Database = {
           used: boolean
         }[]
       }
+      get_journey_conversion: { Args: never; Returns: Json }
+      get_journey_kpis: { Args: never; Returns: Json }
+      get_journey_phase_distribution: { Args: never; Returns: Json }
       get_phase_quiz: { Args: { _phase_id: string }; Returns: Json }
       get_primary_role: {
         Args: { _user_id: string }
