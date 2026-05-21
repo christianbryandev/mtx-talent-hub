@@ -361,7 +361,7 @@ function QuizEditor({
               index={idx}
               q={q}
               onDelete={() => onDeleteQuestion(q.id)}
-              onSave={(text) => onSaveQuestion(q.id, text)}
+              onSave={(patch) => onSaveQuestion(q.id, patch)}
               onSaveOption={(oid, p) => onSaveOption(oid, p, q.id)}
               onAddOption={() => onAddOption(q.id, q.options.length)}
               onDeleteOption={onDeleteOption}
