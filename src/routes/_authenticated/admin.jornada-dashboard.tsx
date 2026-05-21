@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/admin/jornada-dashboard")({
+  // path matches flat dot-naming convention used by sibling admin.quizzes.tsx
   head: () => ({ meta: [{ title: "Admin · Jornada — MTX Hub" }] }),
   component: AdminJourneyDashboard,
 });

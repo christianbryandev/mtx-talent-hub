@@ -45,7 +45,7 @@ import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/crm.$id'
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
-import { Route as AuthenticatedAdminJornadaDashboardRouteImport } from './routes/_authenticated/admin/jornada-dashboard'
+import { Route as AuthenticatedAdminJornadaDashboardRouteImport } from './routes/_authenticated/admin.jornada-dashboard'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
 
@@ -938,3 +938,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
