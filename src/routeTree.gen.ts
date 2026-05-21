@@ -46,6 +46,7 @@ import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
 import { Route as AuthenticatedAdminJourneyMonitorRouteImport } from './routes/_authenticated/admin.journey-monitor'
+import { Route as AuthenticatedAdminJourneyCatalogRouteImport } from './routes/_authenticated/admin.journey-catalog'
 import { Route as AuthenticatedAdminJourneyAnalyticsRouteImport } from './routes/_authenticated/admin.journey-analytics'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
 import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_authenticated/jornada.quiz.$phaseId'
@@ -244,6 +245,12 @@ const AuthenticatedAdminJourneyMonitorRoute =
     path: '/admin/journey-monitor',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminJourneyCatalogRoute =
+  AuthenticatedAdminJourneyCatalogRouteImport.update({
+    id: '/admin/journey-catalog',
+    path: '/admin/journey-catalog',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminJourneyAnalyticsRoute =
   AuthenticatedAdminJourneyAnalyticsRouteImport.update({
     id: '/admin/journey-analytics',
@@ -287,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
   '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -323,6 +331,7 @@ export interface FileRoutesByTo {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
   '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -366,6 +375,7 @@ export interface FileRoutesById {
   '/briefing/$clientId': typeof BriefingClientIdRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/_authenticated/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
+  '/_authenticated/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
   '/_authenticated/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/admin/journey-analytics'
+    | '/admin/journey-catalog'
     | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/admin/journey-analytics'
+    | '/admin/journey-catalog'
     | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
@@ -487,6 +499,7 @@ export interface FileRouteTypes {
     | '/briefing/$clientId'
     | '/convite/$token'
     | '/_authenticated/admin/journey-analytics'
+    | '/_authenticated/admin/journey-catalog'
     | '/_authenticated/admin/journey-monitor'
     | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
@@ -777,6 +790,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminJourneyMonitorRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/journey-catalog': {
+      id: '/_authenticated/admin/journey-catalog'
+      path: '/admin/journey-catalog'
+      fullPath: '/admin/journey-catalog'
+      preLoaderRoute: typeof AuthenticatedAdminJourneyCatalogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/journey-analytics': {
       id: '/_authenticated/admin/journey-analytics'
       path: '/admin/journey-analytics'
@@ -917,6 +937,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedAdminJourneyAnalyticsRoute: typeof AuthenticatedAdminJourneyAnalyticsRoute
+  AuthenticatedAdminJourneyCatalogRoute: typeof AuthenticatedAdminJourneyCatalogRoute
   AuthenticatedAdminJourneyMonitorRoute: typeof AuthenticatedAdminJourneyMonitorRoute
   AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
@@ -939,6 +960,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedAdminJourneyAnalyticsRoute:
     AuthenticatedAdminJourneyAnalyticsRoute,
+  AuthenticatedAdminJourneyCatalogRoute: AuthenticatedAdminJourneyCatalogRoute,
   AuthenticatedAdminJourneyMonitorRoute: AuthenticatedAdminJourneyMonitorRoute,
   AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }
