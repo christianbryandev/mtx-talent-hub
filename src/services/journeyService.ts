@@ -76,13 +76,4 @@ export const journeyService = {
     return data;
   },
 
-  async submitQuizAttempt(userId: string, phaseId: string, score: number) {
-    const { data, error } = await supabase.rpc("submit_quiz_attempt", {
-      _user_id: userId,
-      _phase_id: phaseId,
-      _score: score,
-    });
-    if (error) throw error;
-    return data;
-  },
 };

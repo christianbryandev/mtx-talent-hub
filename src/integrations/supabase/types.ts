@@ -1900,6 +1900,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "user_card_progress_card_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "journey_cards"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_card_progress_card_id_fkey"
             columns: ["card_id"]
             isOneToOne: false
@@ -1933,6 +1940,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_checklist_progress_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "journey_checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_checklist_progress_item_fkey"
             columns: ["checklist_item_id"]
             isOneToOne: false
             referencedRelation: "journey_checklist_items"
@@ -2492,10 +2506,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      mark_checklist_item: {
-        Args: { _item_id: string; _user_id: string }
-        Returns: Json
-      }
       notify_admins: {
         Args: {
           _entity_id: string
@@ -2528,10 +2538,6 @@ export type Database = {
       }
       submit_phase_quiz: {
         Args: { _answers: Json; _phase_id: string }
-        Returns: Json
-      }
-      submit_quiz_attempt: {
-        Args: { _phase_id: string; _score: number; _user_id: string }
         Returns: Json
       }
       toggle_checklist_item: {
