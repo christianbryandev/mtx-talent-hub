@@ -217,6 +217,18 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/quizzes")}
+                    tooltip="Catálogo Jornada (Quizzes)"
+                  >
+                    <Link to="/admin/quizzes" className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>Catálogo Jornada</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {isSuperAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
