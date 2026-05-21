@@ -219,6 +219,7 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
             description: `Reunião "${values.title}" atualizada`,
           });
         }
+        await syncParticipants(meeting.id, youngIds);
         return meeting.id;
       }
       const { data, error } = await supabase
@@ -236,10 +237,12 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
           description: `Reunião "${values.title}" criada`,
         });
       }
+      if (data) await syncParticipants(data.id, youngIds);
       return data!.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meetings"] });
+      queryClient.invalidateQueries({ queryKey: ["meeting-participants"] });
       toast.success(isEdit ? "Reunião atualizada" : "Reunião criada");
       onOpenChange(false);
     },
