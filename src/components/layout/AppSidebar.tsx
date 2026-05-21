@@ -221,6 +221,18 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
+                    isActive={isActive("/admin/journey-monitor")}
+                    tooltip="Monitor da Jornada"
+                  >
+                    <Link to="/admin/journey-monitor" className="flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      <span>Monitor da Jornada</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
                     isActive={isActive("/admin/quizzes")}
                     tooltip="Catálogo Jornada (Quizzes)"
                   >
