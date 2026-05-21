@@ -162,6 +162,7 @@ function RankRow({
       className={`flex items-center gap-3 px-4 py-3 ${
         isMe && !highlight ? "bg-primary/5" : ""
       }`}
+      aria-current={isMe ? "true" : undefined}
     >
       <div className="w-8 text-center text-sm font-semibold tabular-nums text-muted-foreground">
         #{row.rank_position}
@@ -180,6 +181,9 @@ function RankRow({
               Você
             </Badge>
           )}
+        </div>
+        <div className="text-xs text-muted-foreground tabular-nums" aria-label={`Progresso ${row.progress_percentage}%`}>
+          {row.progress_percentage}% concluído
         </div>
       </div>
       <div className="text-sm font-bold tabular-nums">{row.total_xp} XP</div>
