@@ -133,6 +133,22 @@ export function MeetingFormDialog({ open, onOpenChange, meeting }: Props) {
               link_client_id: "",
             },
       );
+      // carrega jovens já vinculados (apenas em edição)
+      if (meeting?.id) {
+        supabase
+          .from("meeting_participants")
+          .select("young_id")
+          .eq("meeting_id", meeting.id)
+          .then(({ data }) => {
+            setYoungIds(
+              ((data ?? []) as { young_id: string | null }[])
+                .map((r) => r.young_id)
+                .filter(Boolean) as string[],
+            );
+          });
+      } else {
+        setYoungIds([]);
+      }
     }
   }, [open, meeting, form]);
 
