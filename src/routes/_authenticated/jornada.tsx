@@ -217,8 +217,8 @@ function PhaseCard({
                   >
                     <Checkbox
                       checked={item.completed}
-                      disabled={item.completed || pending}
-                      onCheckedChange={() => !item.completed && onMark(item.id)}
+                      disabled={pending}
+                      onCheckedChange={(v) => onToggle(item.id, v === true)}
                     />
                     <span className={item.completed ? "line-through text-muted-foreground" : ""}>
                       {item.title}
