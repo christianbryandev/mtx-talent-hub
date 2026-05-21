@@ -36,6 +36,7 @@ import {
 } from "@/types/meetings";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { MultiYoungSearchSelect } from "@/components/shared/MultiYoungSearchSelect";
 
 const schema = z.object({
   title: z.string().min(2, "Informe um título"),
