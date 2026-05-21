@@ -120,7 +120,7 @@ function AdminQuizzesPage() {
       title: "Novo quiz",
       passing_score: 80,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Quiz criado");
     invalidateAll();
   }
@@ -131,7 +131,7 @@ function AdminQuizzesPage() {
       .from("quiz_templates")
       .update(patch)
       .eq("id", quiz.data.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Salvo");
     invalidateAll();
   }
@@ -144,7 +144,7 @@ function AdminQuizzesPage() {
       .insert({ quiz_id: quiz.data.id, question: "Nova pergunta", order_index: order })
       .select()
       .single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     // 4 default options
     await supabase.from("quiz_options").insert(
       [0, 1, 2, 3].map((i) => ({
@@ -160,7 +160,7 @@ function AdminQuizzesPage() {
   async function deleteQuestion(id: string) {
     if (!confirm("Excluir pergunta?")) return;
     const { error } = await supabase.from("quiz_questions").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
   }
 
@@ -169,7 +169,7 @@ function AdminQuizzesPage() {
       .from("quiz_questions")
       .update({ question: text })
       .eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
   }
 
@@ -182,7 +182,7 @@ function AdminQuizzesPage() {
         .eq("question_id", questionId);
     }
     const { error } = await supabase.from("quiz_options").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
   }
 
@@ -193,13 +193,13 @@ function AdminQuizzesPage() {
       is_correct: false,
       order_index: currentCount,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
   }
 
   async function deleteOption(id: string) {
     const { error } = await supabase.from("quiz_options").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
   }
 
