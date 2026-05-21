@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -184,12 +185,12 @@ export function JourneyKanban({ youngId, canEdit, canReassign = false, title }: 
 
   const moveMutation = useMutation({
     mutationFn: async (updates: { id: string; phase: TrailPhase; position: number }[]) => {
-      // batch updates sequentially (small N)
+      // batch updates sequentially (small N) via RPC server-side
       for (const u of updates) {
-        const { error } = await supabase
-          .from("journey_phases")
-          .update({ phase: u.phase, position: u.position } as never)
-          .eq("id", u.id);
+        const { error } = await supabase.rpc("update_phase_fields", {
+          _phase_id: u.id,
+          _data: { phase: u.phase, position: u.position },
+        });
         if (error) throw error;
       }
     },
@@ -582,10 +583,10 @@ function CardDrawer({
       if (canReassign && assignedIds.length > 0 && !assignedIds.includes(card.young_id)) {
         payload.young_id = assignedIds[0];
       }
-      const { error } = await supabase
-        .from("journey_phases")
-        .update(payload as never)
-        .eq("id", card.id);
+      const { error } = await supabase.rpc("update_phase_fields", {
+        _phase_id: card.id,
+        _data: payload as unknown as Json,
+      });
       if (error) throw error;
 
       if (canReassign) {
@@ -718,14 +719,15 @@ function CardDrawer({
                         i === idx ? { ...it, done: !it.done } : it,
                       );
                       setChecklist(next); // otimista
-                      const { error } = await supabase
-                        .from("journey_phases")
-                        .update({ checklist: next } as never)
-                        .eq("id", card.id);
+                      const { error } = await supabase.rpc("update_phase_checklist", {
+                        _phase_id: card.id,
+                        _checklist: next as unknown as Json,
+                      });
                       if (error) {
-                        setChecklist(prev); // rollback
+                        setChecklist(prev); // rollback local
                         toast.error(`Falha ao salvar checklist: ${error.message}`);
                         console.error("[checklist] update failed", error);
+                        onUpdated(); // re-fetch real do banco
                         return;
                       }
                       onUpdated();
@@ -748,14 +750,15 @@ function CardDrawer({
                         const prev = checklist;
                         const next = prev.filter((_, i) => i !== idx);
                         setChecklist(next);
-                        const { error } = await supabase
-                          .from("journey_phases")
-                          .update({ checklist: next } as never)
-                          .eq("id", card.id);
+                        const { error } = await supabase.rpc("update_phase_checklist", {
+                          _phase_id: card.id,
+                          _checklist: next as unknown as Json,
+                        });
                         if (error) {
                           setChecklist(prev);
                           toast.error(`Falha ao remover item: ${error.message}`);
                           console.error("[checklist] remove failed", error);
+                          onUpdated();
                           return;
                         }
                         onUpdated();
