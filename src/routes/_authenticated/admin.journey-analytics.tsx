@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { seedJourneyDemo } from "@/utils/journeySeed";
 import { JourneyTalentTable } from "@/components/admin/JourneyTalentTable";
+import { JourneyMonitor } from "@/components/admin/JourneyMonitor";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-analytics")({
   head: () => ({ meta: [{ title: "Admin · Analytics Jornada — MTX Hub" }] }),
