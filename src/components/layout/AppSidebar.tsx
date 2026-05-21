@@ -14,7 +14,9 @@ import {
   Route as RouteIcon,
   LogOut,
   UserCircle,
+  Zap,
 } from "lucide-react";
+import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
 
 import {
@@ -64,6 +66,9 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
+  const isColaborador = role === "colaborador";
+  // XP only relevant for colaborador (journey owner). Hook is safe-noop for others.
+  const { data: journey } = useJourney(isColaborador ? undefined : "00000000-0000-0000-0000-000000000000");
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["pending-applications-count"],
@@ -220,6 +225,19 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
+        {isColaborador && journey && !collapsed && (
+          <Link
+            to="/jornada"
+            className="mx-2 mt-2 flex items-center justify-between rounded-md border border-border/60 bg-gradient-to-r from-primary/10 to-transparent px-2 py-1.5 transition-colors hover:border-primary/40"
+            title="Ver minha jornada"
+          >
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <Zap className="h-3.5 w-3.5 text-amber-500" />
+              XP
+            </span>
+            <span className="text-xs font-semibold tabular-nums">{journey.total_xp}</span>
+          </Link>
+        )}
         <div className="flex items-center gap-2 p-2">
           <Link
             to="/perfil"
