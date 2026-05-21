@@ -16,6 +16,7 @@ import {
   UserCircle,
   Zap,
   BarChart2,
+  GraduationCap,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
