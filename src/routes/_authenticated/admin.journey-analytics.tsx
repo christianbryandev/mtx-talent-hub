@@ -44,6 +44,8 @@ function JourneyAnalyticsPage() {
         <PhaseDistributionCard />
         <ConversionCard />
       </section>
+
+      <ConversionMiniCards />
     </div>
   );
 }
@@ -201,6 +203,51 @@ function ConversionCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/* ---------------- Conversion mini cards ---------------- */
+
+function ConversionMiniCards() {
+  const { data, loading, error } = useJourneyConversion();
+
+  if (loading) {
+    return (
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-xl" />
+        ))}
+      </section>
+    );
+  }
+
+  if (error || !data) return <EmptyState message="Sem dados de conversão detalhada." />;
+
+  const fmtPct = (v: number) =>
+    `${Math.round((v ?? 0) <= 1 ? (v ?? 0) * 100 : (v ?? 0))}%`;
+
+  const items = [
+    { label: "Taxa de Abandono", value: fmtPct(data.dropoff_rate) },
+    { label: "Aprovação no Quiz", value: fmtPct(data.quiz_pass_rate) },
+    { label: "Total de Tentativas", value: String(data.quiz_attempts_total ?? 0) },
+    { label: "Tentativas Aprovadas", value: String(data.quiz_attempts_passed ?? 0) },
+  ];
+
+  return (
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map(({ label, value }) => (
+        <Card key={label}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">
+              {label}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tracking-tight">{value}</div>
+          </CardContent>
+        </Card>
+      ))}
+    </section>
   );
 }
 
