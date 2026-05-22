@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useJourney, usePhaseMetadata } from "@/hooks/useJourney";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
