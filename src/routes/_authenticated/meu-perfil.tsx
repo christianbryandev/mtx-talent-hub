@@ -50,6 +50,7 @@ const PHASE_MESSAGES: Record<TrailPhase, string> = {
 type FormState = Partial<YoungPerson>;
 
 function MeuPerfilPage() {
+  const { data: catalogPhases } = usePhaseMetadata();
   const { user } = useAuth();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
