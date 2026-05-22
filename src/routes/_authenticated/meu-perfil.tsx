@@ -25,6 +25,7 @@ import {
   type TrailPhase,
   type YoungPerson,
 } from "@/types";
+import { usePhaseMetadata } from "@/hooks/useJourney";
 
 export const Route = createFileRoute("/_authenticated/meu-perfil")({
   head: () => ({ meta: [{ title: "Meu Perfil — MTX Hub" }] }),
