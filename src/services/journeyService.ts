@@ -51,6 +51,16 @@ export interface JourneyPhase {
   last_quiz_score: number | null;
   cards: JourneyCard[];
 }
+
+export interface CatalogPhase {
+  id: string;
+  title: string;
+  description: string | null;
+  order_index: number;
+  has_quiz: boolean;
+  xp_reward: number;
+}
+
 export interface UserJourney {
   phases: JourneyPhase[];
   overall_progress: number;
