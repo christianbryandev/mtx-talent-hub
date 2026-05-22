@@ -148,21 +148,25 @@ export function ColaboradorDashboard() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {TRAIL_PHASE_LIST.map((p) => {
-            const { total, done } = data.byPhase[p];
-            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+          {journeyData?.phases.map((ph) => {
+            const pct = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
             return (
-              <div key={p} className="space-y-1">
+              <div key={ph.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{TRAIL_PHASE_LABELS[p as TrailPhase]}</span>
+                  <span>{ph.title}</span>
                   <span className="text-xs text-muted-foreground">
-                    {done}/{total}
+                    {ph.cards_done}/{ph.cards_total}
                   </span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
               </div>
             );
           })}
+          {(!journeyData || journeyData.phases.length === 0) && (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Carregando fases da jornada...
+            </p>
+          )}
         </CardContent>
       </Card>
 
