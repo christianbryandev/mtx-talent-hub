@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { journeyService, type UserJourney } from "@/services/journeyService";
+import { journeyService, type UserJourney, type CatalogPhase } from "@/services/journeyService";
 
 export function useJourney(targetUserId?: string) {
   const { user } = useAuth();
