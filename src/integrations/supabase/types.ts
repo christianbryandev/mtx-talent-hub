@@ -2662,6 +2662,7 @@ export type Database = {
       admin_get_journey_monitor: { Args: never; Returns: Json }
       admin_get_journey_tracking: { Args: never; Returns: Json }
       daily_notifications_job: { Args: never; Returns: undefined }
+      get_catalog_phases: { Args: never; Returns: Json }
       get_invite_by_token: {
         Args: { _token: string }
         Returns: {
