@@ -108,5 +108,14 @@ export const journeyService = {
       throw normalize(e, "toggle_checklist_item_failed");
     }
   },
+  async getCatalogPhases(): Promise<CatalogPhase[]> {
+    try {
+      const { data, error } = await supabase.rpc("get_catalog_phases");
+      if (error) throw new ServiceError("rpc_error", error.message);
+      return data as unknown as CatalogPhase[];
+    } catch (e) {
+      throw normalize(e, "get_catalog_phases_failed");
+    }
+  },
 };
 
