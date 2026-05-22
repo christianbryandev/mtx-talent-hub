@@ -52,3 +52,11 @@ export function useJourney(targetUserId?: string) {
 
   return { ...query, toggleItem };
 }
+
+export function usePhaseMetadata() {
+  return useQuery<CatalogPhase[]>({
+    queryKey: ["catalog-phases-metadata"],
+    queryFn: () => journeyService.getCatalogPhases(),
+    staleTime: 1000 * 60 * 5, // Metadados podem ser cacheados por 5 min
+  });
+}
