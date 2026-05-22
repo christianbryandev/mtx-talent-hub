@@ -260,8 +260,8 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     },
     social: {
       ativos: youngsAtivos,
-      formacao: phaseCount("formacao"),
-      pratica: phaseCount("estagio") + phaseCount("atendimento"),
+      formacao: phaseCount("fase_1") + phaseCount("fase_2"),
+      pratica: phaseCount("fase_3") + phaseCount("fase_4"),
       gerandoRenda: gerandoRenda.length,
       rendaTotal,
       rendaMedia,
