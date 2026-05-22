@@ -18,15 +18,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useJourney, usePhaseMetadata } from "@/hooks/useJourney";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
 export function ColaboradorDashboard() {
   const { user } = useAuth();
+  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(user?.id);
+  const { data: catalogPhases } = usePhaseMetadata();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["colaborador-dashboard", user?.id],
+    queryKey: ["colaborador-dashboard-base", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data: young } = await supabase
@@ -37,15 +40,11 @@ export function ColaboradorDashboard() {
 
       if (!young) return { young: null };
 
-      const [tasksRes, journeyRes, meetingsRes, clientsRes] = await Promise.all([
+      const [tasksRes, meetingsRes, clientsRes] = await Promise.all([
         supabase
           .from("tasks")
           .select("id, title, kanban_column, due_date")
           .eq("young_responsible", young.id),
-        supabase
-          .from("journey_phases")
-          .select("id, phase, status")
-          .eq("young_id", young.id),
         supabase
           .from("meeting_participants")
           .select("meeting_id, meetings(id, title, date, start_time, type)")
@@ -65,18 +64,6 @@ export function ColaboradorDashboard() {
         (t) => t.due_date && t.due_date < today,
       );
 
-      const journey = journeyRes.data ?? [];
-      const byPhase: Record<string, { total: number; done: number }> = {};
-      TRAIL_PHASE_LIST.forEach((p) => {
-        byPhase[p] = { total: 0, done: 0 };
-      });
-      journey.forEach((j) => {
-        if (byPhase[j.phase]) {
-          byPhase[j.phase].total += 1;
-          if (j.status === "concluida") byPhase[j.phase].done += 1;
-        }
-      });
-
       const meetingRows = (meetingsRes.data ?? [])
         .map((m) => m.meetings)
         .filter(Boolean)
@@ -94,14 +81,13 @@ export function ColaboradorDashboard() {
           .filter((t) => t.due_date)
           .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""))
           .slice(0, 5),
-        byPhase,
         upcomingMeetings: meetingRows,
         clients: clientsRes.data ?? [],
       };
     },
   });
 
-  if (isLoading || !data) {
+  if (isLoading || isLoadingJourney || !data) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -162,21 +148,25 @@ export function ColaboradorDashboard() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {TRAIL_PHASE_LIST.map((p) => {
-            const { total, done } = data.byPhase[p];
-            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+          {journeyData?.phases.map((ph) => {
+            const pct = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
             return (
-              <div key={p} className="space-y-1">
+              <div key={ph.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{TRAIL_PHASE_LABELS[p as TrailPhase]}</span>
+                  <span>{ph.title}</span>
                   <span className="text-xs text-muted-foreground">
-                    {done}/{total}
+                    {ph.cards_done}/{ph.cards_total}
                   </span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
               </div>
             );
           })}
+          {(!journeyData || journeyData.phases.length === 0) && (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Carregando fases da jornada...
+            </p>
+          )}
         </CardContent>
       </Card>
 

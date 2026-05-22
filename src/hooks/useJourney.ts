@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { journeyService, type UserJourney } from "@/services/journeyService";
+import { journeyService, type UserJourney, type CatalogPhase } from "@/services/journeyService";
 
 export function useJourney(targetUserId?: string) {
   const { user } = useAuth();
@@ -51,4 +51,12 @@ export function useJourney(targetUserId?: string) {
   });
 
   return { ...query, toggleItem };
+}
+
+export function usePhaseMetadata() {
+  return useQuery<CatalogPhase[]>({
+    queryKey: ["catalog-phases-metadata"],
+    queryFn: () => journeyService.getCatalogPhases(),
+    staleTime: 1000 * 60 * 5, // Metadados podem ser cacheados por 5 min
+  });
 }

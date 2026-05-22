@@ -51,6 +51,16 @@ export interface JourneyPhase {
   last_quiz_score: number | null;
   cards: JourneyCard[];
 }
+
+export interface CatalogPhase {
+  id: string;
+  title: string;
+  description: string | null;
+  order_index: number;
+  has_quiz: boolean;
+  xp_reward: number;
+}
+
 export interface UserJourney {
   phases: JourneyPhase[];
   overall_progress: number;
@@ -96,6 +106,15 @@ export const journeyService = {
       return data;
     } catch (e) {
       throw normalize(e, "toggle_checklist_item_failed");
+    }
+  },
+  async getCatalogPhases(): Promise<CatalogPhase[]> {
+    try {
+      const { data, error } = await supabase.rpc("get_catalog_phases");
+      if (error) throw new ServiceError("rpc_error", error.message);
+      return data as unknown as CatalogPhase[];
+    } catch (e) {
+      throw normalize(e, "get_catalog_phases_failed");
     }
   },
 };

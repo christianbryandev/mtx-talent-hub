@@ -84,6 +84,7 @@ export const YOUNG_STATUS_LIST: YoungStatus[] = [
   "concluido",
 ];
 
+/** @deprecated Use o catálogo da jornada (journey_phase_catalog) como SSOT */
 export const TRAIL_PHASE_LABELS: Record<TrailPhase, string> = {
   fase_1: "Fase 1 — Fundamentos",
   fase_2: "Fase 2 — Capacitação Técnica",

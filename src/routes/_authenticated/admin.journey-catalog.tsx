@@ -175,6 +175,8 @@ function PhaseRow({ phase }: { phase: Phase }) {
     onSuccess: () => {
       toast.success("Fase salva");
       qc.invalidateQueries({ queryKey: ["catalog-phases"] });
+      qc.invalidateQueries({ queryKey: ["catalog-phases-metadata"] });
+      qc.invalidateQueries({ queryKey: ["user-journey"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

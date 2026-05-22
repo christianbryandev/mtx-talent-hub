@@ -25,6 +25,7 @@ import {
   type TrailPhase,
   type YoungPerson,
 } from "@/types";
+import { usePhaseMetadata } from "@/hooks/useJourney";
 
 export const Route = createFileRoute("/_authenticated/meu-perfil")({
   head: () => ({ meta: [{ title: "Meu Perfil — MTX Hub" }] }),
@@ -49,6 +50,7 @@ const PHASE_MESSAGES: Record<TrailPhase, string> = {
 type FormState = Partial<YoungPerson>;
 
 function MeuPerfilPage() {
+  const { data: catalogPhases } = usePhaseMetadata();
   const { user } = useAuth();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -435,12 +437,12 @@ function MeuPerfilPage() {
             <Card className="p-6">
               <h3 className="mb-4 text-lg font-semibold">Minha trilha</h3>
               <ol className="space-y-3">
-                {TRAIL_PHASE_LIST.map((p, idx) => {
-                  const isCurrent = idx === currentPhaseIdx;
-                  const isDone = currentPhaseIdx > idx;
+                {(catalogPhases ?? []).length > 0 ? (catalogPhases ?? []).map((p, idx) => {
+                  const isCurrent = young.trail_phase ? (parseInt(young.trail_phase.replace("fase_", "")) === p.order_index) : false;
+                  const isDone = young.trail_phase ? (parseInt(young.trail_phase.replace("fase_", "")) > p.order_index) : false;
                   return (
                     <li
-                      key={p}
+                      key={p.id}
                       className={`flex items-center gap-3 rounded-lg border p-3 ${
                         isCurrent
                           ? "border-primary bg-primary/10"
@@ -458,18 +460,31 @@ function MeuPerfilPage() {
                               : "bg-muted text-muted-foreground"
                         }`}
                       >
-                        {idx + 1}
+                        {p.order_index}
                       </div>
-                      <span className="text-sm font-medium">{TRAIL_PHASE_LABELS[p]}</span>
+                      <span className="text-sm font-medium">{p.title}</span>
                       {isCurrent && <span className="ml-auto text-xs font-semibold text-primary">Fase atual</span>}
                       {isDone && <span className="ml-auto text-xs text-emerald-600">Concluída</span>}
                     </li>
                   );
-                })}
+                }) : (
+                  TRAIL_PHASE_LIST.map((p, idx) => {
+                    const isCurrent = idx === currentPhaseIdx;
+                    const isDone = currentPhaseIdx > idx;
+                    return (
+                      <li key={p} className="flex items-center gap-3 rounded-lg border p-3 opacity-60">
+                        <div className="grid h-8 w-8 place-items-center rounded-full text-xs font-bold bg-muted text-muted-foreground">
+                          {idx + 1}
+                        </div>
+                        <span className="text-sm font-medium">{TRAIL_PHASE_LABELS[p]}</span>
+                      </li>
+                    );
+                  })
+                )}
               </ol>
               {young.trail_phase && (
                 <p className="mt-4 rounded-lg bg-gradient-mtx/10 p-3 text-sm italic text-foreground">
-                  💫 {PHASE_MESSAGES[young.trail_phase]}
+                  💫 {catalogPhases?.find(m => parseInt(young.trail_phase!.replace("fase_", "")) === m.order_index)?.description || PHASE_MESSAGES[young.trail_phase]}
                 </p>
               )}
             </Card>
