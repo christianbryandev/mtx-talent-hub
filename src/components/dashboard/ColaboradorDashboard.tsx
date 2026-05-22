@@ -24,10 +24,12 @@ import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
 export function ColaboradorDashboard() {
   const { user } = useAuth();
+  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(user?.id);
+  const { data: catalogPhases } = usePhaseMetadata();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["colaborador-dashboard", user?.id],
+    queryKey: ["colaborador-dashboard-base", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data: young } = await supabase
@@ -38,15 +40,11 @@ export function ColaboradorDashboard() {
 
       if (!young) return { young: null };
 
-      const [tasksRes, journeyRes, meetingsRes, clientsRes] = await Promise.all([
+      const [tasksRes, meetingsRes, clientsRes] = await Promise.all([
         supabase
           .from("tasks")
           .select("id, title, kanban_column, due_date")
           .eq("young_responsible", young.id),
-        supabase
-          .from("journey_phases")
-          .select("id, phase, status")
-          .eq("young_id", young.id),
         supabase
           .from("meeting_participants")
           .select("meeting_id, meetings(id, title, date, start_time, type)")
@@ -66,18 +64,6 @@ export function ColaboradorDashboard() {
         (t) => t.due_date && t.due_date < today,
       );
 
-      const journey = journeyRes.data ?? [];
-      const byPhase: Record<string, { total: number; done: number }> = {};
-      TRAIL_PHASE_LIST.forEach((p) => {
-        byPhase[p] = { total: 0, done: 0 };
-      });
-      journey.forEach((j) => {
-        if (byPhase[j.phase]) {
-          byPhase[j.phase].total += 1;
-          if (j.status === "concluida") byPhase[j.phase].done += 1;
-        }
-      });
-
       const meetingRows = (meetingsRes.data ?? [])
         .map((m) => m.meetings)
         .filter(Boolean)
@@ -95,14 +81,13 @@ export function ColaboradorDashboard() {
           .filter((t) => t.due_date)
           .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""))
           .slice(0, 5),
-        byPhase,
         upcomingMeetings: meetingRows,
         clients: clientsRes.data ?? [],
       };
     },
   });
 
-  if (isLoading || !data) {
+  if (isLoading || isLoadingJourney || !data) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
