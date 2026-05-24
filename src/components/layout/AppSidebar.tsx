@@ -132,7 +132,7 @@ export function AppSidebar() {
               {mainItems
                 .filter((item) => !role || item.roles.includes(role))
                 .map((item) => {
-                const showBadge = item.url === "/jovens" && isAdmin && pendingApps > 0;
+                const showBadge = item.url === "/jovens" && isAdmin && pendingAppsCount > 0;
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
@@ -145,7 +145,7 @@ export function AppSidebar() {
                         <span className="flex-1">{item.title}</span>
                         {showBadge && !collapsed && (
                           <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-[10px] font-bold text-white shadow-mtx-glow">
-                            {pendingApps}
+                            {pendingAppsCount}
                           </span>
                         )}
                       </Link>
