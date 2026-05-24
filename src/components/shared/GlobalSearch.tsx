@@ -136,7 +136,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "jovens" as const,
-            title: r.full_name,
+            title: r.full_name || 'Sem nome',
             subtitle: `${r.email} • ${r.trail_phase ?? 'Sem fase'}`,
             url: `/jovens/${r.id}`
           }))),
@@ -150,7 +150,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "clientes" as const,
-            title: r.trade_name || r.company_name,
+            title: r.trade_name || r.company_name || 'Sem nome',
             subtitle: r.company_name,
             url: `/clientes/${r.id}`
           }))),
@@ -164,7 +164,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "oportunidades" as const,
-            title: r.company_name,
+            title: r.company_name || 'Oportunidade',
             subtitle: `${r.contact_name ?? ''} • ${r.status}`,
             url: `/crm/${r.id}`
           }))),
@@ -178,7 +178,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "servicos" as const,
-            title: r.name,
+            title: r.name || 'Serviço',
             subtitle: r.category ?? '',
             url: `/servicos/${r.id}`
           }))),
@@ -192,7 +192,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "tarefas" as const,
-            title: r.title,
+            title: r.title || 'Tarefa',
             subtitle: `${r.status} • ${(r.young_people as any)?.full_name ?? 'Sem responsável'}`,
             url: `/tarefas` // Kanban doesn't have ID-specific URL yet, opens drawer via state usually
           }))),
@@ -206,7 +206,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "jornadas" as const,
-            title: r.title,
+            title: r.title || 'Fase',
             subtitle: "Fase da Jornada",
             url: `/admin/journey-catalog`
           }))),
@@ -220,7 +220,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "quizzes" as const,
-            title: r.title,
+            title: r.title || 'Quiz',
             subtitle: "Modelo de Quiz",
             url: `/admin/quizzes`
           }))),
@@ -234,7 +234,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "notificacoes" as const,
-            title: r.title,
+            title: r.title || 'Notificação',
             subtitle: new Date(r.created_at).toLocaleDateString("pt-BR"),
             url: `/notificacoes`
           }))),
@@ -248,7 +248,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "reunioes" as const,
-            title: r.title,
+            title: r.title || 'Reunião',
             subtitle: new Date(r.date).toLocaleDateString("pt-BR"),
             url: `/reunioes/${r.id}`
           }))),
@@ -276,8 +276,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "propostas" as const,
-            title: r.title,
-            subtitle: r.status,
+            title: r.title || 'Proposta',
+            subtitle: r.status || '',
             url: `/crm` // No specific route yet
           }))),
 
@@ -290,7 +290,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "briefings" as const,
-            title: r.company_name ?? 'Briefing',
+            title: r.company_name || 'Briefing',
             subtitle: `Enviado em ${new Date(r.submitted_at).toLocaleDateString("pt-BR")}`,
             url: `/clientes`
           }))),
