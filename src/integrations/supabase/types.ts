@@ -442,13 +442,6 @@ export type Database = {
             referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clients_young_responsible_fkey"
-            columns: ["young_responsible"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       edit_requests: {
@@ -743,13 +736,6 @@ export type Database = {
             referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "journey_phase_assignees_young_id_fkey"
-            columns: ["young_id"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       journey_phase_catalog: {
@@ -831,13 +817,6 @@ export type Database = {
             columns: ["young_id"]
             isOneToOne: false
             referencedRelation: "young_people"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "journey_phases_young_id_fkey"
-            columns: ["young_id"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1714,13 +1693,6 @@ export type Database = {
             referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "service_young_people_young_id_fkey"
-            columns: ["young_id"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       services: {
@@ -2127,13 +2099,6 @@ export type Database = {
             referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "tasks_young_responsible_fkey"
-            columns: ["young_responsible"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_achievements: {
@@ -2506,13 +2471,6 @@ export type Database = {
             referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "young_attendance_young_id_fkey"
-            columns: ["young_id"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       young_evolution: {
@@ -2566,13 +2524,6 @@ export type Database = {
             columns: ["young_id"]
             isOneToOne: false
             referencedRelation: "young_people"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "young_evolution_young_id_fkey"
-            columns: ["young_id"]
-            isOneToOne: false
-            referencedRelation: "young_people_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2818,137 +2769,6 @@ export type Database = {
         }
         Relationships: []
       }
-      young_people_safe: {
-        Row: {
-          age: number | null
-          availability: string | null
-          city: string | null
-          created_at: string | null
-          current_situation: string | null
-          dreams: string | null
-          education_level: string | null
-          email: string | null
-          entry_date: string | null
-          full_name: string | null
-          has_cnpj: boolean | null
-          has_internet: boolean | null
-          has_laptop: boolean | null
-          has_phone: boolean | null
-          has_professional_chip: boolean | null
-          id: string | null
-          interest_area: string | null
-          last_progress_at: string | null
-          mentor_id: string | null
-          observations: string | null
-          phone: string | null
-          photo_url: string | null
-          profile_id: string | null
-          school: string | null
-          skills: string | null
-          state: string | null
-          status: string | null
-          trail_phase: string | null
-          updated_at: string | null
-          vocation_area: string | null
-          whatsapp: string | null
-        }
-        Insert: {
-          age?: number | null
-          availability?: string | null
-          city?: string | null
-          created_at?: string | null
-          current_situation?: string | null
-          dreams?: string | null
-          education_level?: string | null
-          email?: string | null
-          entry_date?: string | null
-          full_name?: string | null
-          has_cnpj?: boolean | null
-          has_internet?: boolean | null
-          has_laptop?: boolean | null
-          has_phone?: boolean | null
-          has_professional_chip?: boolean | null
-          id?: string | null
-          interest_area?: string | null
-          last_progress_at?: string | null
-          mentor_id?: string | null
-          observations?: string | null
-          phone?: string | null
-          photo_url?: string | null
-          profile_id?: string | null
-          school?: string | null
-          skills?: string | null
-          state?: string | null
-          status?: string | null
-          trail_phase?: string | null
-          updated_at?: string | null
-          vocation_area?: string | null
-          whatsapp?: string | null
-        }
-        Update: {
-          age?: number | null
-          availability?: string | null
-          city?: string | null
-          created_at?: string | null
-          current_situation?: string | null
-          dreams?: string | null
-          education_level?: string | null
-          email?: string | null
-          entry_date?: string | null
-          full_name?: string | null
-          has_cnpj?: boolean | null
-          has_internet?: boolean | null
-          has_laptop?: boolean | null
-          has_phone?: boolean | null
-          has_professional_chip?: boolean | null
-          id?: string | null
-          interest_area?: string | null
-          last_progress_at?: string | null
-          mentor_id?: string | null
-          observations?: string | null
-          phone?: string | null
-          photo_url?: string | null
-          profile_id?: string | null
-          school?: string | null
-          skills?: string | null
-          state?: string | null
-          status?: string | null
-          trail_phase?: string | null
-          updated_at?: string | null
-          vocation_area?: string | null
-          whatsapp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "young_people_mentor_id_fkey"
-            columns: ["mentor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "young_people_mentor_id_fkey"
-            columns: ["mentor_id"]
-            isOneToOne: false
-            referencedRelation: "vw_journey_ranking"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "young_people_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "young_people_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "vw_journey_ranking"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
     }
     Functions: {
       activate_client_service: {
@@ -2990,6 +2810,42 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_journey: { Args: { _user_id: string }; Returns: Json }
+      get_young_people_safe: {
+        Args: never
+        Returns: {
+          age: number
+          availability: string
+          city: string
+          created_at: string
+          current_situation: string
+          dreams: string
+          education_level: string
+          email: string
+          entry_date: string
+          full_name: string
+          has_cnpj: boolean
+          has_internet: boolean
+          has_laptop: boolean
+          has_phone: boolean
+          has_professional_chip: boolean
+          id: string
+          interest_area: string
+          last_progress_at: string
+          mentor_id: string
+          observations: string
+          phone: string
+          photo_url: string
+          profile_id: string
+          school: string
+          skills: string
+          state: string
+          status: string
+          trail_phase: string
+          updated_at: string
+          vocation_area: string
+          whatsapp: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
