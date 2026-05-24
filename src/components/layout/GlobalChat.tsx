@@ -30,12 +30,50 @@ export function GlobalChat() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isChangingIcon, setIsChangingIcon] = useState(false);
-  const [newIconUrl, setNewIconUrl] = useState("");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canAccess = hasRole(["super_admin", "admin", "comercial", "colaborador"]);
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !canal) return;
+
+    try {
+      setUploadingIcon(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `chat-icon-${canal.id}-${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('chat-assets')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-assets')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("chat_canais")
+        .update({ icon_url: publicUrl })
+        .eq("id", canal.id);
+
+      if (updateError) throw updateError;
+
+      setCanal({ ...canal, icon_url: publicUrl });
+      toast.success("Ícone atualizado!");
+    } catch (error: any) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao atualizar ícone");
+    } finally {
+      setUploadingIcon(false);
+      setIsChangingIcon(false);
+    }
+  };
 
   useEffect(() => {
     if (!canAccess || !user) return;
@@ -298,7 +336,6 @@ export function GlobalChat() {
                   <button 
                     onClick={() => {
                       setIsChangingIcon(!isChangingIcon);
-                      setNewIconUrl(canal?.icon_url || "");
                     }}
                     className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-background text-primary opacity-0 shadow-sm group-hover/icon:opacity-100 transition-opacity"
                     title="Mudar ícone"
@@ -322,44 +359,34 @@ export function GlobalChat() {
 
           {/* Icon Change UI */}
           {isChangingIcon && isSuperAdmin && (
-            <div className="bg-muted/50 p-2 border-b animate-in slide-in-from-top-2">
+            <div className="bg-muted/50 p-3 border-b animate-in slide-in-from-top-2">
               <div className="flex flex-col gap-2">
-                <p className="text-[10px] font-medium px-1">URL do novo ícone:</p>
-                <div className="flex gap-1">
-                  <Input 
-                    value={newIconUrl}
-                    onChange={(e) => setNewIconUrl(e.target.value)}
-                    placeholder="https://exemplo.com/imagem.png"
-                    className="h-7 text-[10px] bg-background"
+                <p className="text-xs font-medium">Alterar ícone do chat:</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleIconUpload}
+                    accept="image/*"
+                    className="hidden"
                   />
                   <Button 
                     size="sm" 
-                    className="h-7 px-2 text-[10px]"
-                    onClick={async () => {
-                      if (!canal) return;
-                      const { error } = await supabase
-                        .from("chat_canais")
-                        .update({ icon_url: newIconUrl })
-                        .eq("id", canal.id);
-                      
-                      if (error) {
-                        toast.error("Erro ao atualizar ícone");
-                      } else {
-                        setCanal({ ...canal, icon_url: newIconUrl });
-                        setIsChangingIcon(false);
-                        toast.success("Ícone atualizado!");
-                      }
-                    }}
+                    variant="outline"
+                    className="flex-1 h-8 gap-2 text-xs"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingIcon}
                   >
-                    Salvar
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    {uploadingIcon ? "Enviando..." : "Upload de Imagem"}
                   </Button>
                   <Button 
                     variant="ghost" 
-                    size="sm" 
-                    className="h-7 px-2 text-[10px]"
+                    size="icon" 
+                    className="h-8 w-8"
                     onClick={() => setIsChangingIcon(false)}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
