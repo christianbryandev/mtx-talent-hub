@@ -504,8 +504,8 @@ function PhaseCard({
         <div className="mt-4 space-y-4">
           {phase.modules && phase.modules.length > 0 ? (
             <div className="space-y-4 pt-4 border-t border-border/40">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
-                <Sparkles className="h-3 w-3" /> Módulos
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 mb-3">
+                Módulos
               </h3>
               <div className="space-y-3">
                 {phase.modules.map((module, idx) => (
