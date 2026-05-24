@@ -556,6 +556,7 @@ export type Database = {
           card_id: string
           created_at: string
           id: string
+          module_id: string | null
           order_index: number
           required: boolean
           title: string
@@ -564,6 +565,7 @@ export type Database = {
           card_id: string
           created_at?: string
           id?: string
+          module_id?: string | null
           order_index?: number
           required?: boolean
           title: string
@@ -572,6 +574,7 @@ export type Database = {
           card_id?: string
           created_at?: string
           id?: string
+          module_id?: string | null
           order_index?: number
           required?: boolean
           title?: string
@@ -582,6 +585,57 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "journey_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_checklist_items_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "journey_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_modules: {
+        Row: {
+          content_body: string | null
+          content_type: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          phase_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_body?: string | null
+          content_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_body?: string | null
+          content_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          phase_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_modules_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "journey_phase_catalog"
             referencedColumns: ["id"]
           },
         ]
