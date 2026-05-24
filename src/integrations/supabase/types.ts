@@ -2810,6 +2810,42 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_journey: { Args: { _user_id: string }; Returns: Json }
+      get_young_people_safe: {
+        Args: never
+        Returns: {
+          age: number
+          availability: string
+          city: string
+          created_at: string
+          current_situation: string
+          dreams: string
+          education_level: string
+          email: string
+          entry_date: string
+          full_name: string
+          has_cnpj: boolean
+          has_internet: boolean
+          has_laptop: boolean
+          has_phone: boolean
+          has_professional_chip: boolean
+          id: string
+          interest_area: string
+          last_progress_at: string
+          mentor_id: string
+          observations: string
+          phone: string
+          photo_url: string
+          profile_id: string
+          school: string
+          skills: string
+          state: string
+          status: string
+          trail_phase: string
+          updated_at: string
+          vocation_area: string
+          whatsapp: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
