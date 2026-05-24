@@ -196,12 +196,12 @@ export function NotificationBell() {
               {selectedNotification?.message}
             </div>
 
-            {selectedNotification?.attachment_url && (
+            {selectedNotification?.attachment_url && attachmentUrl && (
               <div className="mt-4 rounded-xl border border-white/5 overflow-hidden bg-white/5">
                 {selectedNotification.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                  <img 
-                    src={selectedNotification.attachment_url} 
-                    alt="Anexo" 
+                  <img
+                    src={attachmentUrl}
+                    alt="Anexo"
                     className="w-full h-auto max-h-[300px] object-contain"
                   />
                 ) : (
@@ -211,7 +211,7 @@ export function NotificationBell() {
                       <span className="text-xs font-medium text-foreground">Anexo da Notificação</span>
                     </div>
                     <Button variant="outline" size="sm" asChild className="h-8 text-xs text-foreground border-white/10 hover:bg-white/5">
-                      <a href={selectedNotification.attachment_url} target="_blank" rel="noopener noreferrer">
+                      <a href={attachmentUrl} target="_blank" rel="noopener noreferrer">
                         Visualizar / Baixar
                       </a>
                     </Button>
@@ -219,6 +219,7 @@ export function NotificationBell() {
                 )}
               </div>
             )}
+
           </div>
         </DialogContent>
       </Dialog>
