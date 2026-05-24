@@ -525,15 +525,36 @@ function ItemsEditor({ cardId }: { cardId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const { data: phaseModules } = useQuery<Module[]>({
+    queryKey: ["catalog-modules-for-card", cardId],
+    queryFn: async () => {
+      const { data: card } = await supabase.from("journey_cards").select("phase_id").eq("id", cardId).single();
+      if (!card) return [];
+      const { data, error } = await supabase
+        .from("journey_modules")
+        .select("*")
+        .eq("phase_id", card.phase_id)
+        .order("order_index");
+      if (error) throw error;
+      return data as Module[];
+    }
+  });
+
   return (
     <div className="space-y-2">
-      <h5 className="text-xs font-semibold text-muted-foreground">Itens do checklist</h5>
+      <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4">Itens do checklist</h5>
       {items.isLoading ? (
         <Skeleton className="h-16" />
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {(items.data ?? []).map((it) => (
-            <ItemRow key={it.id} item={it} onSave={update.mutate} onRemove={remove.mutate} />
+            <ItemRow 
+              key={it.id} 
+              item={it} 
+              modules={phaseModules ?? []}
+              onSave={update.mutate} 
+              onRemove={remove.mutate} 
+            />
           ))}
         </div>
       )}
@@ -544,7 +565,7 @@ function ItemsEditor({ cardId }: { cardId: string }) {
           onChange={(e) => setNewTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && create.mutate()}
         />
-        <Button size="sm" variant="outline" onClick={() => create.mutate()} disabled={create.isPending}>
+        <Button size="sm" variant="outline" onClick={() => create.mutate()} disabled={create.isPending || !newTitle.trim()}>
           <Plus className="h-3.5 w-3.5 mr-1" />
           Adicionar
         </Button>
@@ -555,10 +576,12 @@ function ItemsEditor({ cardId }: { cardId: string }) {
 
 function ItemRow({
   item,
+  modules,
   onSave,
   onRemove,
 }: {
   item: Item;
+  modules: Module[];
   onSave: (it: Item) => void;
   onRemove: (id: string) => void;
 }) {
@@ -566,38 +589,222 @@ function ItemRow({
   const dirty = JSON.stringify(draft) !== JSON.stringify(item);
 
   return (
-    <div className="flex items-center gap-2 rounded border bg-background p-2">
-      <Input
-        className="h-8"
-        value={draft.title}
-        onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-      />
-      <div className="flex items-center gap-1 shrink-0">
-        <Switch
-          checked={draft.required}
-          onCheckedChange={(v) => setDraft({ ...draft, required: v })}
+    <div className="flex flex-col gap-2 rounded border bg-background p-3">
+      <div className="flex items-center gap-2">
+        <Input
+          className="h-8 flex-1"
+          value={draft.title}
+          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
         />
-        <span className="text-xs text-muted-foreground">obrigatório</span>
-      </div>
-      <Input
-        type="number"
-        className="h-8 w-16"
-        value={draft.order_index}
-        onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
-      />
-      {dirty && (
-        <Button size="sm" variant="ghost" onClick={() => onSave(draft)}>
-          <Save className="h-3.5 w-3.5" />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-destructive shrink-0"
+          onClick={() => onRemove(item.id)}
+        >
+          <Trash2 className="h-4 w-4" />
         </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Label className="text-[10px] whitespace-nowrap">Vincular Módulo:</Label>
+          <Select 
+            value={draft.module_id || "none"} 
+            onValueChange={(val) => setDraft({ ...draft, module_id: val === "none" ? null : val })}
+          >
+            <SelectTrigger className="w-[180px] h-8 text-xs">
+              <SelectValue placeholder="Sem módulo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {modules.map(m => (
+                <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <Switch
+            checked={draft.required}
+            onCheckedChange={(v) => setDraft({ ...draft, required: v })}
+          />
+          <span className="text-[10px] text-muted-foreground">obrigatório</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-[10px]">Ordem:</Label>
+          <Input
+            type="number"
+            className="h-8 w-14 text-xs"
+            value={draft.order_index}
+            onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
+          />
+        </div>
+
+        {dirty && (
+          <Button size="sm" className="h-8 ml-auto" onClick={() => onSave(draft)}>
+            <Save className="h-3.5 w-3.5 mr-1" />
+            Salvar
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------- Modules -------------------------------- */
+
+function ModulesEditor({ phaseId }: { phaseId: string }) {
+  const qc = useQueryClient();
+  const modules = useQuery<Module[]>({
+    queryKey: ["catalog-modules", phaseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journey_modules")
+        .select("*")
+        .eq("phase_id", phaseId)
+        .order("order_index");
+      if (error) throw error;
+      return data as Module[];
+    },
+  });
+
+  const createModule = useMutation({
+    mutationFn: async () => {
+      const nextOrder = (modules.data?.length ?? 0) + 1;
+      const { error } = await supabase.from("journey_modules").insert({
+        phase_id: phaseId,
+        title: `Novo módulo ${nextOrder}`,
+        order_index: nextOrder,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Módulo criado");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold">Módulos desta fase</h4>
+        <Button size="sm" variant="outline" onClick={() => createModule.mutate()} disabled={createModule.isPending}>
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Novo módulo
+        </Button>
+      </div>
+      {modules.isLoading ? (
+        <Skeleton className="h-24" />
+      ) : (modules.data ?? []).length === 0 ? (
+        <p className="text-xs text-muted-foreground">Nenhum módulo ainda.</p>
+      ) : (
+        <div className="space-y-2">
+          {(modules.data ?? []).map((m) => (
+            <ModuleRow key={m.id} module={m} />
+          ))}
+        </div>
       )}
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-7 w-7 text-destructive"
-        onClick={() => onRemove(item.id)}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+    </div>
+  );
+}
+
+function ModuleRow({ module }: { module: Module }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<Module>(module);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(module);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("journey_modules")
+        .update({
+          title: draft.title,
+          description: draft.description,
+          order_index: draft.order_index,
+          content_body: draft.content_body,
+        })
+        .eq("id", module.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Módulo salvo");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", module.phase_id] });
+      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("journey_modules").delete().eq("id", module.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Módulo removido");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", module.phase_id] });
+      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="rounded-md border bg-muted/30">
+      <div className="flex items-center gap-2 p-2">
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setOpen((v) => !v)}>
+          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+        </Button>
+        <span className="text-sm flex-1 truncate font-medium">
+          #{module.order_index} · {module.title}
+        </span>
+      </div>
+      {open && (
+        <div className="space-y-3 p-3 pt-0">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="sm:col-span-2 space-y-1">
+              <Label className="text-xs">Título</Label>
+              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Ordem</Label>
+              <Input
+                type="number"
+                value={draft.order_index}
+                onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="sm:col-span-3 space-y-1">
+              <Label className="text-xs">Conteúdo (Markdown/Texto)</Label>
+              <Textarea
+                rows={3}
+                value={draft.content_body ?? ""}
+                onChange={(e) => setDraft({ ...draft, content_body: e.target.value || null })}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+              <Save className="h-3.5 w-3.5 mr-1" />
+              Salvar módulo
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => {
+                if (confirm("Remover este módulo? Itens vinculados ficarão sem módulo.")) remove.mutate();
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1" />
+              Excluir
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
