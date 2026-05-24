@@ -206,7 +206,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "jornadas" as const,
-            title: r.title || 'Fase',
+            title: (r.title as string) || 'Fase',
             subtitle: "Fase da Jornada",
             url: `/admin/journey-catalog`
           }))),
@@ -220,7 +220,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "quizzes" as const,
-            title: r.title || 'Quiz',
+            title: (r.title as string) || 'Quiz',
             subtitle: "Modelo de Quiz",
             url: `/admin/quizzes`
           }))),
@@ -234,7 +234,7 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "notificacoes" as const,
-            title: r.title || 'Notificação',
+            title: (r.title as string) || 'Notificação',
             subtitle: new Date(r.created_at).toLocaleDateString("pt-BR"),
             url: `/notificacoes`
           }))),
