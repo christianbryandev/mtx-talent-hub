@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -39,6 +40,7 @@ import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos.$id'
 import { Route as AuthenticatedReunioesIdRouteImport } from './routes/_authenticated/reunioes.$id'
+import { Route as AuthenticatedJovensInscricoesFunilRouteImport } from './routes/_authenticated/jovens.inscricoes-funil'
 import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
@@ -54,6 +56,11 @@ import { Route as AuthenticatedJornadaQuizPhaseIdRouteImport } from './routes/_a
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -207,6 +214,12 @@ const AuthenticatedReunioesIdRoute = AuthenticatedReunioesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedReunioesRoute,
 } as any)
+const AuthenticatedJovensInscricoesFunilRoute =
+  AuthenticatedJovensInscricoesFunilRouteImport.update({
+    id: '/inscricoes-funil',
+    path: '/inscricoes-funil',
+    getParentRoute: () => AuthenticatedJovensRoute,
+  } as any)
 const AuthenticatedJovensInscricoesRoute =
   AuthenticatedJovensInscricoesRouteImport.update({
     id: '/inscricoes',
@@ -275,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
+  '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRouteWithChildren
   '/crm': typeof AuthenticatedCrmRouteWithChildren
@@ -302,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -317,6 +332,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
+  '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicadores': typeof AuthenticatedIndicadoresRoute
@@ -339,6 +355,7 @@ export interface FileRoutesByTo {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
@@ -356,6 +373,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
+  '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRouteWithChildren
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
@@ -383,6 +401,7 @@ export interface FileRoutesById {
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/_authenticated/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/_authenticated/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/_authenticated/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -400,6 +419,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
+    | '/registro'
     | '/reset-password'
     | '/clientes'
     | '/crm'
@@ -427,6 +447,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/jovens/inscricoes-funil'
     | '/reunioes/$id'
     | '/servicos/$id'
     | '/clientes/'
@@ -442,6 +463,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
+    | '/registro'
     | '/reset-password'
     | '/dashboard'
     | '/indicadores'
@@ -464,6 +486,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/jovens/inscricoes-funil'
     | '/reunioes/$id'
     | '/servicos/$id'
     | '/clientes'
@@ -480,6 +503,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
+    | '/registro'
     | '/reset-password'
     | '/_authenticated/clientes'
     | '/_authenticated/crm'
@@ -507,6 +531,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm/lista'
     | '/_authenticated/jovens/$id'
     | '/_authenticated/jovens/inscricoes'
+    | '/_authenticated/jovens/inscricoes-funil'
     | '/_authenticated/reunioes/$id'
     | '/_authenticated/servicos/$id'
     | '/_authenticated/clientes/'
@@ -524,6 +549,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InscricaoRoute: typeof InscricaoRoute
   LoginRoute: typeof LoginRoute
+  RegistroRoute: typeof RegistroRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   BriefingClientIdRoute: typeof BriefingClientIdRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
@@ -536,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -741,6 +774,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReunioesIdRouteImport
       parentRoute: typeof AuthenticatedReunioesRoute
     }
+    '/_authenticated/jovens/inscricoes-funil': {
+      id: '/_authenticated/jovens/inscricoes-funil'
+      path: '/inscricoes-funil'
+      fullPath: '/jovens/inscricoes-funil'
+      preLoaderRoute: typeof AuthenticatedJovensInscricoesFunilRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
     '/_authenticated/jovens/inscricoes': {
       id: '/_authenticated/jovens/inscricoes'
       path: '/inscricoes'
@@ -878,12 +918,15 @@ const AuthenticatedJovensIdRouteWithChildren =
 interface AuthenticatedJovensRouteChildren {
   AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRouteWithChildren
   AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
+  AuthenticatedJovensInscricoesFunilRoute: typeof AuthenticatedJovensInscricoesFunilRoute
   AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
 }
 
 const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
   AuthenticatedJovensIdRoute: AuthenticatedJovensIdRouteWithChildren,
   AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
+  AuthenticatedJovensInscricoesFunilRoute:
+    AuthenticatedJovensInscricoesFunilRoute,
   AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
 }
 
@@ -975,6 +1018,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   InscricaoRoute: InscricaoRoute,
   LoginRoute: LoginRoute,
+  RegistroRoute: RegistroRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   BriefingClientIdRoute: BriefingClientIdRoute,
   ConviteTokenRoute: ConviteTokenRoute,
@@ -982,13 +1026,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

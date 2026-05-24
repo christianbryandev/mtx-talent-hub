@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      applications: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       client_briefings: {
         Row: {
           additional_notes: string | null
@@ -495,6 +522,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_journey_ranking"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          email: string
+          id: string
+          is_used: boolean
+          token: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_used?: boolean
+          token?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_used?: boolean
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
           },
         ]
       }

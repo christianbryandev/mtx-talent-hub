@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Inbox, Link2 } from "lucide-react";
+import { Plus, Search, Inbox, Link2, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +107,18 @@ function JovensListPage() {
     },
   });
 
+  const { data: pendingFunilCount = 0 } = useQuery({
+    queryKey: ["pending-funil-applications-count"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("applications")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      return count ?? 0;
+    },
+  });
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return jovens.filter((y) => {
@@ -136,32 +148,45 @@ function JovensListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Jovens</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground uppercase">Jovens</h1>
           <p className="text-sm text-muted-foreground">
             Gestão de jovens em formação e seus percursos na trilha MTX
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isAdmin && (
-            <Button variant="outline" asChild>
-              <Link to="/jovens/inscricoes">
-                <Inbox className="mr-2 h-4 w-4" />
-                Inscrições
-                {pendingCount > 0 && (
-                  <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
-                    {pendingCount}
-                  </span>
-                )}
-              </Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild className="relative">
+                <Link to="/jovens/inscricoes-funil">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Novas Inscrições
+                  {pendingFunilCount > 0 && (
+                    <span className="ml-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-emerald-500/20">
+                      {pendingFunilCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+              <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+                <Link to="/jovens/inscricoes">
+                  <Inbox className="mr-2 h-4 w-4" />
+                  Legado
+                  {pendingCount > 0 && (
+                    <span className="ml-2 rounded-full bg-muted-foreground/20 px-1.5 py-0.5 text-[10px] font-bold">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            </div>
           )}
           {isSuperAdmin && (
-            <Button variant="outline" onClick={() => setLinkOpen(true)}>
-              <Link2 className="mr-2 h-4 w-4" /> Gerar link de inscrição
+            <Button variant="outline" onClick={() => setLinkOpen(true)} className="border-primary/20 hover:bg-primary/5">
+              <Link2 className="mr-2 h-4 w-4 text-primary" /> Link de Inscrição
             </Button>
           )}
           {isAdmin && (
-            <Button onClick={() => setOpenForm(true)}>
+            <Button onClick={() => setOpenForm(true)} className="bg-gradient-mtx text-white font-bold shadow-mtx-glow">
               <Plus className="mr-2 h-4 w-4" /> Novo jovem
             </Button>
           )}
