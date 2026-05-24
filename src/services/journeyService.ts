@@ -140,7 +140,7 @@ export const journeyService = {
         .eq("phase_id", phaseId)
         .order("order_index", { ascending: true });
       if (error) throw new ServiceError("db_error", error.message);
-      return data as JourneyModule[];
+      return data as unknown as JourneyModule[];
     } catch (e) {
       throw normalize(e, "get_phase_modules_failed");
     }
