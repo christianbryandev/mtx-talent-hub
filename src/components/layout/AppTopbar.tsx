@@ -1,11 +1,9 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
