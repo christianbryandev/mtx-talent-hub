@@ -10,6 +10,10 @@ import {
   Star,
   Video,
   Trophy,
+  Megaphone,
+  PartyPopper,
+  ClipboardList,
+  Info,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,27 +50,6 @@ export interface NotificationRow {
   read_at: string | null;
   created_at: string;
 }
-
-import {
-  Bell,
-  CheckSquare,
-  AlertTriangle,
-  Clock,
-  UserPlus,
-  FileText,
-  CalendarClock,
-  RefreshCw,
-  Star,
-  Video,
-  Trophy,
-  Megaphone,
-  PartyPopper,
-  ClipboardList,
-  Info,
-  type LucideIcon,
-} from "lucide-react";
-
-// ... keep existing code
 
 export const NOTIFICATION_META: Record<
   NotificationType,
