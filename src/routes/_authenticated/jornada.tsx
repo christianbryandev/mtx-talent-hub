@@ -178,23 +178,30 @@ function JourneyPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-end justify-between flex-wrap gap-3">
+      <header className=\"flex items-start justify-between flex-wrap gap-4\">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            Minha Jornada
-            {isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          <h1 className=\"text-3xl font-bold tracking-tight flex items-center gap-2\">
+            Sua Jornada
+            {isFetching && <Loader2 className=\"h-5 w-5 animate-spin text-muted-foreground\" />}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {data.done_items}/{data.total_items} itens · {data.total_xp} XP
+          <p className=\"text-muted-foreground mt-1\">
+            Conquiste XP, complete as fases e desbloqueie seu futuro!
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="w-full sm:w-64">
-            <Progress value={data.overall_progress} />
-            <div className="text-xs text-muted-foreground mt-1 text-right">
-              {data.overall_progress}% geral
-            </div>
+          <div className=\"flex items-center gap-2 mt-2 text-sm text-muted-foreground\">
+            <Badge variant=\"outline\" className=\"font-medium\">
+              {data.done_items}/{data.total_items} itens concluídos
+            </Badge>
+            <Badge variant=\"outline\" className=\"font-medium\">
+              {data.total_xp} XP Total
+            </Badge>
           </div>
+        </div>
+        <div className=\"flex flex-col items-end gap-2 min-w-[200px]\">
+          <div className=\"w-full flex justify-between text-xs font-medium mb-1\">
+            <span>Progresso Geral</span>
+            <span>{data.overall_progress}%</span>
+          </div>
+          <Progress value={data.overall_progress} className=\"h-2 w-full\" />
         </div>
       </header>
 
@@ -437,29 +444,49 @@ function PhaseCard({
   return (
     <Card
       id={`phase-${phase.id}`}
-      className={`p-5 transition-opacity scroll-mt-20 ${locked ? "opacity-60" : ""}`}
+      className={`p-5 transition-all scroll-mt-20 border-border/60 ${
+        locked ? \"bg-muted/30 opacity-60 grayscale-[0.5] cursor-not-allowed\" : \"hover:border-primary/20 bg-card\"
+      }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Icon className={`h-5 w-5 shrink-0 ${meta.accent}`} />
-          <div className="min-w-0">
-
-            <div className="font-semibold truncate">
+      <div className=\"flex items-center justify-between gap-3\">
+        <div className=\"flex items-center gap-3 min-w-0\">
+          <div className={`p-2 rounded-lg ${locked ? \"bg-muted text-muted-foreground\" : \"bg-primary/10 text-primary\"}`}>
+            <Icon className={`h-5 w-5 shrink-0`} />
+          </div>
+          <div className=\"min-w-0\">
+            <div className={`font-bold text-lg ${locked ? \"text-muted-foreground\" : \"\"}`}>
               {phase.order_index}. {phase.title}
             </div>
             {phase.description && (
-              <div className="text-xs text-muted-foreground truncate">{phase.description}</div>
+              <div className=\"text-sm text-muted-foreground line-clamp-1\">{phase.description}</div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant={meta.variant}>{meta.label}</Badge>
-          <div className="text-xs text-muted-foreground hidden sm:block w-24">
-            <Progress value={phasePct} />
+        <div className=\"flex items-center gap-4\">
+          <div className=\"flex flex-col items-end gap-1.5\">
+            <Badge variant={meta.variant} className=\"px-2.5 py-0.5\">
+              {meta.label}
+            </Badge>
+            {!locked && (
+              <div className=\"text-[10px] font-medium text-muted-foreground flex items-center gap-2\">
+                <span>{phasePct}% concluído</span>
+                <div className=\"w-16 h-1 bg-muted rounded-full overflow-hidden\">
+                  <div className=\"h-full bg-primary\" style={{ width: `${phasePct}%` }} />
+                </div>
+              </div>
+            )}
           </div>
-          {!locked && (
-            <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
-              {open ? "Fechar" : "Abrir"}
+          {locked ? (
+            <Lock className=\"h-5 w-5 text-muted-foreground/50 ml-2\" />
+          ) : (
+            <Button 
+              variant=\"ghost\" 
+              size=\"sm\" 
+              onClick={() => setOpen((o) => !o)}
+              className=\"ml-2\"
+            >
+              {open ? \"Recolher\" : \"Expandir\"}
+              {open ? <ChevronDown className=\"ml-1.5 h-4 w-4\" /> : <ChevronRight className=\"ml-1.5 h-4 w-4\" />}
             </Button>
           )}
         </div>
@@ -476,8 +503,12 @@ function PhaseCard({
       {open && !locked && (
         <div className="mt-4 space-y-4">
           {phase.modules && phase.modules.length > 0 ? (
-            <div className="space-y-4">
-              {phase.modules.map((module, idx) => (
+            <div className=\"space-y-4 pt-4 border-t border-border/40\">
+              <h3 className=\"text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2\">
+                <Sparkles className=\"h-3 w-3\" /> Módulos
+              </h3>
+              <div className=\"space-y-3\">
+                {phase.modules.map((module, idx) => (
                 <ModuleSection
                   key={module.id}
                   module={module}
@@ -561,9 +592,10 @@ function PhaseCard({
       )}
 
       {locked && (
-        <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-          <Lock className="h-3 w-3" /> Conclua a fase anterior para desbloquear.
-        </p>
+        <div className=\"mt-4 pt-4 border-t border-border/40 flex items-center gap-2 text-xs text-muted-foreground font-medium\">
+          <Lock className=\"h-3.5 w-3.5\" /> 
+          <span>Conclua a fase anterior para desbloquear este conteúdo.</span>
+        </div>
       )}
     </Card>
   );
