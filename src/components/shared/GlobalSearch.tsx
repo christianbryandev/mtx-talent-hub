@@ -164,8 +164,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "oportunidades" as const,
-            title: r.company_name || 'Oportunidade',
-            subtitle: `${r.contact_name ?? ''} • ${r.status}`,
+            title: (r.company_name as string) || 'Oportunidade',
+            subtitle: `${(r.contact_name as string) ?? ''} • ${(r.status as string)}`,
             url: `/crm/${r.id}`
           }))),
 
@@ -178,8 +178,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "servicos" as const,
-            title: r.name || 'Serviço',
-            subtitle: r.category ?? '',
+            title: (r.name as string) || 'Serviço',
+            subtitle: (r.category as string) ?? '',
             url: `/servicos/${r.id}`
           }))),
 
@@ -192,8 +192,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "tarefas" as const,
-            title: r.title || 'Tarefa',
-            subtitle: `${r.status} • ${(r.young_people as any)?.full_name ?? 'Sem responsável'}`,
+            title: (r.title as string) || 'Tarefa',
+            subtitle: `${(r.status as string)} • ${(r.young_people as any)?.full_name ?? 'Sem responsável'}`,
             url: `/tarefas` // Kanban doesn't have ID-specific URL yet, opens drawer via state usually
           }))),
 
