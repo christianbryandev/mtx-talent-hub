@@ -62,7 +62,7 @@ const mainItems: MainItem[] = [
   { title: "Minha Jornada", url: "/jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "colaborador"] },
   { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
-  { title: "Painel de Notificações", url: "/painel-notificacoes", icon: Bell, roles: ["super_admin", "admin"] },
+  
 ];
 
 export function AppSidebar() {
@@ -254,6 +254,18 @@ export function AppSidebar() {
                     <Link to="/admin/quizzes" className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       <span>Quizzes</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/painel-notificacoes")}
+                    tooltip="Painel de Notificações"
+                  >
+                    <Link to="/painel-notificacoes" className="flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      <span>Painel de Notificações</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
