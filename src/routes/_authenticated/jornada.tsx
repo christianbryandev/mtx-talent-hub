@@ -178,30 +178,30 @@ function JourneyPage() {
 
   return (
     <div className="space-y-6">
-      <header className=\"flex items-start justify-between flex-wrap gap-4\">
+      <header className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className=\"text-3xl font-bold tracking-tight flex items-center gap-2\">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             Sua Jornada
-            {isFetching && <Loader2 className=\"h-5 w-5 animate-spin text-muted-foreground\" />}
+            {isFetching && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
           </h1>
-          <p className=\"text-muted-foreground mt-1\">
+          <p className="text-muted-foreground mt-1">
             Conquiste XP, complete as fases e desbloqueie seu futuro!
           </p>
-          <div className=\"flex items-center gap-2 mt-2 text-sm text-muted-foreground\">
-            <Badge variant=\"outline\" className=\"font-medium\">
+          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+            <Badge variant="outline" className="font-medium">
               {data.done_items}/{data.total_items} itens concluídos
             </Badge>
-            <Badge variant=\"outline\" className=\"font-medium\">
+            <Badge variant="outline" className="font-medium">
               {data.total_xp} XP Total
             </Badge>
           </div>
         </div>
-        <div className=\"flex flex-col items-end gap-2 min-w-[200px]\">
-          <div className=\"w-full flex justify-between text-xs font-medium mb-1\">
+        <div className="flex flex-col items-end gap-2 min-w-[200px]">
+          <div className="w-full flex justify-between text-xs font-medium mb-1">
             <span>Progresso Geral</span>
             <span>{data.overall_progress}%</span>
           </div>
-          <Progress value={data.overall_progress} className=\"h-2 w-full\" />
+          <Progress value={data.overall_progress} className="h-2 w-full" />
         </div>
       </header>
 
@@ -445,48 +445,48 @@ function PhaseCard({
     <Card
       id={`phase-${phase.id}`}
       className={`p-5 transition-all scroll-mt-20 border-border/60 ${
-        locked ? \"bg-muted/30 opacity-60 grayscale-[0.5] cursor-not-allowed\" : \"hover:border-primary/20 bg-card\"
+        locked ? "bg-muted/30 opacity-60 grayscale-[0.5] cursor-not-allowed" : "hover:border-primary/20 bg-card"
       }`}
     >
-      <div className=\"flex items-center justify-between gap-3\">
-        <div className=\"flex items-center gap-3 min-w-0\">
-          <div className={`p-2 rounded-lg ${locked ? \"bg-muted text-muted-foreground\" : \"bg-primary/10 text-primary\"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`p-2 rounded-lg ${locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
             <Icon className={`h-5 w-5 shrink-0`} />
           </div>
-          <div className=\"min-w-0\">
-            <div className={`font-bold text-lg ${locked ? \"text-muted-foreground\" : \"\"}`}>
+          <div className="min-w-0">
+            <div className={`font-bold text-lg ${locked ? "text-muted-foreground" : ""}`}>
               {phase.order_index}. {phase.title}
             </div>
             {phase.description && (
-              <div className=\"text-sm text-muted-foreground line-clamp-1\">{phase.description}</div>
+              <div className="text-sm text-muted-foreground line-clamp-1">{phase.description}</div>
             )}
           </div>
         </div>
-        <div className=\"flex items-center gap-4\">
-          <div className=\"flex flex-col items-end gap-1.5\">
-            <Badge variant={meta.variant} className=\"px-2.5 py-0.5\">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end gap-1.5">
+            <Badge variant={meta.variant} className="px-2.5 py-0.5">
               {meta.label}
             </Badge>
             {!locked && (
-              <div className=\"text-[10px] font-medium text-muted-foreground flex items-center gap-2\">
+              <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-2">
                 <span>{phasePct}% concluído</span>
-                <div className=\"w-16 h-1 bg-muted rounded-full overflow-hidden\">
-                  <div className=\"h-full bg-primary\" style={{ width: `${phasePct}%` }} />
+                <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${phasePct}%` }} />
                 </div>
               </div>
             )}
           </div>
           {locked ? (
-            <Lock className=\"h-5 w-5 text-muted-foreground/50 ml-2\" />
+            <Lock className="h-5 w-5 text-muted-foreground/50 ml-2" />
           ) : (
             <Button 
-              variant=\"ghost\" 
-              size=\"sm\" 
+              variant="ghost" 
+              size="sm" 
               onClick={() => setOpen((o) => !o)}
-              className=\"ml-2\"
+              className="ml-2"
             >
-              {open ? \"Recolher\" : \"Expandir\"}
-              {open ? <ChevronDown className=\"ml-1.5 h-4 w-4\" /> : <ChevronRight className=\"ml-1.5 h-4 w-4\" />}
+              {open ? "Recolher" : "Expandir"}
+              {open ? <ChevronDown className="ml-1.5 h-4 w-4" /> : <ChevronRight className="ml-1.5 h-4 w-4" />}
             </Button>
           )}
         </div>
