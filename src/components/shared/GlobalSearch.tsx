@@ -277,7 +277,7 @@ export function GlobalSearch() {
             id: r.id,
             category: "propostas" as const,
             title: r.title || 'Proposta',
-            subtitle: r.status || '',
+            subtitle: (r.status as string) || '',
             url: `/crm` // No specific route yet
           }))),
 
