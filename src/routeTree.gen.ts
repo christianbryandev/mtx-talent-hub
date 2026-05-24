@@ -39,6 +39,7 @@ import { Route as AuthenticatedCrmIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedServicosIdRouteImport } from './routes/_authenticated/servicos.$id'
 import { Route as AuthenticatedReunioesIdRouteImport } from './routes/_authenticated/reunioes.$id'
+import { Route as AuthenticatedJovensInscricoesFunilRouteImport } from './routes/_authenticated/jovens.inscricoes-funil'
 import { Route as AuthenticatedJovensInscricoesRouteImport } from './routes/_authenticated/jovens.inscricoes'
 import { Route as AuthenticatedJovensIdRouteImport } from './routes/_authenticated/jovens.$id'
 import { Route as AuthenticatedCrmListaRouteImport } from './routes/_authenticated/crm.lista'
@@ -207,6 +208,12 @@ const AuthenticatedReunioesIdRoute = AuthenticatedReunioesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedReunioesRoute,
 } as any)
+const AuthenticatedJovensInscricoesFunilRoute =
+  AuthenticatedJovensInscricoesFunilRouteImport.update({
+    id: '/inscricoes-funil',
+    path: '/inscricoes-funil',
+    getParentRoute: () => AuthenticatedJovensRoute,
+  } as any)
 const AuthenticatedJovensInscricoesRoute =
   AuthenticatedJovensInscricoesRouteImport.update({
     id: '/inscricoes',
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -339,6 +347,7 @@ export interface FileRoutesByTo {
   '/crm/lista': typeof AuthenticatedCrmListaRoute
   '/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
@@ -383,6 +392,7 @@ export interface FileRoutesById {
   '/_authenticated/crm/lista': typeof AuthenticatedCrmListaRoute
   '/_authenticated/jovens/$id': typeof AuthenticatedJovensIdRouteWithChildren
   '/_authenticated/jovens/inscricoes': typeof AuthenticatedJovensInscricoesRoute
+  '/_authenticated/jovens/inscricoes-funil': typeof AuthenticatedJovensInscricoesFunilRoute
   '/_authenticated/reunioes/$id': typeof AuthenticatedReunioesIdRoute
   '/_authenticated/servicos/$id': typeof AuthenticatedServicosIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/jovens/inscricoes-funil'
     | '/reunioes/$id'
     | '/servicos/$id'
     | '/clientes/'
@@ -464,6 +475,7 @@ export interface FileRouteTypes {
     | '/crm/lista'
     | '/jovens/$id'
     | '/jovens/inscricoes'
+    | '/jovens/inscricoes-funil'
     | '/reunioes/$id'
     | '/servicos/$id'
     | '/clientes'
@@ -507,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm/lista'
     | '/_authenticated/jovens/$id'
     | '/_authenticated/jovens/inscricoes'
+    | '/_authenticated/jovens/inscricoes-funil'
     | '/_authenticated/reunioes/$id'
     | '/_authenticated/servicos/$id'
     | '/_authenticated/clientes/'
@@ -741,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReunioesIdRouteImport
       parentRoute: typeof AuthenticatedReunioesRoute
     }
+    '/_authenticated/jovens/inscricoes-funil': {
+      id: '/_authenticated/jovens/inscricoes-funil'
+      path: '/inscricoes-funil'
+      fullPath: '/jovens/inscricoes-funil'
+      preLoaderRoute: typeof AuthenticatedJovensInscricoesFunilRouteImport
+      parentRoute: typeof AuthenticatedJovensRoute
+    }
     '/_authenticated/jovens/inscricoes': {
       id: '/_authenticated/jovens/inscricoes'
       path: '/inscricoes'
@@ -878,12 +898,15 @@ const AuthenticatedJovensIdRouteWithChildren =
 interface AuthenticatedJovensRouteChildren {
   AuthenticatedJovensIdRoute: typeof AuthenticatedJovensIdRouteWithChildren
   AuthenticatedJovensInscricoesRoute: typeof AuthenticatedJovensInscricoesRoute
+  AuthenticatedJovensInscricoesFunilRoute: typeof AuthenticatedJovensInscricoesFunilRoute
   AuthenticatedJovensIndexRoute: typeof AuthenticatedJovensIndexRoute
 }
 
 const AuthenticatedJovensRouteChildren: AuthenticatedJovensRouteChildren = {
   AuthenticatedJovensIdRoute: AuthenticatedJovensIdRouteWithChildren,
   AuthenticatedJovensInscricoesRoute: AuthenticatedJovensInscricoesRoute,
+  AuthenticatedJovensInscricoesFunilRoute:
+    AuthenticatedJovensInscricoesFunilRoute,
   AuthenticatedJovensIndexRoute: AuthenticatedJovensIndexRoute,
 }
 
