@@ -2982,6 +2982,17 @@ export type Database = {
           used: boolean
         }[]
       }
+      get_invite_by_token_public: {
+        Args: { _token: string }
+        Returns: {
+          application_id: string
+          created_at: string
+          email: string
+          id: string
+          is_used: boolean
+          token: string
+        }[]
+      }
       get_journey_conversion: { Args: never; Returns: Json }
       get_journey_kpis: { Args: never; Returns: Json }
       get_journey_phase_distribution: { Args: never; Returns: Json }
@@ -3057,6 +3068,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_invite_used: { Args: { _token: string }; Returns: boolean }
       notify_admins: {
         Args: {
           _entity_id: string
