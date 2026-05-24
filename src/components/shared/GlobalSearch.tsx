@@ -296,7 +296,7 @@ export function GlobalSearch() {
       ];
 
       const allResults = await Promise.all(searchPromises);
-      const flattened = allResults.flat();
+      const flattened: SearchResult[] = allResults.flat();
       setResults(flattened.slice(0, 50));
     } catch (err) {
       console.error("Global search failed", err);
