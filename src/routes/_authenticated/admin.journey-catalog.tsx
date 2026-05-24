@@ -54,8 +54,19 @@ interface Card {
 interface Item {
   id: string;
   card_id: string;
+  module_id: string | null;
   title: string;
   required: boolean;
+  order_index: number;
+}
+
+interface Module {
+  id: string;
+  phase_id: string;
+  title: string;
+  description: string | null;
+  content_type: string;
+  content_body: string | null;
   order_index: number;
 }
 
@@ -273,7 +284,10 @@ function PhaseRow({ phase }: { phase: Phase }) {
             </Button>
           </div>
           <Separator />
-          <CardsEditor phaseId={phase.id} />
+          <div className="grid gap-6 md:grid-cols-2">
+            <ModulesEditor phaseId={phase.id} />
+            <CardsEditor phaseId={phase.id} />
+          </div>
         </CardContent>
       )}
     </Card>
@@ -455,7 +469,7 @@ function ItemsEditor({ cardId }: { cardId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journey_checklist_items")
-        .select("id,card_id,title,required,order_index")
+        .select("id,card_id,module_id,title,required,order_index")
         .eq("card_id", cardId)
         .order("order_index");
       if (error) throw error;
@@ -489,7 +503,12 @@ function ItemsEditor({ cardId }: { cardId: string }) {
     mutationFn: async (it: Item) => {
       const { error } = await supabase
         .from("journey_checklist_items")
-        .update({ title: it.title, required: it.required, order_index: it.order_index })
+        .update({ 
+          title: it.title, 
+          required: it.required, 
+          order_index: it.order_index,
+          module_id: it.module_id 
+        })
         .eq("id", it.id);
       if (error) throw error;
     },
