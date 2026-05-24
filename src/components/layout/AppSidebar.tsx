@@ -18,6 +18,7 @@ import {
   BarChart2,
   GraduationCap,
   Activity,
+  Bell,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";

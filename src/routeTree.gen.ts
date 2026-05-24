@@ -24,6 +24,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as AuthenticatedReunioesRouteImport } from './routes/_authenticated/reunioes'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedPainelNotificacoesRouteImport } from './routes/_authenticated/painel-notificacoes'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedMinhaJornadaRouteImport } from './routes/_authenticated/minha-jornada'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
@@ -127,6 +128,12 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPainelNotificacoesRoute =
+  AuthenticatedPainelNotificacoesRouteImport.update({
+    id: '/painel-notificacoes',
+    path: '/painel-notificacoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedNotificacoesRoute =
   AuthenticatedNotificacoesRouteImport.update({
     id: '/notificacoes',
@@ -299,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/painel-notificacoes': typeof AuthenticatedPainelNotificacoesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/reunioes': typeof AuthenticatedReunioesRouteWithChildren
   '/servicos': typeof AuthenticatedServicosRouteWithChildren
@@ -340,6 +348,7 @@ export interface FileRoutesByTo {
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/painel-notificacoes': typeof AuthenticatedPainelNotificacoesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -384,6 +393,7 @@ export interface FileRoutesById {
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/minha-jornada': typeof AuthenticatedMinhaJornadaRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/_authenticated/painel-notificacoes': typeof AuthenticatedPainelNotificacoesRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/reunioes': typeof AuthenticatedReunioesRouteWithChildren
   '/_authenticated/servicos': typeof AuthenticatedServicosRouteWithChildren
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/meu-perfil'
     | '/minha-jornada'
     | '/notificacoes'
+    | '/painel-notificacoes'
     | '/perfil'
     | '/reunioes'
     | '/servicos'
@@ -471,6 +482,7 @@ export interface FileRouteTypes {
     | '/meu-perfil'
     | '/minha-jornada'
     | '/notificacoes'
+    | '/painel-notificacoes'
     | '/perfil'
     | '/settings'
     | '/tarefas'
@@ -514,6 +526,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meu-perfil'
     | '/_authenticated/minha-jornada'
     | '/_authenticated/notificacoes'
+    | '/_authenticated/painel-notificacoes'
     | '/_authenticated/perfil'
     | '/_authenticated/reunioes'
     | '/_authenticated/servicos'
@@ -660,6 +673,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/painel-notificacoes': {
+      id: '/_authenticated/painel-notificacoes'
+      path: '/painel-notificacoes'
+      fullPath: '/painel-notificacoes'
+      preLoaderRoute: typeof AuthenticatedPainelNotificacoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notificacoes': {
@@ -973,6 +993,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMinhaJornadaRoute: typeof AuthenticatedMinhaJornadaRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
+  AuthenticatedPainelNotificacoesRoute: typeof AuthenticatedPainelNotificacoesRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRouteWithChildren
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRouteWithChildren
@@ -995,6 +1016,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMinhaJornadaRoute: AuthenticatedMinhaJornadaRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
+  AuthenticatedPainelNotificacoesRoute: AuthenticatedPainelNotificacoesRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedReunioesRoute: AuthenticatedReunioesRouteWithChildren,
   AuthenticatedServicosRoute: AuthenticatedServicosRouteWithChildren,
