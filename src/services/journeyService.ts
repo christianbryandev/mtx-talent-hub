@@ -14,6 +14,7 @@ export interface JourneyChecklistItem {
   required: boolean;
   order_index: number;
   completed: boolean;
+  module_id?: string | null;
 }
 export interface JourneyLink {
   label: string;
@@ -50,6 +51,20 @@ export interface JourneyPhase {
   cards_done: number;
   last_quiz_score: number | null;
   cards: JourneyCard[];
+  modules?: JourneyModule[];
+}
+
+export interface JourneyModule {
+  id: string;
+  phase_id: string;
+  title: string;
+  description: string | null;
+  content_type: string;
+  content_body: string | null;
+  order_index: number;
+  unlocked: boolean;
+  completed: boolean;
+  items: JourneyChecklistItem[];
 }
 
 export interface CatalogPhase {
@@ -117,5 +132,44 @@ export const journeyService = {
       throw normalize(e, "get_catalog_phases_failed");
     }
   },
+  async getPhaseModules(phaseId: string): Promise<JourneyModule[]> {
+    try {
+      const { data, error } = await supabase
+        .from("journey_modules")
+        .select("*")
+        .eq("phase_id", phaseId)
+        .order("order_index", { ascending: true });
+      if (error) throw new ServiceError("db_error", error.message);
+      return data as unknown as JourneyModule[];
+    } catch (e) {
+      throw normalize(e, "get_phase_modules_failed");
+    }
+  },
+  async getChecklistItemsWithModule(phaseId: string): Promise<{ id: string; module_id: string | null }[]> {
+    try {
+      const { data, error } = await supabase
+        .from("journey_checklist_items")
+        .select("id, module_id")
+        .filter("card_id", "in", `(SELECT id FROM journey_cards WHERE phase_id = '${phaseId}')`);
+      
+      // Since Supabase doesn't support subqueries in filters directly like this easily via client, 
+      // we'll fetch them normally or use an RPC if needed. 
+      // Actually, we can just fetch all checklist items for the phase.
+      
+      const { data: cards } = await supabase.from("journey_cards").select("id").eq("phase_id", phaseId);
+      if (!cards || cards.length === 0) return [];
+      
+      const cardIds = cards.map(c => c.id);
+      const { data: items, error: itemsError } = await supabase
+        .from("journey_checklist_items")
+        .select("id, module_id")
+        .in("card_id", cardIds);
+        
+      if (itemsError) throw new ServiceError("db_error", itemsError.message);
+      return items;
+    } catch (e) {
+      throw normalize(e, "get_checklist_items_failed");
+    }
+  }
 };
 

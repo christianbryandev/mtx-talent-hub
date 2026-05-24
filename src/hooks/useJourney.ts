@@ -11,8 +11,51 @@ export function useJourney(targetUserId?: string) {
   const query = useQuery<UserJourney>({
     queryKey: ["user-journey", userId],
     enabled: !!userId,
-    queryFn: () => journeyService.getUserJourney(userId!),
-    // Estado crítico: sempre buscar fresco; nada de cache persistente.
+    queryFn: async () => {
+      const journey = await journeyService.getUserJourney(userId!);
+      
+      // Para cada fase, buscamos os módulos e injetamos no objeto da jornada
+      const phasesWithModules = await Promise.all(
+        journey.phases.map(async (phase) => {
+          const [modules, checklistMapping] = await Promise.all([
+            journeyService.getPhaseModules(phase.id),
+            journeyService.getChecklistItemsWithModule(phase.id)
+          ]);
+
+          if (modules.length === 0) return { ...phase, modules: [] };
+
+          // Criar um mapa de checklist_item_id -> module_id
+          const moduleMap = new Map(checklistMapping.map(m => [m.id, m.module_id]));
+
+          // Distribuir os itens de checklist nos módulos
+          const allItems = phase.cards.flatMap(c => c.items);
+          
+          const modulesWithItems = modules.map((mod, index) => {
+            const modItems = allItems.filter(item => moduleMap.get(item.id) === mod.id);
+            const isCompleted = modItems.length === 0 || modItems.every(i => i.completed);
+            
+            return {
+              ...mod,
+              items: modItems,
+              completed: isCompleted,
+              unlocked: true // Será calculado abaixo
+            } as any;
+          });
+
+          // Lógica de Cadeado (Lock): O primeiro é sempre aberto. 
+          // Os seguintes só abrem se o anterior estiver concluído.
+          const modulesWithLock = modulesWithItems.map((mod, idx) => {
+            if (idx === 0) return { ...mod, unlocked: true };
+            const prevModule = modulesWithItems[idx - 1];
+            return { ...mod, unlocked: prevModule.completed };
+          });
+
+          return { ...phase, modules: modulesWithLock };
+        })
+      );
+
+      return { ...journey, phases: phasesWithModules };
+    },
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: true,

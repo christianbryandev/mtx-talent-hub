@@ -16,6 +16,8 @@ import {
   GraduationCap,
   ArrowRight,
   Rocket,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -472,83 +474,80 @@ function PhaseCard({
       )}
 
       {open && !locked && (
-        <div className="mt-4 space-y-3">
-          {phase.cards.map((card) => (
-            <div key={card.id} className="rounded-md border border-border/60 p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-medium text-sm">{card.title}</div>
-                {card.completed && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
-              </div>
-              {card.description && (
-                <p className="text-xs text-muted-foreground whitespace-pre-line">{card.description}</p>
-              )}
-              {card.notes && (
-                <p className="text-xs italic text-muted-foreground border-l-2 border-border/60 pl-2 whitespace-pre-line">
-                  {card.notes}
-                </p>
-              )}
-              {card.materials && (
-                <div className="text-xs text-muted-foreground flex items-start gap-1">
-                  <BookOpen className="h-3 w-3 mt-0.5 shrink-0" />
-                  <span className="whitespace-pre-line">{card.materials}</span>
-                </div>
-              )}
-
-              {card.links?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {card.links.map((l, idx) => (
-                    <a
-                      key={idx}
-                      href={normalizeExternalUrl(l.url)}
-                      {...externalLinkProps}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" /> {l.label || l.url}
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {card.attachments?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {card.attachments.map((a, idx) => (
-                    <a
-                      key={idx}
-                      href={normalizeExternalUrl(a.url)}
-                      {...externalLinkProps}
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
-                    >
-                      <Paperclip className="h-3 w-3" /> {a.label || "Anexo"}
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-1 pt-1">
-                {card.items.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={item.completed}
-                      disabled={pending}
-                      onCheckedChange={(v) => onToggle(item.id, v === true)}
-                    />
-                    <span className={item.completed ? "line-through text-muted-foreground" : ""}>
-                      {item.title}
-                    </span>
-                    {!item.required && (
-                      <span className="text-[10px] text-muted-foreground">(opcional)</span>
-                    )}
-                  </label>
-                ))}
-                {card.items.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">Sem itens.</p>
-                )}
-              </div>
+        <div className="mt-4 space-y-4">
+          {phase.modules && phase.modules.length > 0 ? (
+            <div className="space-y-4">
+              {phase.modules.map((module, idx) => (
+                <ModuleSection
+                  key={module.id}
+                  module={module}
+                  pending={pending}
+                  onToggle={onToggle}
+                />
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {phase.cards.map((card) => (
+                <div key={card.id} className="rounded-md border border-border/60 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium text-sm">{card.title}</div>
+                    {card.completed && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
+                  </div>
+                  {card.description && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-line">{card.description}</p>
+                  )}
+                  {card.notes && (
+                    <p className="text-xs italic text-muted-foreground border-l-2 border-border/60 pl-2 whitespace-pre-line">
+                      {card.notes}
+                    </p>
+                  )}
+                  {card.materials && (
+                    <div className="text-xs text-muted-foreground flex items-start gap-1">
+                      <BookOpen className="h-3 w-3 mt-0.5 shrink-0" />
+                      <span className="whitespace-pre-line">{card.materials}</span>
+                    </div>
+                  )}
+
+                  {card.links?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {card.links.map((l, idx) => (
+                        <a
+                          key={idx}
+                          href={normalizeExternalUrl(l.url)}
+                          {...externalLinkProps}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" /> {l.label || l.url}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-1 pt-1">
+                    {card.items.map((item) => (
+                      <label
+                        key={item.id}
+                        className="flex items-center gap-2 text-sm cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={item.completed}
+                          disabled={pending}
+                          onCheckedChange={(v) => onToggle(item.id, v === true)}
+                        />
+                        <span className={item.completed ? "line-through text-muted-foreground" : ""}>
+                          {item.title}
+                        </span>
+                        {!item.required && (
+                          <span className="text-[10px] text-muted-foreground">(opcional)</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {phase.has_quiz && (
             <QuizCard
@@ -613,3 +612,115 @@ function WelcomeHero() {
     </Card>
   );
 }
+
+function ModuleSection({
+  module,
+  pending,
+  onToggle,
+}: {
+  module: any;
+  pending: boolean;
+  onToggle: (itemId: string, completed: boolean) => void;
+}) {
+  const [open, setOpen] = useState(module.unlocked && !module.completed);
+  const locked = !module.unlocked;
+
+  return (
+    <div
+      className={`rounded-lg border border-border/60 overflow-hidden transition-all ${
+        locked ? "bg-muted/30 opacity-70" : "bg-card shadow-sm"
+      }`}
+    >
+      <div
+        className={`p-4 flex items-center justify-between gap-3 cursor-pointer select-none ${
+          locked ? "cursor-not-allowed" : "hover:bg-muted/10"
+        }`}
+        onClick={() => !locked && setOpen(!open)}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`rounded-full p-1.5 shrink-0 ${
+              locked
+                ? "bg-muted text-muted-foreground"
+                : module.completed
+                  ? "bg-emerald-500/15 text-emerald-500"
+                  : "bg-primary/15 text-primary"
+            }`}
+          >
+            {locked ? (
+              <Lock className="h-4 w-4" />
+            ) : module.completed ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h4 className={`font-semibold text-sm truncate ${locked ? "text-muted-foreground" : ""}`}>
+              Módulo {module.order_index}: {module.title}
+            </h4>
+            {module.description && (
+              <p className="text-xs text-muted-foreground truncate">{module.description}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+          {module.completed && !locked && (
+            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20">
+              Concluído
+            </Badge>
+          )}
+          {!locked && (
+            <ChevronRight
+              className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+            />
+          )}
+        </div>
+      </div>
+
+      {open && !locked && (
+        <div className="p-4 pt-0 space-y-4 border-t border-border/40 bg-muted/5">
+          {module.content_body && (
+            <div className="text-sm text-foreground/80 leading-relaxed pt-3 whitespace-pre-line">
+              {module.content_body}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <h5 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Checklist do Módulo</h5>
+            <div className="space-y-1.5">
+              {module.items.map((item: any) => (
+                <label
+                  key={item.id}
+                  className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/20 transition-colors cursor-pointer group"
+                >
+                  <div className="pt-0.5">
+                    <Checkbox
+                      checked={item.completed}
+                      disabled={pending}
+                      onCheckedChange={(v) => onToggle(item.id, v === true)}
+                      className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span className={`text-sm ${item.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                      {item.title}
+                    </span>
+                    {!item.required && (
+                      <span className="text-[10px] text-muted-foreground ml-2">(opcional)</span>
+                    )}
+                  </div>
+                </label>
+              ))}
+              {module.items.length === 0 && (
+                <p className="text-xs text-muted-foreground italic p-2">Sem tarefas vinculadas a este módulo.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
