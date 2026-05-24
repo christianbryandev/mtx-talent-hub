@@ -32,7 +32,7 @@ export function useJourney(targetUserId?: string) {
           
           const modulesWithItems = modules.map((mod, index) => {
             const modItems = allItems.filter(item => moduleMap.get(item.id) === mod.id);
-            const isCompleted = modItems.length > 0 && modItems.every(i => i.completed);
+            const isCompleted = modItems.length === 0 || modItems.every(i => i.completed);
             
             return {
               ...mod,
