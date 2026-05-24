@@ -18,13 +18,9 @@ interface RankingRow {
 }
 
 async function fetchRanking(): Promise<RankingRow[]> {
-  const { data, error } = await supabase
-    .from("vw_journey_ranking" as never)
-    .select("user_id, full_name, first_name, avatar_url, total_xp, progress_percentage, rank_position")
-    .order("rank_position", { ascending: true })
-    .limit(200);
+  const { data, error } = await supabase.rpc("get_journey_ranking");
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as RankingRow[];
+  return (data ?? []) as RankingRow[];
 }
 
 function initials(name: string | null | undefined): string {
