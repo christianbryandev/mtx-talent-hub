@@ -1261,7 +1261,9 @@ export type Database = {
       }
       notifications: {
         Row: {
+          attachment_url: string | null
           created_at: string
+          created_by: string | null
           entity_id: string | null
           entity_type: string | null
           id: string
@@ -1273,7 +1275,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachment_url?: string | null
           created_at?: string
+          created_by?: string | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
@@ -1285,7 +1289,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachment_url?: string | null
           created_at?: string
+          created_by?: string | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string

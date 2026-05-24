@@ -17,6 +17,7 @@ const TITLES: Record<string, string> = {
   "/indicadores": "Indicadores",
   "/users": "Usuários e Permissões",
   "/settings": "Configurações",
+  "/painel-notificacoes": "Painel de Notificações",
 };
 
 export function AppTopbar() {

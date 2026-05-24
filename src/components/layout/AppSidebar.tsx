@@ -18,6 +18,7 @@ import {
   BarChart2,
   GraduationCap,
   Activity,
+  Bell,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
@@ -61,6 +62,7 @@ const mainItems: MainItem[] = [
   { title: "Minha Jornada", url: "/jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "colaborador"] },
   { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
+  { title: "Painel de Notificações", url: "/painel-notificacoes", icon: Bell, roles: ["super_admin", "admin"] },
 ];
 
 export function AppSidebar() {

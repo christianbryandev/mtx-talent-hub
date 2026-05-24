@@ -10,6 +10,10 @@ import {
   Star,
   Video,
   Trophy,
+  Megaphone,
+  PartyPopper,
+  ClipboardList,
+  Info,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +29,11 @@ export type NotificationType =
   | "nova_oportunidade"
   | "reuniao_agendada"
   | "cliente_convertido"
+  | "aviso"
+  | "urgente"
+  | "celebracao"
+  | "tarefa"
+  | "informativo"
   | "geral";
 
 export interface NotificationRow {
@@ -35,6 +44,8 @@ export interface NotificationRow {
   type: NotificationType;
   entity_type: string | null;
   entity_id: string | null;
+  attachment_url: string | null;
+  created_by: string | null;
   read: boolean;
   read_at: string | null;
   created_at: string;
@@ -54,6 +65,11 @@ export const NOTIFICATION_META: Record<
   nova_oportunidade: { icon: Star, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Nova oportunidade" },
   reuniao_agendada: { icon: Video, color: "text-indigo-400", bg: "bg-indigo-500/10", label: "Reunião agendada" },
   cliente_convertido: { icon: Trophy, color: "text-green-400", bg: "bg-green-500/10", label: "Cliente convertido" },
+  aviso: { icon: Megaphone, color: "text-blue-400", bg: "bg-blue-500/10", label: "Aviso" },
+  urgente: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10", label: "Urgente" },
+  celebracao: { icon: PartyPopper, color: "text-green-400", bg: "bg-green-500/10", label: "Celebração" },
+  tarefa: { icon: ClipboardList, color: "text-amber-400", bg: "bg-amber-500/10", label: "Tarefa" },
+  informativo: { icon: Info, color: "text-zinc-400", bg: "bg-zinc-500/10", label: "Informativo" },
   geral: { icon: Bell, color: "text-zinc-300", bg: "bg-zinc-500/10", label: "Notificação" },
 };
 
@@ -81,6 +97,8 @@ export interface CreateNotificationInput {
   type: NotificationType;
   entity_type?: string;
   entity_id?: string;
+  attachment_url?: string;
+  created_by?: string;
 }
 
 /**
@@ -100,6 +118,8 @@ export async function createNotification(
       type: r.type,
       entity_type: r.entity_type ?? null,
       entity_id: r.entity_id ?? null,
+      attachment_url: r.attachment_url ?? null,
+      created_by: r.created_by ?? null,
     })),
   );
   if (error) console.error("[notifications] insert failed:", error);
