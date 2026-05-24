@@ -2804,6 +2804,18 @@ export type Database = {
       get_journey_conversion: { Args: never; Returns: Json }
       get_journey_kpis: { Args: never; Returns: Json }
       get_journey_phase_distribution: { Args: never; Returns: Json }
+      get_journey_ranking: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          first_name: string
+          full_name: string
+          progress_percentage: number
+          rank_position: number
+          total_xp: number
+          user_id: string
+        }[]
+      }
       get_phase_quiz: { Args: { _phase_id: string }; Returns: Json }
       get_primary_role: {
         Args: { _user_id: string }
