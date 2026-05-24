@@ -287,7 +287,7 @@ export function GlobalChat() {
           <div className="flex items-center justify-between border-b bg-primary p-3 text-primary-foreground">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8 border border-primary-foreground/20">
-                <AvatarImage src="/logo.png" />
+                <AvatarImage src="/favicon.png" />
                 <AvatarFallback>MTX</AvatarFallback>
               </Avatar>
               <div>
@@ -468,7 +468,7 @@ export function GlobalChat() {
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="relative">
-          <MessageCircle className="h-7 w-7" />
+          <img src="/favicon.png" alt="Chat" className="h-8 w-8" />
           {unreadCount > 0 && (
             <Badge className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive p-0 text-[10px] text-destructive-foreground">
               {unreadCount}
