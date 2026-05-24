@@ -289,9 +289,9 @@ export function GlobalChat() {
           <div className="flex items-center justify-between border-b bg-primary p-3 text-primary-foreground">
             <div className="flex items-center gap-3">
               <div className="relative group/icon">
-                <Avatar className="h-8 w-8 border border-primary-foreground/20 bg-transparent">
+                <Avatar className="h-8 w-8 border border-primary-foreground/20 bg-transparent rounded-none">
                   <AvatarImage src={canal?.icon_url || "/favicon.png"} className="object-contain" />
-                  <AvatarFallback className="bg-transparent text-primary-foreground">MTX</AvatarFallback>
+                  <AvatarFallback className="bg-transparent text-primary-foreground rounded-none">MTX</AvatarFallback>
                 </Avatar>
                 
                 {isSuperAdmin && (
