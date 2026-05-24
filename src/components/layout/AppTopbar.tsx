@@ -1,10 +1,9 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -34,14 +33,8 @@ export function AppTopbar() {
         <h1 className="text-sm font-semibold tracking-tight text-foreground">{title}</h1>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden md:block">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="h-9 w-64 rounded-full border-white/10 bg-white/[0.03] pl-8 focus-visible:ring-primary/40"
-          />
-        </div>
+      <div className="ml-auto flex items-center gap-3">
+        <GlobalSearch />
         <NotificationBell />
         <UserMenu />
       </div>
