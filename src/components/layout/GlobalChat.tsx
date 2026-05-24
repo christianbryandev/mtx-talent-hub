@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, Smile, MoreVertical, Trash2, Edit2, Check } from "lucide-react";
+import { MessageCircle, X, Send, Smile, MoreVertical, Trash2, Edit2, Check, Settings, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -29,6 +29,8 @@ export function GlobalChat() {
   const [editContent, setEditContent] = useState("");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [isChangingIcon, setIsChangingIcon] = useState(false);
+  const [newIconUrl, setNewIconUrl] = useState("");
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<any>(null);
@@ -286,12 +288,30 @@ export function GlobalChat() {
           {/* Header */}
           <div className="flex items-center justify-between border-b bg-primary p-3 text-primary-foreground">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8 border border-primary-foreground/20 bg-transparent">
-                <AvatarImage src="/favicon.png" className="object-contain" />
-                <AvatarFallback className="bg-transparent text-primary-foreground">MTX</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-sm font-semibold">Comunidade MTX</h3>
+              <div className="relative group/icon">
+                <Avatar className="h-8 w-8 border border-primary-foreground/20 bg-transparent">
+                  <AvatarImage src={canal?.icon_url || "/favicon.png"} className="object-contain" />
+                  <AvatarFallback className="bg-transparent text-primary-foreground">MTX</AvatarFallback>
+                </Avatar>
+                
+                {isSuperAdmin && (
+                  <button 
+                    onClick={() => {
+                      setIsChangingIcon(!isChangingIcon);
+                      setNewIconUrl(canal?.icon_url || "");
+                    }}
+                    className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-background text-primary opacity-0 shadow-sm group-hover/icon:opacity-100 transition-opacity"
+                    title="Mudar ícone"
+                  >
+                    <Settings className="h-2.5 w-2.5" />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold">Comunidade MTX</h3>
+                </div>
                 <p className="text-[10px] opacity-80">Canal Geral</p>
               </div>
             </div>
@@ -299,6 +319,52 @@ export function GlobalChat() {
               <X className="h-5 w-5" />
             </Button>
           </div>
+
+          {/* Icon Change UI */}
+          {isChangingIcon && isSuperAdmin && (
+            <div className="bg-muted/50 p-2 border-b animate-in slide-in-from-top-2">
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] font-medium px-1">URL do novo ícone:</p>
+                <div className="flex gap-1">
+                  <Input 
+                    value={newIconUrl}
+                    onChange={(e) => setNewIconUrl(e.target.value)}
+                    placeholder="https://exemplo.com/imagem.png"
+                    className="h-7 text-[10px] bg-background"
+                  />
+                  <Button 
+                    size="sm" 
+                    className="h-7 px-2 text-[10px]"
+                    onClick={async () => {
+                      if (!canal) return;
+                      const { error } = await supabase
+                        .from("chat_canais")
+                        .update({ icon_url: newIconUrl })
+                        .eq("id", canal.id);
+                      
+                      if (error) {
+                        toast.error("Erro ao atualizar ícone");
+                      } else {
+                        setCanal({ ...canal, icon_url: newIconUrl });
+                        setIsChangingIcon(false);
+                        toast.success("Ícone atualizado!");
+                      }
+                    }}
+                  >
+                    Salvar
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 text-[10px]"
+                    onClick={() => setIsChangingIcon(false)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Messages */}
           <ScrollArea ref={scrollRef} className="flex-1 p-4">
