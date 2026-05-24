@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { resolveNotificationAttachmentUrl } from "@/lib/notification-attachment";
+
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Bell, Check, Paperclip } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
@@ -30,8 +32,21 @@ import {
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<NotificationRow | null>(null);
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(20);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAttachmentUrl(null);
+    if (selectedNotification?.attachment_url) {
+      resolveNotificationAttachmentUrl(selectedNotification.attachment_url).then((url) => {
+        if (!cancelled) setAttachmentUrl(url);
+      });
+    }
+    return () => { cancelled = true; };
+  }, [selectedNotification?.id, selectedNotification?.attachment_url]);
+
 
   const handleClick = async (n: NotificationRow) => {
     if (!n.read) await markAsRead(n.id);
