@@ -73,15 +73,15 @@ export function AppSidebar() {
   // XP only relevant for colaborador (journey owner). Hook is safe-noop for others.
   const { data: journey } = useJourney(isColaborador ? undefined : "00000000-0000-0000-0000-000000000000");
 
-  const { data: pendingApps = 0 } = useQuery({
-    queryKey: ["pending-applications-count"],
+  const { data: pendingAppsCount = 0 } = useQuery({
+    queryKey: ["pending-applications-count-combined"],
     enabled: isAdmin,
     queryFn: async () => {
-      const { count } = await supabase
-        .from("young_applications")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pendente");
-      return count ?? 0;
+      const [oldApps, newApps] = await Promise.all([
+        supabase.from("young_applications").select("*", { count: "exact", head: true }).eq("status", "pendente"),
+        supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "pending")
+      ]);
+      return (oldApps.count ?? 0) + (newApps.count ?? 0);
     },
   });
 
