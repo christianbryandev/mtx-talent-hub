@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { resolveNotificationAttachmentUrl } from "@/lib/notification-attachment";
+
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -69,6 +71,19 @@ function NotificationPanelPage() {
   
   // Detail modal
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
+  const [selectedAttachmentUrl, setSelectedAttachmentUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSelectedAttachmentUrl(null);
+    if (selectedNotification?.attachment_url) {
+      resolveNotificationAttachmentUrl(selectedNotification.attachment_url).then((url) => {
+        if (!cancelled) setSelectedAttachmentUrl(url);
+      });
+    }
+    return () => { cancelled = true; };
+  }, [selectedNotification?.id, selectedNotification?.attachment_url]);
+
 
   useEffect(() => {
     if (!isAdmin && !isSuperAdmin) {
