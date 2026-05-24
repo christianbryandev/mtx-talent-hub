@@ -257,6 +257,18 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/painel-notificacoes")}
+                    tooltip="Painel de Notificações"
+                  >
+                    <Link to="/painel-notificacoes" className="flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      <span>Painel de Notificações</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {isSuperAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
