@@ -15,7 +15,6 @@ import {
   ClipboardList,
   Clock,
   ArrowRight,
-  X,
   Loader2
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
