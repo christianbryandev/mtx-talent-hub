@@ -136,8 +136,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "jovens" as const,
-            title: r.full_name || 'Sem nome',
-            subtitle: `${r.email || ''} • ${r.trail_phase ?? 'Sem fase'}`,
+            title: (r.full_name as string) || 'Sem nome',
+            subtitle: `${(r.email as string) || ''} • ${r.trail_phase ?? 'Sem fase'}`,
             url: `/jovens/${r.id}`
           }))),
 
@@ -150,8 +150,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "clientes" as const,
-            title: r.trade_name || r.company_name || 'Sem nome',
-            subtitle: r.company_name || '',
+            title: (r.trade_name as string) || (r.company_name as string) || 'Sem nome',
+            subtitle: (r.company_name as string) || '',
             url: `/clientes/${r.id}`
           }))),
 
