@@ -472,83 +472,80 @@ function PhaseCard({
       )}
 
       {open && !locked && (
-        <div className="mt-4 space-y-3">
-          {phase.cards.map((card) => (
-            <div key={card.id} className="rounded-md border border-border/60 p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-medium text-sm">{card.title}</div>
-                {card.completed && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
-              </div>
-              {card.description && (
-                <p className="text-xs text-muted-foreground whitespace-pre-line">{card.description}</p>
-              )}
-              {card.notes && (
-                <p className="text-xs italic text-muted-foreground border-l-2 border-border/60 pl-2 whitespace-pre-line">
-                  {card.notes}
-                </p>
-              )}
-              {card.materials && (
-                <div className="text-xs text-muted-foreground flex items-start gap-1">
-                  <BookOpen className="h-3 w-3 mt-0.5 shrink-0" />
-                  <span className="whitespace-pre-line">{card.materials}</span>
-                </div>
-              )}
-
-              {card.links?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {card.links.map((l, idx) => (
-                    <a
-                      key={idx}
-                      href={normalizeExternalUrl(l.url)}
-                      {...externalLinkProps}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" /> {l.label || l.url}
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {card.attachments?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {card.attachments.map((a, idx) => (
-                    <a
-                      key={idx}
-                      href={normalizeExternalUrl(a.url)}
-                      {...externalLinkProps}
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
-                    >
-                      <Paperclip className="h-3 w-3" /> {a.label || "Anexo"}
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-1 pt-1">
-                {card.items.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={item.completed}
-                      disabled={pending}
-                      onCheckedChange={(v) => onToggle(item.id, v === true)}
-                    />
-                    <span className={item.completed ? "line-through text-muted-foreground" : ""}>
-                      {item.title}
-                    </span>
-                    {!item.required && (
-                      <span className="text-[10px] text-muted-foreground">(opcional)</span>
-                    )}
-                  </label>
-                ))}
-                {card.items.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">Sem itens.</p>
-                )}
-              </div>
+        <div className="mt-4 space-y-4">
+          {phase.modules && phase.modules.length > 0 ? (
+            <div className="space-y-4">
+              {phase.modules.map((module, idx) => (
+                <ModuleSection
+                  key={module.id}
+                  module={module}
+                  pending={pending}
+                  onToggle={onToggle}
+                />
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {phase.cards.map((card) => (
+                <div key={card.id} className="rounded-md border border-border/60 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium text-sm">{card.title}</div>
+                    {card.completed && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />}
+                  </div>
+                  {card.description && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-line">{card.description}</p>
+                  )}
+                  {card.notes && (
+                    <p className="text-xs italic text-muted-foreground border-l-2 border-border/60 pl-2 whitespace-pre-line">
+                      {card.notes}
+                    </p>
+                  )}
+                  {card.materials && (
+                    <div className="text-xs text-muted-foreground flex items-start gap-1">
+                      <BookOpen className="h-3 w-3 mt-0.5 shrink-0" />
+                      <span className="whitespace-pre-line">{card.materials}</span>
+                    </div>
+                  )}
+
+                  {card.links?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {card.links.map((l, idx) => (
+                        <a
+                          key={idx}
+                          href={normalizeExternalUrl(l.url)}
+                          {...externalLinkProps}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" /> {l.label || l.url}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-1 pt-1">
+                    {card.items.map((item) => (
+                      <label
+                        key={item.id}
+                        className="flex items-center gap-2 text-sm cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={item.completed}
+                          disabled={pending}
+                          onCheckedChange={(v) => onToggle(item.id, v === true)}
+                        />
+                        <span className={item.completed ? "line-through text-muted-foreground" : ""}>
+                          {item.title}
+                        </span>
+                        {!item.required && (
+                          <span className="text-[10px] text-muted-foreground">(opcional)</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {phase.has_quiz && (
             <QuizCard
