@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           criado_em: string | null
           descricao: string | null
+          icon_url: string | null
           id: string
           nome: string
           tipo: string | null
@@ -109,6 +110,7 @@ export type Database = {
         Insert: {
           criado_em?: string | null
           descricao?: string | null
+          icon_url?: string | null
           id?: string
           nome: string
           tipo?: string | null
@@ -116,6 +118,7 @@ export type Database = {
         Update: {
           criado_em?: string | null
           descricao?: string | null
+          icon_url?: string | null
           id?: string
           nome?: string
           tipo?: string | null
