@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { resolveNotificationAttachmentUrl } from "@/lib/notification-attachment";
+
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -69,6 +71,19 @@ function NotificationPanelPage() {
   
   // Detail modal
   const [selectedNotification, setSelectedNotification] = useState<any>(null);
+  const [selectedAttachmentUrl, setSelectedAttachmentUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSelectedAttachmentUrl(null);
+    if (selectedNotification?.attachment_url) {
+      resolveNotificationAttachmentUrl(selectedNotification.attachment_url).then((url) => {
+        if (!cancelled) setSelectedAttachmentUrl(url);
+      });
+    }
+    return () => { cancelled = true; };
+  }, [selectedNotification?.id, selectedNotification?.attachment_url]);
+
 
   useEffect(() => {
     if (!isAdmin && !isSuperAdmin) {
@@ -169,12 +184,10 @@ function NotificationPanelPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("notificacoes-anexos")
-          .getPublicUrl(filePath);
-        
-        attachmentUrl = publicUrl;
+        // Bucket é privado — armazenamos o path; URL assinada é gerada na leitura.
+        attachmentUrl = filePath;
       }
+
 
       let targetUserIds: string[] = [];
 
@@ -568,12 +581,12 @@ function NotificationPanelPage() {
               {selectedNotification?.message}
             </div>
 
-            {selectedNotification?.attachment_url && (
+            {selectedNotification?.attachment_url && selectedAttachmentUrl && (
               <div className="mt-4 rounded-xl border border-white/5 overflow-hidden bg-white/5">
                 {selectedNotification.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                  <img 
-                    src={selectedNotification.attachment_url} 
-                    alt="Anexo" 
+                  <img
+                    src={selectedAttachmentUrl}
+                    alt="Anexo"
                     className="w-full h-auto max-h-[300px] object-contain"
                   />
                 ) : (
@@ -583,8 +596,9 @@ function NotificationPanelPage() {
                       <span className="text-xs font-medium">Anexo da Notificação</span>
                     </div>
                     <Button variant="outline" size="sm" asChild className="h-8 text-xs">
-                      <a href={selectedNotification.attachment_url} target="_blank" rel="noopener noreferrer">
+                      <a href={selectedAttachmentUrl} target="_blank" rel="noopener noreferrer">
                         Visualizar / Baixar
+
                       </a>
                     </Button>
                   </div>
