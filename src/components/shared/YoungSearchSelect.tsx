@@ -55,12 +55,15 @@ export function YoungSearchSelect({
     staleTime: 0,
     refetchOnMount: "always",
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("young_people")
-        .select("id, full_name, status, trail_phase, profile_id")
-        .order("full_name");
+      const { data, error } = await supabase.rpc("get_young_people_safe");
       if (error) throw error;
-      const rows = data ?? [];
+      const rows = (data ?? []) as Array<{
+        id: string;
+        full_name: string;
+        status: string | null;
+        trail_phase: string | null;
+        profile_id: string | null;
+      }>;
       const profileIds = rows.map((r) => r.profile_id).filter(Boolean) as string[];
       const { data: profiles } = profileIds.length
         ? await supabase
@@ -74,16 +77,17 @@ export function YoungSearchSelect({
       return rows.map((r) => {
         const prof = r.profile_id ? profileMap.get(r.profile_id) : undefined;
         return {
-          id: r.id as string,
-          full_name: (r.full_name as string) ?? "Sem nome",
-          status: (r.status as string | null) ?? null,
-          trail_phase: (r.trail_phase as string | null) ?? null,
+          id: r.id,
+          full_name: r.full_name ?? "Sem nome",
+          status: r.status ?? null,
+          trail_phase: r.trail_phase ?? null,
           avatar_url: prof?.avatar_url ?? null,
           email: prof?.email ?? null,
         };
       });
     },
   });
+
 
   const list = excludeId ? youngs.filter((y) => y.id !== excludeId) : youngs;
   const current = youngs.find((y) => y.id === value);
