@@ -101,14 +101,24 @@ function AdminQuizzesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_questions")
-        .select("id,question,order_index,media_url,media_type, options:quiz_options(id,text,is_correct,order_index,media_url,media_type)")
+        .select("id,question,order_index,media_url,media_type")
         .eq("quiz_id", quiz.data!.id)
         .order("order_index");
       if (error) throw error;
-      return (data as Question[]).map((q) => ({
-        ...q,
-        options: [...q.options].sort((a, b) => a.order_index - b.order_index),
-      }));
+
+      // Fetch options via secure RPC (includes is_correct only for admins)
+      const questionsWithOptions = await Promise.all(
+        (data ?? []).map(async (q) => {
+          const { data: opts, error: optErr } = await supabase
+            .rpc("admin_get_quiz_options", { p_question_id: q.id });
+          if (optErr) throw optErr;
+          return {
+            ...q,
+            options: (opts ?? []).sort((a: any, b: any) => a.order_index - b.order_index),
+          } as Question;
+        })
+      );
+      return questionsWithOptions;
     },
   });
 
