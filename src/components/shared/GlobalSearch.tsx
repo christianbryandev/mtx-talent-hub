@@ -248,8 +248,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "reunioes" as const,
-            title: r.title || 'Reunião',
-            subtitle: new Date(r.date).toLocaleDateString("pt-BR"),
+            title: (r.title as string) || 'Reunião',
+            subtitle: new Date(r.date as string).toLocaleDateString("pt-BR"),
             url: `/reunioes/${r.id}`
           }))),
 
@@ -262,8 +262,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "perfis" as const,
-            title: r.full_name ?? r.email ?? 'Sem nome',
-            subtitle: r.email ?? '',
+            title: (r.full_name as string) ?? (r.email as string) ?? 'Sem nome',
+            subtitle: (r.email as string) ?? '',
             url: `/users` // Perfil page or users management
           }))),
 
@@ -290,8 +290,8 @@ export function GlobalSearch() {
           .then(res => (res.data ?? []).map(r => ({
             id: r.id,
             category: "briefings" as const,
-            title: r.company_name || 'Briefing',
-            subtitle: `Enviado em ${new Date(r.submitted_at).toLocaleDateString("pt-BR")}`,
+            title: (r.company_name as string) || 'Briefing',
+            subtitle: `Enviado em ${new Date(r.submitted_at as string).toLocaleDateString("pt-BR")}`,
             url: `/clientes`
           }))),
       ];
