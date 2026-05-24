@@ -137,7 +137,7 @@ export function GlobalSearch() {
             id: r.id,
             category: "jovens" as const,
             title: r.full_name || 'Sem nome',
-            subtitle: `${r.email} • ${r.trail_phase ?? 'Sem fase'}`,
+            subtitle: `${r.email || ''} • ${r.trail_phase ?? 'Sem fase'}`,
             url: `/jovens/${r.id}`
           }))),
 
@@ -151,7 +151,7 @@ export function GlobalSearch() {
             id: r.id,
             category: "clientes" as const,
             title: r.trade_name || r.company_name || 'Sem nome',
-            subtitle: r.company_name,
+            subtitle: r.company_name || '',
             url: `/clientes/${r.id}`
           }))),
 
