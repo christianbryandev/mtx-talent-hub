@@ -98,6 +98,177 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_canais: {
+        Row: {
+          criado_em: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          tipo: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          tipo?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
+      chat_membros: {
+        Row: {
+          canal_id: string | null
+          id: string
+          perfil_id: string | null
+          pode_escrever: boolean | null
+          ultimo_acesso: string | null
+        }
+        Insert: {
+          canal_id?: string | null
+          id?: string
+          perfil_id?: string | null
+          pode_escrever?: boolean | null
+          ultimo_acesso?: string | null
+        }
+        Update: {
+          canal_id?: string | null
+          id?: string
+          perfil_id?: string | null
+          pode_escrever?: boolean | null
+          ultimo_acesso?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_membros_canal_id_fkey"
+            columns: ["canal_id"]
+            isOneToOne: false
+            referencedRelation: "chat_canais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_membros_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_membros_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      chat_mensagens: {
+        Row: {
+          autor_id: string | null
+          canal_id: string | null
+          conteudo: string
+          criado_em: string | null
+          deletado: boolean | null
+          editado: boolean | null
+          id: string
+          tipo: string | null
+        }
+        Insert: {
+          autor_id?: string | null
+          canal_id?: string | null
+          conteudo: string
+          criado_em?: string | null
+          deletado?: boolean | null
+          editado?: boolean | null
+          id?: string
+          tipo?: string | null
+        }
+        Update: {
+          autor_id?: string | null
+          canal_id?: string | null
+          conteudo?: string
+          criado_em?: string | null
+          deletado?: boolean | null
+          editado?: boolean | null
+          id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_mensagens_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_mensagens_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chat_mensagens_canal_id_fkey"
+            columns: ["canal_id"]
+            isOneToOne: false
+            referencedRelation: "chat_canais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reacoes: {
+        Row: {
+          criado_em: string | null
+          emoji: string
+          id: string
+          mensagem_id: string | null
+          perfil_id: string | null
+        }
+        Insert: {
+          criado_em?: string | null
+          emoji: string
+          id?: string
+          mensagem_id?: string | null
+          perfil_id?: string | null
+        }
+        Update: {
+          criado_em?: string | null
+          emoji?: string
+          id?: string
+          mensagem_id?: string | null
+          perfil_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reacoes_mensagem_id_fkey"
+            columns: ["mensagem_id"]
+            isOneToOne: false
+            referencedRelation: "chat_mensagens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_reacoes_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_reacoes_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "vw_journey_ranking"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       client_briefings: {
         Row: {
           additional_notes: string | null
@@ -2789,6 +2960,7 @@ export type Database = {
           text: string
         }[]
       }
+      can_access_chat: { Args: never; Returns: boolean }
       daily_notifications_job: { Args: never; Returns: undefined }
       get_catalog_phases: { Args: never; Returns: Json }
       get_invite_by_token: {
