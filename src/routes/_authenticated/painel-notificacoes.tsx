@@ -581,12 +581,12 @@ function NotificationPanelPage() {
               {selectedNotification?.message}
             </div>
 
-            {selectedNotification?.attachment_url && (
+            {selectedNotification?.attachment_url && selectedAttachmentUrl && (
               <div className="mt-4 rounded-xl border border-white/5 overflow-hidden bg-white/5">
                 {selectedNotification.attachment_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                  <img 
-                    src={selectedNotification.attachment_url} 
-                    alt="Anexo" 
+                  <img
+                    src={selectedAttachmentUrl}
+                    alt="Anexo"
                     className="w-full h-auto max-h-[300px] object-contain"
                   />
                 ) : (
@@ -596,8 +596,9 @@ function NotificationPanelPage() {
                       <span className="text-xs font-medium">Anexo da Notificação</span>
                     </div>
                     <Button variant="outline" size="sm" asChild className="h-8 text-xs">
-                      <a href={selectedNotification.attachment_url} target="_blank" rel="noopener noreferrer">
+                      <a href={selectedAttachmentUrl} target="_blank" rel="noopener noreferrer">
                         Visualizar / Baixar
+
                       </a>
                     </Button>
                   </div>
