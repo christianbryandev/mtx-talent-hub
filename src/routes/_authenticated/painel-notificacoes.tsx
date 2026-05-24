@@ -169,12 +169,10 @@ function NotificationPanelPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("notificacoes-anexos")
-          .getPublicUrl(filePath);
-        
-        attachmentUrl = publicUrl;
+        // Bucket é privado — armazenamos o path; URL assinada é gerada na leitura.
+        attachmentUrl = filePath;
       }
+
 
       let targetUserIds: string[] = [];
 

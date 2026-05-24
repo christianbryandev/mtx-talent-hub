@@ -58,10 +58,8 @@ function RegistrationPage() {
 
       try {
         const { data, error: fetchError } = await supabase
-          .from("invites")
-          .select("*")
-          .eq("token", search.token)
-          .single();
+          .rpc("get_invite_by_token_public", { _token: search.token })
+          .maybeSingle();
 
         if (fetchError || !data) {
           setError("Convite inválido ou não encontrado.");
@@ -72,6 +70,7 @@ function RegistrationPage() {
         }
       } catch (err) {
         setError("Erro ao validar convite.");
+
       } finally {
         setValidating(false);
       }
@@ -98,16 +97,16 @@ function RegistrationPage() {
 
       if (signupError) throw signupError;
 
-      // 2. Mark invite as used
-      const { error: updateError } = await supabase
-        .from("invites")
-        .update({ is_used: true })
-        .eq("id", invite.id);
+      // 2. Mark invite as used (via SECURITY DEFINER function)
+      const { error: updateError } = await supabase.rpc("mark_invite_used", {
+        _token: invite.token,
+      });
 
       if (updateError) {
         console.error("Erro ao queimar convite:", updateError);
         // We don't throw here because the user is already created
       }
+
 
       toast.success("Conta criada com sucesso!", {
         description: "Você já pode acessar a plataforma.",
