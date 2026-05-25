@@ -214,7 +214,7 @@ function AdminDashboardContent() {
               <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Sem dados ainda</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.trailData}>
+                <BarChart data={stats?.trailData || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                   <XAxis dataKey="fase" stroke="#A1A1AA" fontSize={11} />
                   <YAxis stroke="#A1A1AA" fontSize={11} />
@@ -235,7 +235,7 @@ function AdminDashboardContent() {
               <Skeleton className="h-full w-full" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats.clientsByMonth}>
+                <LineChart data={stats?.clientsByMonth || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                   <XAxis dataKey="mes" stroke="#A1A1AA" fontSize={11} />
                   <YAxis stroke="#A1A1AA" fontSize={11} />
