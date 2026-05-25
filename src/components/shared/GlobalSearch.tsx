@@ -160,21 +160,18 @@ export function GlobalSearch() {
 
     setLoading(true);
     
-    // Simulate slight delay for "search feel" although it's static now
-    setTimeout(() => {
-      const normalizedQuery = searchTerm.toLowerCase();
+    const normalizedQuery = searchTerm.toLowerCase();
+    
+    const matchedItems = NAVIGATION_ITEMS.filter(item => {
+      const inTitle = item.title.toLowerCase().includes(normalizedQuery);
+      const inSubtitle = item.subtitle?.toLowerCase().includes(normalizedQuery);
+      const inCategory = CATEGORY_LABELS[item.category].label.toLowerCase().includes(normalizedQuery);
       
-      const matchedItems = NAVIGATION_ITEMS.filter(item => {
-        const inTitle = item.title.toLowerCase().includes(normalizedQuery);
-        const inSubtitle = item.subtitle?.toLowerCase().includes(normalizedQuery);
-        const inCategory = CATEGORY_LABELS[item.category].label.toLowerCase().includes(normalizedQuery);
-        
-        return inTitle || inSubtitle || inCategory;
-      });
+      return inTitle || inSubtitle || inCategory;
+    });
 
-      setResults(matchedItems);
-      setLoading(false);
-    }, 100);
+    setResults(matchedItems);
+    setLoading(false);
   }, []);
 
   // Handle search with immediate feedback for small lists
