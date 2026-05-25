@@ -15,7 +15,10 @@ import {
   ClipboardList,
   Clock,
   ArrowRight,
-  Loader2
+  Loader2,
+  LayoutDashboard,
+  Shield,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
