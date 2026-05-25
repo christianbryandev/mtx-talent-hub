@@ -34,18 +34,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type SearchCategory = 
-  | "jovens" 
+  | "menu" 
+  | "jornada" 
   | "clientes" 
-  | "oportunidades" 
-  | "servicos" 
-  | "tarefas" 
-  | "jornadas" 
-  | "quizzes" 
-  | "notificacoes" 
-  | "reunioes" 
-  | "perfis" 
-  | "propostas" 
-  | "briefings";
+  | "jovens" 
+  | "admin" 
+  | "crm" 
+  | "perfil"
+  | "configuracoes";
 
 interface SearchResult {
   id: string;
@@ -56,19 +52,54 @@ interface SearchResult {
 }
 
 const CATEGORY_LABELS: Record<SearchCategory, { label: string; icon: any }> = {
-  jovens: { label: "Jovens", icon: Users },
+  menu: { label: "Menu Principal", icon: LayoutDashboard },
+  jornada: { label: "Minha Jornada", icon: RouteIcon },
   clientes: { label: "Clientes", icon: Building2 },
-  oportunidades: { label: "Oportunidades", icon: Target },
-  servicos: { label: "Serviços", icon: Briefcase },
-  tarefas: { label: "Tarefas", icon: ListChecks },
-  jornadas: { label: "Jornadas", icon: RouteIcon },
-  quizzes: { label: "Quizzes", icon: GraduationCap },
-  notificacoes: { label: "Notificações", icon: Bell },
-  reunioes: { label: "Reuniões", icon: CalendarDays },
-  perfis: { label: "Perfis", icon: UserCircle },
-  propostas: { label: "Propostas", icon: FileText },
-  briefings: { label: "Briefings", icon: ClipboardList },
+  jovens: { label: "Jovens", icon: Users },
+  crm: { label: "CRM Comercial", icon: Target },
+  admin: { label: "Administração", icon: Shield },
+  perfil: { label: "Meu Perfil", icon: UserCircle },
+  configuracoes: { label: "Configurações", icon: SettingsIcon },
 };
+
+const NAVIGATION_ITEMS: SearchResult[] = [
+  // Menu Principal
+  { id: "nav-dashboard", category: "menu", title: "Dashboard", url: "/dashboard" },
+  { id: "nav-tarefas", category: "menu", title: "Tarefas / Kanban", url: "/tarefas" },
+  { id: "nav-reunioes", category: "menu", title: "Reuniões", url: "/reunioes" },
+  { id: "nav-indicadores", category: "menu", title: "Indicadores", url: "/indicadores" },
+  
+  // Clientes
+  { id: "nav-clientes-lista", category: "clientes", title: "Lista de Clientes", url: "/clientes" },
+  { id: "nav-clientes-servicos", category: "clientes", title: "Serviços e Contratos", url: "/clientes", subtitle: "Aba em detalhes do cliente" },
+  { id: "nav-clientes-briefing", category: "clientes", title: "Briefing de Cliente", url: "/clientes", subtitle: "Aba em detalhes do cliente" },
+  
+  // Jovens
+  { id: "nav-jovens-lista", category: "jovens", title: "Lista de Jovens", url: "/jovens" },
+  { id: "nav-jovens-inscricoes", category: "jovens", title: "Inscrições / Funil", url: "/jovens/inscricoes-funil" },
+  
+  // CRM
+  { id: "nav-crm-pipeline", category: "crm", title: "CRM / Pipeline", url: "/crm" },
+  { id: "nav-crm-lista", category: "crm", title: "Lista de Oportunidades", url: "/crm/lista" },
+  
+  // Minha Jornada
+  { id: "nav-jornada-trilha", category: "jornada", title: "Minha Jornada - Trilha", url: "/jornada" },
+  { id: "nav-jornada-ranking", category: "jornada", title: "Minha Jornada - Ranking", url: "/jornada", subtitle: "Aba de Ranking" },
+  
+  // Administração
+  { id: "nav-admin-users", category: "admin", title: "Usuários e Permissões", url: "/users" },
+  { id: "nav-admin-analytics", category: "admin", title: "Analytics da Jornada", url: "/admin/journey-analytics" },
+  { id: "nav-admin-monitor", category: "admin", title: "Monitor da Jornada", url: "/admin/journey-monitor" },
+  { id: "nav-admin-catalog", category: "admin", title: "Catálogo da Jornada (Fases)", url: "/admin/journey-catalog" },
+  { id: "nav-admin-quizzes", category: "admin", title: "Gestão de Quizzes", url: "/admin/quizzes" },
+  { id: "nav-admin-notifs", category: "admin", title: "Painel de Notificações", url: "/painel-notificacoes" },
+  
+  // Configurações & Perfil
+  { id: "nav-perfil", category: "perfil", title: "Meu Perfil", url: "/meu-perfil" },
+  { id: "nav-settings-geral", category: "configuracoes", title: "Configurações Gerais", url: "/settings" },
+  { id: "nav-settings-categorias", category: "configuracoes", title: "Categorias de Serviços", url: "/settings", subtitle: "Aba de Configurações" },
+  { id: "nav-settings-notificacoes", category: "configuracoes", title: "Preferências de Notificação", url: "/settings", subtitle: "Aba de Configurações" },
+];
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
@@ -114,195 +145,29 @@ export function GlobalSearch() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const performSearch = useCallback(async (searchTerm: string) => {
+  const performSearch = useCallback((searchTerm: string) => {
     if (searchTerm.length < 2) {
       setResults([]);
       return;
     }
 
     setLoading(true);
-    const q = `%${searchTerm}%`;
+    
+    // Simulate slight delay for "search feel" although it's static now
+    setTimeout(() => {
+      const normalizedQuery = searchTerm.toLowerCase();
+      
+      const matchedItems = NAVIGATION_ITEMS.filter(item => {
+        const inTitle = item.title.toLowerCase().includes(normalizedQuery);
+        const inSubtitle = item.subtitle?.toLowerCase().includes(normalizedQuery);
+        const inCategory = CATEGORY_LABELS[item.category].label.toLowerCase().includes(normalizedQuery);
+        
+        return inTitle || inSubtitle || inCategory;
+      });
 
-    try {
-      // Parallel searches
-      const searchPromises = [
-        // Jovens + Profiles
-        supabase
-          .from("young_people")
-          .select("id, full_name, email, trail_phase")
-          .or(`full_name.ilike.${q},email.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "jovens" as const,
-            title: (r.full_name as string) || 'Sem nome',
-            subtitle: `${(r.email as string) || ''} • ${r.trail_phase ?? 'Sem fase'}`,
-            url: `/jovens/${r.id}`
-          }))),
-
-        // Clientes
-        supabase
-          .from("clients")
-          .select("id, company_name, trade_name, email")
-          .or(`company_name.ilike.${q},trade_name.ilike.${q},email.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "clientes" as const,
-            title: (r.trade_name as string) || (r.company_name as string) || 'Sem nome',
-            subtitle: (r.company_name as string) || '',
-            url: `/clientes/${r.id}`
-          }))),
-
-        // Oportunidades
-        supabase
-          .from("opportunities")
-          .select("id, company_name, contact_name, status")
-          .or(`company_name.ilike.${q},contact_name.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "oportunidades" as const,
-            title: (r.company_name as string) || 'Oportunidade',
-            subtitle: `${(r.contact_name as string) ?? ''} • ${(r.status as string)}`,
-            url: `/crm/${r.id}`
-          }))),
-
-        // Serviços
-        supabase
-          .from("services")
-          .select("id, name, category")
-          .or(`name.ilike.${q},description.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "servicos" as const,
-            title: (r.name as string) || 'Serviço',
-            subtitle: (r.category as string) ?? '',
-            url: `/servicos/${r.id}`
-          }))),
-
-        // Tarefas
-        supabase
-          .from("tasks")
-          .select("id, title, status, young_people:young_responsible(full_name)")
-          .or(`title.ilike.${q},description.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "tarefas" as const,
-            title: (r.title as string) || 'Tarefa',
-            subtitle: `${(r.status as string)} • ${(r.young_people as any)?.full_name ?? 'Sem responsável'}`,
-            url: `/tarefas` // Kanban doesn't have ID-specific URL yet, opens drawer via state usually
-          }))),
-
-        // Jornadas (Fases)
-        supabase
-          .from("journey_phase_catalog")
-          .select("id, title")
-          .ilike("title", q)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "jornadas" as const,
-            title: (r.title as string) || 'Fase',
-            subtitle: "Fase da Jornada",
-            url: `/admin/journey-catalog`
-          }))),
-
-        // Quizzes
-        supabase
-          .from("quiz_templates")
-          .select("id, title")
-          .ilike("title", q)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "quizzes" as const,
-            title: (r.title as string) || 'Quiz',
-            subtitle: "Modelo de Quiz",
-            url: `/admin/quizzes`
-          }))),
-
-        // Notificações
-        supabase
-          .from("notifications")
-          .select("id, title, message, created_at")
-          .or(`title.ilike.${q},message.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "notificacoes" as const,
-            title: (r.title as string) || 'Notificação',
-            subtitle: new Date(r.created_at).toLocaleDateString("pt-BR"),
-            url: `/notificacoes`
-          }))),
-
-        // Reuniões
-        supabase
-          .from("meetings")
-          .select("id, title, date")
-          .or(`title.ilike.${q},observations.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "reunioes" as const,
-            title: (r.title as string) || 'Reunião',
-            subtitle: new Date(r.date as string).toLocaleDateString("pt-BR"),
-            url: `/reunioes/${r.id}`
-          }))),
-
-        // Perfis
-        supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .or(`full_name.ilike.${q},email.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "perfis" as const,
-            title: (r.full_name as string) ?? (r.email as string) ?? 'Sem nome',
-            subtitle: (r.email as string) ?? '',
-            url: `/users` // Perfil page or users management
-          }))),
-
-        // Propostas
-        supabase
-          .from("proposals")
-          .select("id, title, status")
-          .or(`title.ilike.${q},description.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "propostas" as const,
-            title: r.title || 'Proposta',
-            subtitle: (r.status as string) || '',
-            url: `/crm` // No specific route yet
-          }))),
-
-        // Briefings
-        supabase
-          .from("client_briefings")
-          .select("id, company_name, contact_name, submitted_at")
-          .or(`company_name.ilike.${q},contact_name.ilike.${q},additional_notes.ilike.${q}`)
-          .limit(6)
-          .then(res => (res.data ?? []).map(r => ({
-            id: r.id,
-            category: "briefings" as const,
-            title: (r.company_name as string) || 'Briefing',
-            subtitle: `Enviado em ${new Date(r.submitted_at as string).toLocaleDateString("pt-BR")}`,
-            url: `/clientes`
-          }))),
-      ];
-
-      const allResults = await Promise.all(searchPromises);
-      const flattened: SearchResult[] = allResults.flat();
-      setResults(flattened.slice(0, 50));
-    } catch (err) {
-      console.error("Global search failed", err);
-    } finally {
+      setResults(matchedItems);
       setLoading(false);
-    }
+    }, 100);
   }, []);
 
   // Debounce search
