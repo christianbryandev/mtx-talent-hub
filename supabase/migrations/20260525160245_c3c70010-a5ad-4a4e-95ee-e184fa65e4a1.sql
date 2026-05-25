@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "All authenticated users can view roles" ON public.user_roles;
