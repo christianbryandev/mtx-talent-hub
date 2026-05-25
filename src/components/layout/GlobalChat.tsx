@@ -95,14 +95,22 @@ export function GlobalChat() {
     if (!canAccess || !user) return;
 
     const fetchCanal = async () => {
-      const { data } = await supabase
-        .from("chat_canais")
-        .select("*")
-        .eq("nome", "Geral")
-        .single();
-      if (data) {
-        const signedUrl = await resolveChatAssetUrl(data.icon_url);
-        setCanal({ ...data, icon_signed_url: signedUrl });
+      try {
+        const { data, error } = await supabase
+          .from("chat_canais")
+          .select("*")
+          .eq("nome", "Geral")
+          .single();
+        if (error) {
+          console.error("Erro ao buscar canal:", error);
+          return;
+        }
+        if (data) {
+          const signedUrl = await resolveChatAssetUrl(data.icon_url);
+          setCanal({ ...data, icon_signed_url: signedUrl });
+        }
+      } catch (err) {
+        console.error("Erro inesperado em fetchCanal:", err);
       }
     };
 
