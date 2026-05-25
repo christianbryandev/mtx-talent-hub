@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppTopbar } from "@/components/layout/AppTopbar";
-
+import { GlobalChat } from "@/components/layout/GlobalChat";
 import { IncompleteProfileBanner } from "@/components/layout/IncompleteProfileBanner";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -45,6 +45,7 @@ function AuthenticatedLayout() {
           <IncompleteProfileBanner />
           <main className="flex-1 overflow-y-auto px-6 py-6 lg:px-8">
             <Outlet />
+            <GlobalChat />
           </main>
         </div>
       </div>

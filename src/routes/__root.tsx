@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
-import { GlobalChat } from "@/components/layout/GlobalChat";
+
 
 function NotFoundComponent() {
   return (
@@ -148,7 +148,6 @@ function RootComponent() {
       <AuthProvider>
         <AuthSync />
         <Outlet />
-        <GlobalChat />
         <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>
