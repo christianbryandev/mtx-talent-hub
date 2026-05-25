@@ -38,7 +38,8 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("Critical error at root:", error);
+  // Optional: you can also log to an external service here
   const router = useRouter();
 
   return (
