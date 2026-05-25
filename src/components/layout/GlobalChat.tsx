@@ -38,6 +38,24 @@ export function GlobalChat() {
 
   const canAccess = hasRole(["super_admin", "admin", "comercial", "colaborador"]);
 
+  // Resolve a chat-assets storage path to a short-lived signed URL.
+  const resolveChatAssetUrl = async (value: string | null | undefined): Promise<string | null> => {
+    if (!value) return null;
+    // Extract storage path from either a legacy public URL or a raw path.
+    let path = value;
+    const marker = "/chat-assets/";
+    const idx = value.indexOf(marker);
+    if (idx !== -1) path = value.slice(idx + marker.length);
+    const { data, error } = await supabase.storage
+      .from("chat-assets")
+      .createSignedUrl(path, 60 * 60 * 24); // 24h
+    if (error) {
+      console.error("Erro ao gerar URL assinada do ícone do chat", error);
+      return null;
+    }
+    return data.signedUrl;
+  };
+
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !canal) return;
@@ -53,18 +71,16 @@ export function GlobalChat() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat-assets')
-        .getPublicUrl(fileName);
-
+      // Store the storage path (not a public URL — bucket is private).
       const { error: updateError } = await supabase
         .from("chat_canais")
-        .update({ icon_url: publicUrl })
+        .update({ icon_url: fileName })
         .eq("id", canal.id);
 
       if (updateError) throw updateError;
 
-      setCanal({ ...canal, icon_url: publicUrl });
+      const signedUrl = await resolveChatAssetUrl(fileName);
+      setCanal({ ...canal, icon_url: fileName, icon_signed_url: signedUrl });
       toast.success("Ícone atualizado!");
     } catch (error: any) {
       console.error("Erro no upload:", error);
@@ -84,7 +100,10 @@ export function GlobalChat() {
         .select("*")
         .eq("nome", "Geral")
         .single();
-      if (data) setCanal(data);
+      if (data) {
+        const signedUrl = await resolveChatAssetUrl(data.icon_url);
+        setCanal({ ...data, icon_signed_url: signedUrl });
+      }
     };
 
     fetchCanal();
