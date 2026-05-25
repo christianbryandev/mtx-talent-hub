@@ -177,16 +177,13 @@ export function GlobalSearch() {
     }, 100);
   }, []);
 
-  // Debounce search
+  // Handle search with immediate feedback for small lists
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query.trim()) {
-        performSearch(query);
-      } else {
-        setResults([]);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
+    if (query.trim()) {
+      performSearch(query);
+    } else {
+      setResults([]);
+    }
   }, [query, performSearch]);
 
   const onSelect = (item: SearchResult) => {
