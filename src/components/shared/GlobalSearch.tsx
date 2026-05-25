@@ -310,7 +310,7 @@ export function GlobalSearch() {
             ) : (
               <div className="flex flex-col items-center gap-2 py-8">
                 <Search className="h-8 w-8 text-muted-foreground/20" />
-                <p className="text-sm text-muted-foreground">Busque por jovens, clientes, tarefas e mais...</p>
+                <p className="text-sm text-muted-foreground">Busque por abas e seções do sistema...</p>
                 <div className="mt-4 flex gap-2">
                   <kbd className="rounded border border-white/20 bg-white/5 px-1.5 py-0.5 text-xs">⌘</kbd>
                   <span className="text-xs text-muted-foreground">+</span>
@@ -354,17 +354,6 @@ export function GlobalSearch() {
                     </div>
                   </CommandItem>
                 ))}
-                {catResults.length >= 5 && (
-                  <CommandItem
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate({ to: itemToCategoryUrl(cat) as any });
-                    }}
-                    className="text-xs text-primary font-medium pl-10 cursor-pointer justify-center"
-                  >
-                    Ver todos os resultados de {label}
-                  </CommandItem>
-                )}
                 <CommandSeparator className="mt-2" />
               </CommandGroup>
             );
@@ -379,16 +368,11 @@ function itemToCategoryUrl(cat: SearchCategory): string {
   switch (cat) {
     case "jovens": return "/jovens";
     case "clientes": return "/clientes";
-    case "oportunidades": return "/crm";
-    case "servicos": return "/servicos";
-    case "tarefas": return "/tarefas";
-    case "jornadas": return "/admin/journey-catalog";
-    case "quizzes": return "/admin/quizzes";
-    case "notificacoes": return "/notificacoes";
-    case "reunioes": return "/reunioes";
-    case "perfis": return "/users";
-    case "propostas": return "/crm";
-    case "briefings": return "/clientes";
+    case "crm": return "/crm";
+    case "jornada": return "/jornada";
+    case "admin": return "/admin/journey-catalog";
+    case "configuracoes": return "/settings";
+    case "perfil": return "/meu-perfil";
     default: return "/dashboard";
   }
 }
