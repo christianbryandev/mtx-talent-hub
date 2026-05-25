@@ -95,14 +95,22 @@ export function GlobalChat() {
     if (!canAccess || !user) return;
 
     const fetchCanal = async () => {
-      const { data } = await supabase
-        .from("chat_canais")
-        .select("*")
-        .eq("nome", "Geral")
-        .single();
-      if (data) {
-        const signedUrl = await resolveChatAssetUrl(data.icon_url);
-        setCanal({ ...data, icon_signed_url: signedUrl });
+      try {
+        const { data, error } = await supabase
+          .from("chat_canais")
+          .select("*")
+          .eq("nome", "Geral")
+          .single();
+        if (error) {
+          console.error("Erro ao buscar canal:", error);
+          return;
+        }
+        if (data) {
+          const signedUrl = await resolveChatAssetUrl(data.icon_url);
+          setCanal({ ...data, icon_signed_url: signedUrl });
+        }
+      } catch (err) {
+        console.error("Erro inesperado em fetchCanal:", err);
       }
     };
 
@@ -128,6 +136,8 @@ export function GlobalChat() {
       if (data) {
         setMessages(data.reverse());
         setHasMore(data.length === 50);
+      } else if (error) {
+        console.error("Erro ao carregar mensagens:", error);
       }
       setLoading(false);
     };
@@ -147,11 +157,15 @@ export function GlobalChat() {
         },
         async (payload) => {
           if (payload.eventType === "INSERT") {
-            const { data: authorData } = await supabase
-              .from("profiles")
-              .select("full_name, avatar_url")
-              .eq("id", payload.new.autor_id)
-              .single();
+            let authorData = null;
+            if (payload.new.autor_id) {
+              const { data } = await supabase
+                .from("profiles")
+                .select("full_name, avatar_url")
+                .eq("id", payload.new.autor_id)
+                .maybeSingle();
+              authorData = data;
+            }
             
             const newMessage = {
               ...payload.new,
@@ -516,16 +530,18 @@ export function GlobalChat() {
                       </div>
 
                       <div className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground">
-                        {format(new Date(msg.criado_em), "HH:mm")}
+                        {msg.criado_em ? format(new Date(msg.criado_em), "HH:mm") : "--:--"}
                         {msg.editado && <span>(editado)</span>}
                       </div>
 
                       {/* Reactions display */}
-                      {msg.reacoes && msg.reacoes.length > 0 && (
+                      {msg.reacoes && Array.isArray(msg.reacoes) && msg.reacoes.length > 0 && (
                         <div className={`mt-1 flex flex-wrap gap-1 ${isOwn ? "justify-end" : ""}`}>
                           {Object.entries(
                             msg.reacoes.reduce((acc: any, r: any) => {
-                              acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                              if (r && r.emoji) {
+                                acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                              }
                               return acc;
                             }, {})
                           ).map(([emoji, count]: [string, any]) => (

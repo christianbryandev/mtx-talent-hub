@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
-import { GlobalChat } from "@/components/layout/GlobalChat";
+
 
 function NotFoundComponent() {
   return (
@@ -38,7 +38,8 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("Critical error at root:", error);
+  // Optional: you can also log to an external service here
   const router = useRouter();
 
   return (
@@ -147,7 +148,6 @@ function RootComponent() {
       <AuthProvider>
         <AuthSync />
         <Outlet />
-        <GlobalChat />
         <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>
