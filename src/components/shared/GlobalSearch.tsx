@@ -70,7 +70,11 @@ const NAVIGATION_ITEMS: SearchResult[] = [
   { id: "nav-dashboard", category: "menu", title: "Dashboard", url: "/dashboard" },
   { id: "nav-tarefas", category: "menu", title: "Tarefas / Kanban", url: "/tarefas" },
   { id: "nav-reunioes", category: "menu", title: "Reuniões", url: "/reunioes" },
-  { id: "nav-indicadores", category: "menu", title: "Indicadores", url: "/indicadores" },
+  { id: "nav-indicadores", category: "menu", title: "Indicadores - Geral", url: "/indicadores" },
+  { id: "nav-indicadores-comercial", category: "menu", title: "Indicadores - Comercial", url: "/indicadores", subtitle: "Aba em Indicadores" },
+  { id: "nav-indicadores-operacional", category: "menu", title: "Indicadores - Operacional", url: "/indicadores", subtitle: "Aba em Indicadores" },
+  { id: "nav-indicadores-social", category: "menu", title: "Indicadores - Impacto Social", url: "/indicadores", subtitle: "Aba em Indicadores" },
+  { id: "nav-indicadores-reunioes", category: "menu", title: "Indicadores - Reuniões", url: "/indicadores", subtitle: "Aba em Indicadores" },
   
   // Clientes
   { id: "nav-clientes-lista", category: "clientes", title: "Lista de Clientes", url: "/clientes" },
