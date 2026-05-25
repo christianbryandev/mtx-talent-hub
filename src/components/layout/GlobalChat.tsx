@@ -157,11 +157,15 @@ export function GlobalChat() {
         },
         async (payload) => {
           if (payload.eventType === "INSERT") {
-            const { data: authorData } = await supabase
-              .from("profiles")
-              .select("full_name, avatar_url")
-              .eq("id", payload.new.autor_id)
-              .single();
+            let authorData = null;
+            if (payload.new.autor_id) {
+              const { data } = await supabase
+                .from("profiles")
+                .select("full_name, avatar_url")
+                .eq("id", payload.new.autor_id)
+                .maybeSingle();
+              authorData = data;
+            }
             
             const newMessage = {
               ...payload.new,
