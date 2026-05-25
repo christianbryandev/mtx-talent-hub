@@ -171,11 +171,11 @@ function AdminDashboardContent() {
 
       {/* KPIs principais */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Jovens ativos" value={isLoading ? "..." : stats!.activeYoungs} icon={<Users className="h-5 w-5" />} accent="primary" />
-        <KpiCard label="Clientes ativos" value={isLoading ? "..." : stats!.activeClients} icon={<Building2 className="h-5 w-5" />} accent="info" />
-        <KpiCard label="Tarefas em aberto" value={isLoading ? "..." : stats!.openTasks} icon={<ListChecks className="h-5 w-5" />} accent="warning" />
+        <KpiCard label="Jovens ativos" value={isLoading || !stats ? "..." : stats.activeYoungs} icon={<Users className="h-5 w-5" />} accent="primary" />
+        <KpiCard label="Clientes ativos" value={isLoading || !stats ? "..." : stats.activeClients} icon={<Building2 className="h-5 w-5" />} accent="info" />
+        <KpiCard label="Tarefas em aberto" value={isLoading || !stats ? "..." : stats.openTasks} icon={<ListChecks className="h-5 w-5" />} accent="warning" />
         {isAdmin && (
-          <KpiCard label="Faturamento recorrente" value={isLoading ? "..." : fmt(stats!.recurringRevenue)} icon={<TrendingUp className="h-5 w-5" />} accent="success" />
+          <KpiCard label="Faturamento recorrente" value={isLoading || !stats ? "..." : fmt(stats.recurringRevenue)} icon={<TrendingUp className="h-5 w-5" />} accent="success" />
         )}
       </div>
 
@@ -183,10 +183,10 @@ function AdminDashboardContent() {
       <div>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Impacto social</h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Jovens remunerados" value={isLoading ? "..." : stats!.remunerated} icon={<Users className="h-5 w-5" />} accent="success" />
-          <KpiCard label="Com CNPJ" value={isLoading ? "..." : stats!.youngsWithCnpj} icon={<Building2 className="h-5 w-5" />} accent="info" />
-          <KpiCard label="Renda média / jovem" value={isLoading ? "..." : fmtFull(stats!.avgIncome)} icon={<TrendingUp className="h-5 w-5" />} accent="primary" />
-          <KpiCard label="Tarefas atrasadas" value={isLoading ? "..." : stats!.overdueTasks} icon={<AlertCircle className="h-5 w-5" />} accent="warning" />
+          <KpiCard label="Jovens remunerados" value={isLoading || !stats ? "..." : stats.remunerated} icon={<Users className="h-5 w-5" />} accent="success" />
+          <KpiCard label="Com CNPJ" value={isLoading || !stats ? "..." : stats.youngsWithCnpj} icon={<Building2 className="h-5 w-5" />} accent="info" />
+          <KpiCard label="Renda média / jovem" value={isLoading || !stats ? "..." : fmtFull(stats.avgIncome)} icon={<TrendingUp className="h-5 w-5" />} accent="primary" />
+          <KpiCard label="Tarefas atrasadas" value={isLoading || !stats ? "..." : stats.overdueTasks} icon={<AlertCircle className="h-5 w-5" />} accent="warning" />
         </div>
       </div>
 
@@ -194,10 +194,10 @@ function AdminDashboardContent() {
       <div>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Comercial</h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Oportunidades abertas" value={isLoading ? "..." : stats!.openOpportunities} icon={<Target className="h-5 w-5" />} accent="primary" />
-          <KpiCard label="Valor em pipeline" value={isLoading ? "..." : fmt(stats!.pipelineValue)} icon={<TrendingUp className="h-5 w-5" />} accent="info" />
-          <KpiCard label="Follow-ups atrasados" value={isLoading ? "..." : stats!.overdueFollowups} icon={<AlertCircle className="h-5 w-5" />} accent="warning" />
-          <KpiCard label="Próximas reuniões" value={isLoading ? "..." : stats!.upcomingMeetings.length} icon={<Calendar className="h-5 w-5" />} accent="primary" />
+          <KpiCard label="Oportunidades abertas" value={isLoading || !stats ? "..." : stats.openOpportunities} icon={<Target className="h-5 w-5" />} accent="primary" />
+          <KpiCard label="Valor em pipeline" value={isLoading || !stats ? "..." : fmt(stats.pipelineValue)} icon={<TrendingUp className="h-5 w-5" />} accent="info" />
+          <KpiCard label="Follow-ups atrasados" value={isLoading || !stats ? "..." : stats.overdueFollowups} icon={<AlertCircle className="h-5 w-5" />} accent="warning" />
+          <KpiCard label="Próximas reuniões" value={isLoading || !stats ? "..." : stats.upcomingMeetings.length} icon={<Calendar className="h-5 w-5" />} accent="primary" />
         </div>
       </div>
 
@@ -210,11 +210,11 @@ function AdminDashboardContent() {
           <CardContent className="h-64">
             {isLoading ? (
               <Skeleton className="h-full w-full" />
-            ) : stats!.trailData.length === 0 ? (
+            ) : !stats || stats.trailData.length === 0 ? (
               <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Sem dados ainda</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats!.trailData}>
+                <BarChart data={stats.trailData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                   <XAxis dataKey="fase" stroke="#A1A1AA" fontSize={11} />
                   <YAxis stroke="#A1A1AA" fontSize={11} />
@@ -235,7 +235,7 @@ function AdminDashboardContent() {
               <Skeleton className="h-full w-full" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats!.clientsByMonth}>
+                <LineChart data={stats.clientsByMonth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                   <XAxis dataKey="mes" stroke="#A1A1AA" fontSize={11} />
                   <YAxis stroke="#A1A1AA" fontSize={11} />
@@ -259,10 +259,10 @@ function AdminDashboardContent() {
           <CardContent className="space-y-3">
             {isLoading ? (
               <Skeleton className="h-32 w-full" />
-            ) : stats!.activityLogs.length === 0 ? (
+            ) : !stats || stats.activityLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma atividade registrada.</p>
             ) : (
-              stats!.activityLogs.map((a) => (
+              stats.activityLogs.map((a) => (
                 <div key={a.id} className="flex items-start gap-3 text-sm">
                   <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   <div className="flex-1">
@@ -286,10 +286,10 @@ function AdminDashboardContent() {
           <CardContent className="space-y-3">
             {isLoading ? (
               <Skeleton className="h-32 w-full" />
-            ) : stats!.upcomingMeetings.length === 0 ? (
+            ) : !stats || stats.upcomingMeetings.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma reunião agendada.</p>
             ) : (
-              stats!.upcomingMeetings.map((m) => (
+              stats.upcomingMeetings.map((m) => (
                 <Link
                   key={m.id}
                   to="/reunioes/$id"
@@ -321,10 +321,10 @@ function AdminDashboardContent() {
           <CardContent className="space-y-3">
             {isLoading ? (
               <Skeleton className="h-32 w-full" />
-            ) : stats!.upcomingTasks.length === 0 ? (
+            ) : !stats || stats.upcomingTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa com prazo.</p>
             ) : (
-              stats!.upcomingTasks.map((t) => {
+              stats.upcomingTasks.map((t) => {
                 const overdue = t.due_date && t.due_date < new Date().toISOString().slice(0, 10);
                 return (
                   <div key={t.id} className="flex items-center justify-between gap-2 text-sm">
