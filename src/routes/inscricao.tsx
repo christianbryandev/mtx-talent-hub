@@ -264,7 +264,7 @@ function PublicApplicationPage() {
         <Card className="border-border/50 shadow-xl shadow-black/5 overflow-hidden">
           <CardContent className="p-6 sm:p-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((v) => submit.mutate(v))} className="space-y-6">
+              <form onSubmit={form.handleSubmit((v: ApplicationValues) => submit.mutate(v))} className="space-y-6">
                 
                 {/* Step 0: Personal */}
                 {step === 0 && (
