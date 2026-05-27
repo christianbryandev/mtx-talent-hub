@@ -69,7 +69,7 @@ const applicationSchema = z.object({
   
   // Step 6: Legal
   data_authorization: z.boolean().refine(val => val === true, "Você precisa autorizar o uso de dados"),
-  guardian_authorization: z.boolean().default(false),
+  guardian_authorization: z.boolean(),
 });
 
 type ApplicationValues = z.infer<typeof applicationSchema>;
