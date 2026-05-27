@@ -115,7 +115,6 @@ function PublicApplicationPage() {
       data_authorization: false,
       guardian_authorization: false,
     },
-    mode: "onChange",
   });
 
   const birthDate = form.watch("birth_date");
