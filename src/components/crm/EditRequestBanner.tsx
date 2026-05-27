@@ -102,7 +102,7 @@ export function EditRequestBanner({
 
   return (
     <>
-      {/* Banner para o colaborador/comercial */}
+      {/* Banner para o jovem_aprendiz/comercial */}
       {!isAdmin && locked && (
         <div className="rounded-lg border bg-card p-3 flex flex-col sm:flex-row sm:items-center gap-3">
           {hasActiveApproval ? (

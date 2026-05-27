@@ -36,7 +36,7 @@ export function GlobalChat() {
   const typingTimeoutRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const canAccess = hasRole(["super_admin", "admin", "comercial", "colaborador"]);
+  const canAccess = hasRole(["super_admin", "admin", "comercial", "jovem_aprendiz"]);
 
   // Resolve a chat-assets storage path to a short-lived signed URL.
   const resolveChatAssetUrl = async (value: string | null | undefined): Promise<string | null> => {

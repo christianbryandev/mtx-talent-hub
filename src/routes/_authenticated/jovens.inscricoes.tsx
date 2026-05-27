@@ -384,7 +384,7 @@ function ComplementModal({
           data: {
             email: state.app.email,
             fullName: state.app.full_name,
-            role: "colaborador",
+            role: "jovem_aprendiz",
           },
         });
         const token = (res as { invite: { token: string } }).invite.token;
