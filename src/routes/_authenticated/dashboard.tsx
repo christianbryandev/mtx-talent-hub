@@ -38,7 +38,7 @@ import {
 } from "@/types/meetings";
 import { cn } from "@/lib/utils";
 import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
-import { ColaboradorDashboard } from "@/components/dashboard/ColaboradorDashboard";
+import { JovemAprendizDashboard } from "@/components/dashboard/JovemAprendizDashboard";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 
 
@@ -52,7 +52,7 @@ function DashboardPage() {
 
   if (loading) return null;
   if (!isAdmin && isComercial) return <ComercialDashboard />;
-  if (!isAdmin && hasRole("colaborador")) return <ColaboradorDashboard />;
+  if (!isAdmin && hasRole("jovem_aprendiz")) return <JovemAprendizDashboard />;
 
   return <AdminDashboardContent />;
 }
