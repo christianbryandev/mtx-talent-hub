@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegistroRouteImport } from './routes/registro'
-import { Route as OgGeneratorRouteImport } from './routes/og-generator'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -63,11 +62,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RegistroRoute = RegistroRouteImport.update({
   id: '/registro',
   path: '/registro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OgGeneratorRoute = OgGeneratorRouteImport.update({
-  id: '/og-generator',
-  path: '/og-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -301,7 +295,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
-  '/og-generator': typeof OgGeneratorRoute
   '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRouteWithChildren
@@ -347,7 +340,6 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
-  '/og-generator': typeof OgGeneratorRoute
   '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -390,7 +382,6 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
-  '/og-generator': typeof OgGeneratorRoute
   '/registro': typeof RegistroRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRouteWithChildren
@@ -438,7 +429,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
-    | '/og-generator'
     | '/registro'
     | '/reset-password'
     | '/clientes'
@@ -484,7 +474,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
-    | '/og-generator'
     | '/registro'
     | '/reset-password'
     | '/dashboard'
@@ -526,7 +515,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/inscricao'
     | '/login'
-    | '/og-generator'
     | '/registro'
     | '/reset-password'
     | '/_authenticated/clientes'
@@ -574,7 +562,6 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InscricaoRoute: typeof InscricaoRoute
   LoginRoute: typeof LoginRoute
-  OgGeneratorRoute: typeof OgGeneratorRoute
   RegistroRoute: typeof RegistroRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   BriefingClientIdRoute: typeof BriefingClientIdRoute
@@ -595,13 +582,6 @@ declare module '@tanstack/react-router' {
       path: '/registro'
       fullPath: '/registro'
       preLoaderRoute: typeof RegistroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/og-generator': {
-      id: '/og-generator'
-      path: '/og-generator'
-      fullPath: '/og-generator'
-      preLoaderRoute: typeof OgGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1060,7 +1040,6 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   InscricaoRoute: InscricaoRoute,
   LoginRoute: LoginRoute,
-  OgGeneratorRoute: OgGeneratorRoute,
   RegistroRoute: RegistroRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   BriefingClientIdRoute: BriefingClientIdRoute,

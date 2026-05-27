@@ -93,8 +93,12 @@ function PublicApplicationPage() {
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            <Sparkles className="h-8 w-8" strokeWidth={2.5} />
+          <div className="flex items-center justify-center">
+            <img
+              src="/mtx-hub-logo.png"
+              alt="MTX Hub"
+              className="h-16 w-auto drop-shadow-[0_0_20px_rgba(192,38,211,0.4)]"
+            />
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-black tracking-tight text-foreground uppercase">MTX • Multiplicando Talentos</h1>
