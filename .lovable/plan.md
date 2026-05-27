@@ -1,25 +1,19 @@
-## Plano de Busca Global
+The registration link currently only collects name, email, and phone, saving to a generic `applications` table. I will update it to be a comprehensive multi-step form that collects all information required for the Jovem Aprendiz program, saving to the specialized `young_applications` table.
 
-1. **Schema da busca**: Criar um componente `GlobalSearch` usando o `CommandDialog` do `cmdk`.
-2. **Lógica**: Implementar uma função que busca em paralelo em múltiplas tabelas Supabase (usando `Promise.all` e `supabase.from().select()`).
-   - Tabelas: `young_people` (+`profiles` join), `clients` (+`profiles` join), `opportunities`, `services`, `tasks`, `journey_phase_catalog`, `journey_modules`, `quiz_templates`, `quiz_questions`, `notifications`, `meetings`, `profiles`, `proposals`, `client_briefings`.
-3. **UI do Modal**:
-   - Componente `GlobalSearch` com `CommandDialog`.
-   - Categorias e ícones definidos para cada tipo.
-   - Histórico recente salvo no localStorage (`localStorage.getItem('global-search-history')`).
-4. **Permissões**: Filtrar por `isAdmin`.
-5. **Integração no Header**:
-   - Adicionar o botão/input da busca ao `AppTopbar`.
-   - Adicionar o listener global `Ctrl+K` ou `Cmd+K`.
-6. **Otimizações**:
-   - Debounce de 300ms.
-   - Limitar 5 resultados por categoria.
-   - Skeleton loading.
+### Technical Details
+- **Schema Update**: Transition from `applications` to `young_applications` table.
+- **Form Structure**: 6-step wizard using `react-hook-form` and `zod`.
+  - **Step 1 (Personal)**: Full name, birth date, email, phone, whatsapp.
+  - **Step 2 (Address)**: Address, city, state.
+  - **Step 3 (Context)**: Education level, study/work status, family income.
+  - **Step 4 (Profile)**: Personal story, dreams, motivation (Why MTX), perceived skills, interest area.
+  - **Step 5 (Infrastructure)**: Hardware access (laptop, phone, internet) and how they found us.
+  - **Step 6 (Legal)**: Data and guardian authorization.
+- **UI/UX**: Responsive sectioned layout with progress indicators.
+- **Validation**: Strict validation for required fields and formats (email, phone, dates).
 
-## detalhes técnicos
-- O `GlobalSearch` será um novo componente em `src/components/shared/GlobalSearch.tsx`.
-- Usaremos o `cmdk` para a interface (já instalado no projeto).
-- As queries serão disparadas em paralelo.
-- Os resultados serão processados para exibição uniforme.
-- O histórico será persistido no `localStorage`.
-- O acesso será protegido validando `usePermissions()` para exibir o componente.
+### Plan
+1. Update `src/routes/inscricao.tsx` to include the expanded Zod schema for `young_applications`.
+2. Implement the multi-step form UI with progress tracking.
+3. Update the mutation to insert data into `young_applications`.
+4. Add field-specific icons and clear labels to improve completion rates.
