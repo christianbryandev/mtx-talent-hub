@@ -50,8 +50,8 @@ const applicationSchema = z.object({
   
   // Step 3: Education/Context
   education_level: z.string().min(1, "Selecione sua escolaridade"),
-  currently_studying: z.boolean().default(false),
-  currently_working: z.boolean().default(false),
+  currently_studying: z.boolean(),
+  currently_working: z.boolean(),
   family_income: z.string().min(1, "Informe a renda familiar aproximada"),
   
   // Step 4: Profile/Motivation
@@ -62,14 +62,14 @@ const applicationSchema = z.object({
   interest_area: z.string().min(1, "Selecione uma área de interesse"),
   
   // Step 5: Infrastructure
-  has_laptop: z.boolean().default(false),
-  has_phone: z.boolean().default(false),
-  has_internet: z.boolean().default(false),
+  has_laptop: z.boolean(),
+  has_phone: z.boolean(),
+  has_internet: z.boolean(),
   how_found_mtx: z.string().min(1, "Informe como nos conheceu"),
   
   // Step 6: Legal
   data_authorization: z.boolean().refine(val => val === true, "Você precisa autorizar o uso de dados"),
-  guardian_authorization: z.boolean().optional(),
+  guardian_authorization: z.boolean().default(false),
 });
 
 type ApplicationValues = z.infer<typeof applicationSchema>;
