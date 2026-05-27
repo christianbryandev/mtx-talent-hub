@@ -7,7 +7,7 @@ const APP_ROLES = [
   "super_admin",
   "admin",
   "comercial",
-  "colaborador",
+  "jovem_aprendiz",
   "cliente",
 ] as const;
 
@@ -228,8 +228,8 @@ export const acceptInvite = createServerFn({ method: "POST" })
       description: `Conta criada a partir de convite (${invite.email})`,
     });
 
-    // Notificação especial para colaboradores completarem o perfil
-    if (invite.role === "colaborador") {
+    // Notificação especial para jovem_aprendizes completarem o perfil
+    if (invite.role === "jovem_aprendiz") {
       await supabaseAdmin.from("notifications").insert({
         user_id: newUserId,
         title: "Complete seu perfil na MTX!",

@@ -2,7 +2,7 @@ export type AppRole =
   | "super_admin"
   | "admin"
   | "comercial"
-  | "colaborador"
+  | "jovem_aprendiz"
   | "cliente";
 
 export interface Profile {
@@ -34,7 +34,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Administrador",
   comercial: "Comercial",
-  colaborador: "Colaborador",
+  jovem_aprendiz: "Jovem Aprendiz",
   cliente: "Cliente",
 };
 
@@ -42,7 +42,7 @@ export const ROLE_PRECEDENCE: AppRole[] = [
   "super_admin",
   "admin",
   "comercial",
-  "colaborador",
+  "jovem_aprendiz",
   "cliente",
 ];
 

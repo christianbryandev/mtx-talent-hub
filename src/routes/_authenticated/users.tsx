@@ -63,7 +63,7 @@ const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   super_admin: "Acesso total ao sistema",
   admin: "Acesso quase total, sem configurações críticas",
   comercial: "Acesso ao CRM e módulo comercial",
-  colaborador: "Acesso apenas às próprias tarefas e trilha",
+  jovem_aprendiz: "Acesso apenas às próprias tarefas e trilha",
   cliente: "Acesso apenas ao portal do cliente",
 };
 
@@ -101,7 +101,7 @@ function UsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
-  const [inviteRole, setInviteRole] = useState<AppRole>("colaborador");
+  const [inviteRole, setInviteRole] = useState<AppRole>("jovem_aprendiz");
 
   const [linkDialog, setLinkDialog] = useState<{
     email: string;
@@ -213,7 +213,7 @@ function UsersPage() {
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
-      setInviteRole("colaborador");
+      setInviteRole("jovem_aprendiz");
       setLinkDialog({ email: invite.email, url: buildInviteUrl(invite.token) });
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao criar convite"),

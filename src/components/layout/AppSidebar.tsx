@@ -53,14 +53,14 @@ type MainItem = {
 };
 
 const mainItems: MainItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
   { title: "Jovens", url: "/jovens", icon: Users, roles: ["super_admin", "admin"] },
   { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin", "comercial"] },
   { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial"] },
   { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin"] },
-  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "colaborador"] },
-  { title: "Minha Jornada", url: "/jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "colaborador"] },
-  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "colaborador", "cliente"] },
+  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
+  { title: "Minha Jornada", url: "/jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
+  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
   
 ];
@@ -71,9 +71,9 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
-  const isColaborador = role === "colaborador";
-  // XP only relevant for colaborador (journey owner). Hook is safe-noop for others.
-  const { data: journey } = useJourney(isColaborador ? undefined : "00000000-0000-0000-0000-000000000000");
+  const isJovemAprendiz = role === "jovem_aprendiz";
+  // XP only relevant for jovem_aprendiz (journey owner). Hook is safe-noop for others.
+  const { data: journey } = useJourney(isJovemAprendiz ? undefined : "00000000-0000-0000-0000-000000000000");
 
   const { data: pendingAppsCount = 0 } = useQuery({
     queryKey: ["pending-applications-count-combined"],
@@ -89,7 +89,7 @@ export function AppSidebar() {
 
   const { data: hasYoungProfile = true } = useQuery({
     queryKey: ["has-young-profile", user?.id],
-    enabled: !!user && role === "colaborador",
+    enabled: !!user && role === "jovem_aprendiz",
     queryFn: async () => {
       const { data } = await supabase
         .from("young_people")
@@ -173,7 +173,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
-              {role === "colaborador" && !hasYoungProfile && !collapsed && (
+              {role === "jovem_aprendiz" && !hasYoungProfile && !collapsed && (
                 <div className="mx-2 mt-2 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                     <UserCircle className="h-4 w-4" />
@@ -290,7 +290,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        {isColaborador && !collapsed && (
+        {isJovemAprendiz && !collapsed && (
           <Link
             to="/jornada"
             className="mx-2 mt-2 inline-flex w-fit items-center gap-1 rounded-md border border-border/60 px-1.5 py-0.5 text-[11px] font-medium text-amber-400 transition-colors hover:border-amber-400/40"

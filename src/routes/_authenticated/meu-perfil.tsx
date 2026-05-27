@@ -603,7 +603,7 @@ function CreateMyProfile() {
         action: "young_self_created",
         entity_type: "young_people",
         entity_id: created.id,
-        description: "Colaborador criou o próprio perfil",
+        description: "Jovem Aprendiz criou o próprio perfil",
       });
 
       // Marca notificação de boas-vindas como lida

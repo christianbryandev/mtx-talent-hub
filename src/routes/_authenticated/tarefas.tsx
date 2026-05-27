@@ -65,7 +65,7 @@ function TarefasKanbanPage() {
   const [onlyLate, setOnlyLate] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  // Descobre o young_id do usuário logado (para colaboradores)
+  // Descobre o young_id do usuário logado (para jovem_aprendizes)
   const { data: currentYoung } = useQuery({
     queryKey: ["my-young-id", user?.id],
     enabled: !!user,
@@ -79,7 +79,7 @@ function TarefasKanbanPage() {
     },
   });
 
-  // Quando colaborador (não admin/comercial) carrega: filtra pelas próprias tarefas
+  // Quando jovem_aprendiz (não admin/comercial) carrega: filtra pelas próprias tarefas
   useEffect(() => {
     if (!isAdmin && !isComercial && currentYoung?.id && youngFilter === "all") {
       setYoungFilter(currentYoung.id);

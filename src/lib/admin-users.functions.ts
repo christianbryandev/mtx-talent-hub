@@ -7,7 +7,7 @@ const APP_ROLES = [
   "super_admin",
   "admin",
   "comercial",
-  "colaborador",
+  "jovem_aprendiz",
   "cliente",
 ] as const;
 
@@ -65,7 +65,7 @@ export const inviteUser = createServerFn({ method: "POST" })
       .object({
         email: z.string().email(),
         fullName: z.string().min(1).max(120).optional(),
-        role: z.enum(APP_ROLES).default("colaborador"),
+        role: z.enum(APP_ROLES).default("jovem_aprendiz"),
       })
       .parse(input),
   )

@@ -22,14 +22,14 @@ import { useJourney, usePhaseMetadata } from "@/hooks/useJourney";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
-export function ColaboradorDashboard() {
+export function JovemAprendizDashboard() {
   const { user } = useAuth();
   const { data: journeyData, isLoading: isLoadingJourney } = useJourney(user?.id);
   const { data: catalogPhases } = usePhaseMetadata();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["colaborador-dashboard-base", user?.id],
+    queryKey: ["jovem_aprendiz-dashboard-base", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data: young } = await supabase
