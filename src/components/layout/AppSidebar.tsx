@@ -71,9 +71,9 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, role } = usePermissions();
-  const isJovem Aprendiz = role === "jovem_aprendiz";
+  const isJovemAprendiz = role === "jovem_aprendiz";
   // XP only relevant for jovem_aprendiz (journey owner). Hook is safe-noop for others.
-  const { data: journey } = useJourney(isJovem Aprendiz ? undefined : "00000000-0000-0000-0000-000000000000");
+  const { data: journey } = useJourney(isJovemAprendiz ? undefined : "00000000-0000-0000-0000-000000000000");
 
   const { data: pendingAppsCount = 0 } = useQuery({
     queryKey: ["pending-applications-count-combined"],
@@ -290,7 +290,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        {isJovem Aprendiz && !collapsed && (
+        {isJovemAprendiz && !collapsed && (
           <Link
             to="/jornada"
             className="mx-2 mt-2 inline-flex w-fit items-center gap-1 rounded-md border border-border/60 px-1.5 py-0.5 text-[11px] font-medium text-amber-400 transition-colors hover:border-amber-400/40"
