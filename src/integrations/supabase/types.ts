@@ -2497,6 +2497,47 @@ export type Database = {
           },
         ]
       }
+      user_module_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          last_watched_at: string | null
+          module_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          last_watched_at?: string | null
+          module_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          last_watched_at?: string | null
+          module_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "journey_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_phase_status: {
         Row: {
           completed_at: string | null
