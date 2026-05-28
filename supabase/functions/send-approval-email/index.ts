@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, full_name } = await req.json();
+    const { email, full_name, invite_link } = await req.json();
 
     if (!email || !full_name) {
       throw new Error("Email and full_name are required");
@@ -42,9 +42,21 @@ serve(async (req) => {
               <p style="font-size: 16px; line-height: 1.5;">
                 Temos o prazer de informar que sua inscrição no programa da <strong>MTX Multiplicando Talentos</strong> foi aprovada!
               </p>
+              ${invite_link ? `
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${invite_link}" style="background-color: #c026d3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                  Criar minha conta e acessar painel
+                </a>
+              </div>
+              <p style="font-size: 14px; color: #666; text-align: center;">
+                Ou copie e cole este link no seu navegador:<br>
+                ${invite_link}
+              </p>
+              ` : `
               <p style="font-size: 16px; line-height: 1.5;">
                 Você agora faz parte da nossa trilha de transformação. Em breve, nossa equipe entrará em contato via WhatsApp ou E-mail para orientar sobre os próximos passos e o início das suas atividades.
               </p>
+              `}
               <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0; font-weight: bold;">O que fazer agora?</p>
                 <ul style="margin: 10px 0 0 0; padding-left: 20px;">

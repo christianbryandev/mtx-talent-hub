@@ -135,13 +135,27 @@ function InscricoesPage() {
         description: `Inscrição aprovada: ${app.full_name}`,
       });
 
-      // Enviar e-mail de aprovação (mesmo que ainda precise configurar o domínio)
+      // Criar convite e enviar e-mail de aprovação
       try {
+        const res = await createInviteFn({
+          data: {
+            email: app.email,
+            fullName: app.full_name,
+            role: "jovem_aprendiz",
+          },
+        });
+        const token = (res as { invite: { token: string } }).invite.token;
+        const link = `${window.location.origin}/convite/${token}`;
+
         await supabase.functions.invoke("send-approval-email", {
-          body: { email: app.email, full_name: app.full_name },
+          body: { 
+            email: app.email, 
+            full_name: app.full_name,
+            invite_link: link 
+          },
         });
       } catch (err) {
-        console.error("Erro ao chamar função de e-mail:", err);
+        console.error("Erro ao processar convite/e-mail:", err);
       }
 
       return { created, app };
