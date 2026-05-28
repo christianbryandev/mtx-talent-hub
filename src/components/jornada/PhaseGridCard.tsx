@@ -52,7 +52,7 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       className={cn(
         "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px] shadow-none",
         "bg-[#0a0a0a]",
-        isLocked ? "cursor-not-allowed" : "hover:brightness-125 active:scale-[0.98]"
+        isLocked ? "cursor-not-allowed" : "hover:brightness-125 active:scale-[0.98] group"
       )}
     >
       {/* Cinematic Background Art */}
@@ -61,14 +61,17 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       {/* Decorative Glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className={cn(
-          "absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full blur-[100px] transition-opacity duration-500",
-          isInProgress ? "bg-[#e040fb] opacity-[0.08]" : isCompleted ? "bg-[#00e676] opacity-[0.06]" : "bg-[#ffffff] opacity-[0.02]"
+          "absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full blur-[100px] transition-all duration-700",
+          isInProgress ? "bg-[#e040fb] opacity-[0.12]" : isCompleted ? "bg-[#00e676] opacity-[0.1]" : "bg-[#ffffff] opacity-[0.04]"
         )} />
         <div className={cn(
-          "absolute -bottom-[30%] -left-[20%] w-[90%] h-[90%] rounded-full blur-[120px] transition-opacity duration-500",
-          isInProgress ? "bg-[#ff6d00] opacity-[0.05]" : isCompleted ? "bg-[#00bcd4] opacity-[0.04]" : "bg-[#ffffff] opacity-[0.01]"
+          "absolute -bottom-[30%] -left-[20%] w-[90%] h-[90%] rounded-full blur-[120px] transition-all duration-700",
+          isInProgress ? "bg-[#ff6d00] opacity-[0.08]" : isCompleted ? "bg-[#00bcd4] opacity-[0.06]" : "bg-[#ffffff] opacity-[0.02]"
         )} />
         
+        {/* Subtle Noise/Grain Texture */}
+        <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
+
         {/* Subtle Geometric Pattern */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.03] text-white" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
@@ -79,15 +82,17 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
           <rect width="100%" height="100%" fill={`url(#pattern-${phase.id})`} />
           <path d="M0 30 L100 70 M0 70 L100 30" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 2" />
         </svg>
-      </div>
 
+        {/* Floating Accent Lines (animated on hover via group) */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 translate-x-[-100%] group-hover:translate-x-[100%]" />
+      </div>
 
       {/* Badge Status */}
       <div className="absolute top-3 right-3 z-10">
         <Badge 
           variant="outline" 
           className={cn(
-            "text-[10px] font-bold px-2 py-0.5 border",
+            "text-[10px] font-bold px-2 py-0.5 border backdrop-blur-sm",
             badgeStyles
           )}
         >
@@ -96,12 +101,12 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       </div>
 
       {/* Visual Upper Area */}
-      <div className="pt-8 pb-4 px-6 flex flex-col items-start relative">
+      <div className="pt-8 pb-4 px-6 flex flex-col items-start relative z-10">
         <span className="text-[9px] font-medium text-[#aaaaaa] tracking-[3px] uppercase mb-0">
           FASE
         </span>
         <span className={cn(
-          "text-[72px] font-bold tracking-tighter leading-[0.9]",
+          "text-[72px] font-bold tracking-tighter leading-[0.9] drop-shadow-2xl transition-colors duration-500",
           textPrimary
         )}>
           {phaseNumber}
