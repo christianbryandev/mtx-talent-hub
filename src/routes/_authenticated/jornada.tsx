@@ -46,6 +46,8 @@ import { JourneyLeaderboard } from "@/components/jornada/JourneyLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhaseGridCard } from "@/components/jornada/PhaseGridCard";
 import { PhaseContentList } from "@/components/jornada/PhaseContentList";
+import { QuizView } from "@/components/jornada/QuizView";
+
 
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({ meta: [{ title: "Jornada — MTX Hub" }] }),
@@ -55,12 +57,15 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 function JourneyPage() {
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+  const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
+
   useEffect(() => {
-    if (!selectedPhaseId) return;
+    if (!selectedPhaseId && !activeQuizPhaseId) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [selectedPhaseId]);
+  }, [selectedPhaseId, activeQuizPhaseId]);
+
 
   const phasesDone = useMemo(
     () => (data ? data.phases.filter((p) => p.status === "concluida").length : 0),
@@ -139,15 +144,29 @@ function JourneyPage() {
           </TabsList>
         )}
 
-        <TabsContent value="trilha" className={`${!selectedPhase ? "mt-6" : ""}`}>
-          {selectedPhase ? (
+        <TabsContent value="trilha" className={`${!selectedPhase && !activeQuizPhaseId ? "mt-6" : ""}`}>
+          {activeQuizPhaseId ? (
+            <QuizView 
+              phaseId={activeQuizPhaseId} 
+              onClose={(passed) => {
+                setActiveQuizPhaseId(null);
+                if (passed) {
+                  // If passed, user goes back to phase list or stays in same phase
+                  // Already handled by service invalidating journey
+                }
+              }}
+            />
+          ) : selectedPhase ? (
             <PhaseContentList
               phase={selectedPhase}
               onBack={() => setSelectedPhaseId(null)}
               onSelectItem={(module) => {
-                setSelectedModuleId(module.id);
-                // The actual player/quiz view will be in Camada 3
-                toast.info(`Abrindo: ${module.title}`);
+                if (module.content_type === "quiz") {
+                  setActiveQuizPhaseId(selectedPhase.id);
+                } else {
+                  setSelectedModuleId(module.id);
+                  toast.info(`Abrindo: ${module.title}`);
+                }
               }}
             />
           ) : (
@@ -162,6 +181,7 @@ function JourneyPage() {
             </div>
           )}
         </TabsContent>
+
 
         <TabsContent value="conquistas" className="space-y-6 mt-4">
           <JourneyCompletedBanner journey={data} />
