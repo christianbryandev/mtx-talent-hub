@@ -57,7 +57,7 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
     badgeLabel = "EM ANDAMENTO";
   } else if (isCompleted) {
-    badgeStyles = "bg-[rgba(81,91,212,0.08)]";
+    badgeStyles = "text-white border-transparent";
     percentageInlineStyle = {
       backgroundImage: MTX_LOGO_GRADIENT,
       WebkitBackgroundClip: 'text',
