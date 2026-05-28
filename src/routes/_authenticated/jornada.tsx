@@ -38,7 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
-import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+import type { JourneyPhase, PhaseStatus, UserJourney, JourneyModule } from "@/services/journeyService";
 import { QuizCard } from "@/components/jornada/QuizCard";
 import {
   AchievementsSection,
@@ -49,6 +49,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhaseGridCard } from "@/components/jornada/PhaseGridCard";
 import { PhaseContentList } from "@/components/jornada/PhaseContentList";
 import { QuizView } from "@/components/jornada/QuizView";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
