@@ -44,6 +44,8 @@ import {
 } from "@/components/jornada/AchievementsSection";
 import { JourneyLeaderboard } from "@/components/jornada/JourneyLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PhaseGridCard } from "@/components/jornada/PhaseGridCard";
+
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
@@ -179,32 +181,20 @@ function JourneyPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between flex-wrap gap-4">
+      <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            Sua Jornada
-            {isFetching && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Minha Jornada
+            {isFetching && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground inline ml-2" />}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Conquiste XP, complete as fases e desbloqueie seu futuro!
-          </p>
-          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-            <Badge variant="outline" className="font-medium">
-              {data.done_items}/{data.total_items} itens concluídos
-            </Badge>
-            <Badge variant="outline" className="font-medium">
-              {data.total_xp} XP Total
-            </Badge>
-          </div>
         </div>
-        <div className="flex flex-col items-end gap-2 min-w-[200px]">
-          <div className="w-full flex justify-between text-xs font-medium mb-1">
-            <span>Progresso Geral</span>
-            <span>{data.overall_progress}%</span>
-          </div>
-          <Progress value={data.overall_progress} className="h-2 w-full" />
+        <div className="text-right">
+          <Badge variant="outline" className="font-bold border-primary/30 text-primary bg-primary/5 px-3 py-1">
+            {phasesDone} de {data.phases.length} fases
+          </Badge>
         </div>
       </header>
+
 
       <Tabs defaultValue="trilha" className="w-full">
         <TabsList>
@@ -217,30 +207,22 @@ function JourneyPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="trilha" className="space-y-6 mt-4">
-          <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
-
-          <IndicatorsRow
-            xp={data.total_xp}
-            progress={data.overall_progress}
-            phasesDone={phasesDone}
-            phasesTotal={data.phases.length}
-            quizzesApproved={quizzesApproved}
-            quizzesTotal={quizzesTotal}
-          />
-
-          <div className="space-y-4">
+        <TabsContent value="trilha" className="space-y-8 mt-6">
+          <div className="grid grid-cols-2 gap-4">
             {data.phases.map((phase) => (
-              <PhaseCard
+              <PhaseGridCard
                 key={phase.id}
                 phase={phase}
-                pending={toggleItem.isPending}
-                forceOpen={openPhaseId === phase.id}
-                onToggle={(itemId, completed) => toggleItem.mutate({ itemId, completed })}
+                onClick={(p) => {
+                  setOpenPhaseId(p.id);
+                  // behavior for drill-down will be handled in next prompts
+                  toast.info(`Navegando para: ${p.title}`);
+                }}
               />
             ))}
           </div>
         </TabsContent>
+
 
         <TabsContent value="conquistas" className="space-y-6 mt-4">
           <JourneyCompletedBanner journey={data} />
