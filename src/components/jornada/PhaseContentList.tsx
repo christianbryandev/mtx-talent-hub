@@ -56,9 +56,8 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
               isCompleted={module.completed}
               isLocked={!module.unlocked}
               onClick={() => onSelectItem(module)}
-              // Duration/Date/QuestionsCount would ideally come from the module data
-              duration={module.content_type === "video" ? "42min" : undefined}
-              questionsCount={module.content_type === "quiz" ? 5 : undefined}
+              duration={module.duration_minutes ? `${module.duration_minutes}min` : undefined}
+              questionsCount={module.content_type === "quiz" ? (module.questions_count || 5) : undefined}
             />
           ))
         )}
