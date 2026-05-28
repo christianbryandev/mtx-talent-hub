@@ -14,6 +14,7 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
@@ -78,6 +79,11 @@ const InscricaoRoute = InscricaoRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriarSenhaRoute = CriarSenhaRouteImport.update({
+  id: '/criar-senha',
+  path: '/criar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -299,6 +305,7 @@ const AuthenticatedJornadaQuizPhaseIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
   '/login': typeof LoginRoute
@@ -436,6 +445,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
     | '/login'
@@ -482,6 +492,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
     | '/login'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
     | '/login'
@@ -572,6 +584,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  CriarSenhaRoute: typeof CriarSenhaRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InscricaoRoute: typeof InscricaoRoute
   LoginRoute: typeof LoginRoute
@@ -616,6 +629,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criar-senha': {
+      id: '/criar-senha'
+      path: '/criar-senha'
+      fullPath: '/criar-senha'
+      preLoaderRoute: typeof CriarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1059,6 +1079,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  CriarSenhaRoute: CriarSenhaRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   InscricaoRoute: InscricaoRoute,
   LoginRoute: LoginRoute,
