@@ -512,6 +512,8 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
 function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClose: () => void; phaseId: string }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Module>(module);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify(module);
 
   const save = useMutation({
@@ -535,6 +537,35 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("journey-videos")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("journey-videos")
+        .getPublicUrl(filePath);
+
+      setDraft(prev => ({ ...prev, content_body: publicUrl }));
+      toast.success("Vídeo enviado com sucesso");
+    } catch (error: any) {
+      toast.error("Erro ao enviar vídeo: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -547,29 +578,74 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
               <Label>Título</Label>
               <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
             </div>
-            {module.content_type === "video" && (
-              <div className="space-y-1.5">
-                <Label>Duração (minutos)</Label>
-                <Input 
-                  type="number" 
-                  value={draft.duration_minutes ?? ""} 
-                  onChange={(e) => setDraft({ ...draft, duration_minutes: e.target.value ? Number(e.target.value) : null })} 
+
+            {module.content_type === "video" ? (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Arquivo de Vídeo</Label>
+                <div className="mt-1 flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/60 rounded-lg hover:border-primary/40 transition-colors">
+                  {draft.content_body ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Vídeo carregado
+                      </div>
+                      <video 
+                        src={draft.content_body} 
+                        className="max-h-32 rounded border bg-black mt-2"
+                        controls
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Substituir vídeo
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-medium">Clique para fazer upload</p>
+                        <p className="text-muted-foreground text-xs mt-1">Formatos suportados: MP4, MOV, WebM</p>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        disabled={uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Selecionar arquivo
+                      </Button>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="video/*"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Instruções do Quiz</Label>
+                <Textarea 
+                  value={draft.content_body ?? ""} 
+                  onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
+                  rows={4}
                 />
               </div>
             )}
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>{module.content_type === "video" ? "URL do Vídeo / Conteúdo" : "Instruções do Quiz"}</Label>
-              <Textarea 
-                value={draft.content_body ?? ""} 
-                onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
-                rows={4}
-              />
-            </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending || uploading}>
             {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações
           </Button>
