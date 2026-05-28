@@ -9,6 +9,8 @@ interface PhaseGridCardProps {
   onClick: (phase: JourneyPhase) => void;
 }
 
+const MTX_LOGO_GRADIENT = "linear-gradient(to right, #515BD4, #8131AF, #C7288B, #DD2A7B, #F58529, #FEDA77)";
+
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
   const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
@@ -46,6 +48,8 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   let percentageColor = "";
   let progressBarBg = "";
   let badgeLabel = "";
+  let percentageInlineStyle: React.CSSProperties = {};
+  let progressInlineStyle: React.CSSProperties = {};
 
   if (isInProgress) {
     badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
@@ -53,9 +57,16 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
     badgeLabel = "EM ANDAMENTO";
   } else if (isCompleted) {
-    badgeStyles = "text-[#00e676] border-[#00e676] bg-[#00e676]/[0.08]";
-    percentageColor = "text-[#00e676]";
-    progressBarBg = "bg-gradient-to-r from-[#00e676] to-[#00bcd4]";
+    badgeStyles = "bg-[rgba(81,91,212,0.08)]";
+    percentageInlineStyle = {
+      backgroundImage: MTX_LOGO_GRADIENT,
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      color: 'transparent'
+    };
+    progressInlineStyle = {
+      background: MTX_LOGO_GRADIENT
+    };
     badgeLabel = "CONCLUÍDO";
   } else {
     // Blocked
@@ -78,7 +89,14 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     >
       {/* Cinematic Background Gradient (Base) */}
       {!isLocked && (
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,#0a0a0a_0%,#1a0a1a_100%)]" />
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            background: isCompleted 
+              ? "linear-gradient(135deg, rgba(81, 91, 212, 0.15), rgba(245, 133, 41, 0.05))" 
+              : "linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%)" 
+          }} 
+        />
       )}
       
       {/* Background Art Layers */}
@@ -88,11 +106,11 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
           <>
             <div className={cn(
               "absolute -top-[10%] -right-[10%] w-[80%] h-[80%] rounded-full blur-[120px] transition-all duration-1000",
-              isInProgress ? "bg-[#e040fb] opacity-[0.12]" : "bg-[#00e676] opacity-[0.1]"
+              isInProgress ? "bg-[#e040fb] opacity-[0.12]" : isCompleted ? "bg-[#515BD4] opacity-[0.15]" : "bg-[#00e676] opacity-[0.1]"
             )} />
             <div className={cn(
               "absolute -bottom-[20%] -left-[10%] w-[100%] h-[100%] rounded-full blur-[150px] transition-all duration-1000",
-              isInProgress ? "bg-[#ff6d00] opacity-[0.08]" : "bg-[#00bcd4] opacity-[0.06]"
+              isInProgress ? "bg-[#ff6d00] opacity-[0.08]" : isCompleted ? "bg-[#F58529] opacity-[0.1]" : "bg-[#00bcd4] opacity-[0.06]"
             )} />
           </>
         )}
@@ -128,11 +146,29 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       <div className="relative z-10 flex flex-col h-full p-6">
         {/* Status Badge Top Right */}
         <div className="absolute top-6 right-6">
-          <div className={cn(
-            "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
-            badgeStyles
-          )}>
-            {badgeLabel}
+          <div 
+            className={cn(
+              "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
+              badgeStyles
+            )}
+            style={isCompleted ? {
+              backgroundColor: 'rgba(81, 91, 212, 0.08)',
+              border: '1px solid transparent',
+              backgroundImage: `linear-gradient(rgba(81, 91, 212, 0.08), rgba(81, 91, 212, 0.08)), ${MTX_LOGO_GRADIENT}`,
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
+            } : {}}
+          >
+            {isCompleted ? (
+              <span style={{
+                backgroundImage: MTX_LOGO_GRADIENT,
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent'
+              }}>
+                {badgeLabel}
+              </span>
+            ) : badgeLabel}
           </div>
         </div>
 
@@ -165,7 +201,10 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
           </div>
           
           <div className="flex flex-col items-end">
-            <span className={cn("text-[16px] font-black italic tracking-tighter", percentageColor)}>
+            <span 
+              className={cn("text-[16px] font-black italic tracking-tighter", percentageColor)}
+              style={percentageInlineStyle}
+            >
               {phasePct}%
             </span>
           </div>
@@ -173,11 +212,14 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       </div>
 
       {/* Progress Bar (Bottom Edge) */}
-      <div className={cn(
-        "absolute bottom-0 left-0 h-[6px] w-full transition-all duration-500", 
-        progressBarBg,
-        !isLocked && "group-hover:h-[8px]"
-      )} />
+      <div 
+        className={cn(
+          "absolute bottom-0 left-0 h-[6px] w-full transition-all duration-500", 
+          progressBarBg,
+          !isLocked && "group-hover:h-[8px]"
+        )} 
+        style={progressInlineStyle}
+      />
     </Card>
   );
 }
