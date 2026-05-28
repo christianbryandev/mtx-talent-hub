@@ -266,11 +266,12 @@ export function AppSidebar() {
                     tooltip="Quizzes da Jornada"
                   >
                     <Link to="/admin/quizzes" className="flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
+                      <ClipboardList className="h-4 w-4" />
                       <span>Quizzes</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
