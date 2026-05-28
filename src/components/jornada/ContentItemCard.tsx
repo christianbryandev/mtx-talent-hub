@@ -69,13 +69,19 @@ export function ContentItemCard({
             </Badge>
           ) : (
             <>
-              <span className="text-[11px] text-muted-foreground">
-                {duration || "42min"}
-              </span>
-              <span className="text-[11px] text-muted-foreground/40">•</span>
-              <span className="text-[11px] text-muted-foreground">
-                {date || "Há 2 dias"}
-              </span>
+              {duration && (
+                <>
+                  <span className="text-[11px] text-muted-foreground">
+                    {duration}
+                  </span>
+                  {date && <span className="text-[11px] text-muted-foreground/40">•</span>}
+                </>
+              )}
+              {date && (
+                <span className="text-[11px] text-muted-foreground">
+                  {date}
+                </span>
+              )}
             </>
           )}
         </div>
