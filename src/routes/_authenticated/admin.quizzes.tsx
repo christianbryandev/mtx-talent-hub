@@ -28,6 +28,7 @@ import { QuizMediaUpload } from "@/components/admin/QuizMediaUpload";
 export const Route = createFileRoute("/_authenticated/admin/quizzes")({
   head: () => ({ meta: [{ title: "Admin · Criador de Quiz — MTX Hub" }] }),
   component: AdminQuizzesPage,
+  ssr: false,
 });
 
 type MediaType = "image" | "video";

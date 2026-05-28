@@ -37,6 +37,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 export const Route = createFileRoute("/_authenticated/admin/journey-catalog")({
   head: () => ({ meta: [{ title: "Admin · Catálogo Jornada — MTX Hub" }] }),
   component: AdminJourneyCatalogPage,
+  ssr: false,
 });
 
 interface Phase {
