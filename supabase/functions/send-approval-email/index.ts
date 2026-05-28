@@ -42,13 +42,11 @@ serve(async (req) => {
     // Preferência pelo domínio personalizado do usuário
     let appUrl = "https://mtxmarketing.com";
     
-    // Se a requisição vier de uma origem conhecida (como o preview ou o domínio padrão da Lovable), 
-    // podemos usar essa origem, mas o domínio personalizado é o ideal para produção.
+    // Priorizamos o domínio personalizado, mas permitimos detecção dinâmica para ambientes de preview
     if (origin) {
       try {
         const originUrl = new URL(origin).origin;
-        // Se for um domínio da Lovable (preview ou app), mantemos a detecção dinâmica
-        if (originUrl.includes("lovable.app")) {
+        if (originUrl.includes("lovable.app") && !originUrl.includes("https-mtx-talent-hub-vercel-app")) {
           appUrl = originUrl;
         }
       } catch (e) {
@@ -56,8 +54,12 @@ serve(async (req) => {
       }
     }
     
-    // Limpeza de segurança para evitar protocolos duplicados
-    appUrl = appUrl.replace(/^https?:\/\/https?:\/\//, "https://");
+    // Limpeza rigorosa para evitar o prefixo "https-https-" ou similares
+    appUrl = appUrl.replace(/^https?:\/\/https?-/, "https://");
+    // Se o domínio for o indesejado, forçamos o correto
+    if (appUrl.includes("https-mtx-talent-hub-vercel-app.lovable.app")) {
+      appUrl = "https://mtxmarketing.com";
+    }
     
     console.log("App URL determinada:", appUrl);
 
