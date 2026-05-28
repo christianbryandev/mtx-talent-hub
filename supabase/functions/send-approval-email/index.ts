@@ -41,6 +41,7 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer");
     let appUrl = "https://https-mtx-talent-hub-vercel-app.lovable.app";
     
+    // Check for origin and strip double https if present in the variable (safety check)
     if (origin) {
       try {
         appUrl = new URL(origin).origin;
@@ -49,18 +50,19 @@ serve(async (req) => {
       }
     }
     
+    // Ensure appUrl doesn't have double protocol
+    appUrl = appUrl.replace(/^https?:\/\/https?:\/\//, "https://");
+    
     console.log("App URL determinada:", appUrl);
 
-    // Para novos usuários, enviamos para redefinir senha primeiro
-    const inviteRedirectTo = `${appUrl}/reset-password`;
-    // Para usuários existentes, enviamos para o dashboard (ou também reset-password se quisermos forçar)
-    const loginRedirectTo = `${appUrl}/dashboard`;
+    // Redireciona para /reset-password para que o jovem defina a senha
+    const redirectTo = `${appUrl}/reset-password`;
 
     let inviteData: any;
     let { data, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: { redirectTo: inviteRedirectTo },
+      options: { redirectTo },
     });
 
     if (inviteError && /already.*registered|already exists/i.test(inviteError.message)) {
@@ -71,7 +73,7 @@ serve(async (req) => {
       const retry = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo: inviteRedirectTo },
+        options: { redirectTo },
       });
       if (retry.error) {
         console.error("Erro ao gerar magic link:", retry.error);

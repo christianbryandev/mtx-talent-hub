@@ -36,6 +36,14 @@ function ResetPage() {
     resolver: zodResolver(schema),
   });
 
+  // Log para depuração
+  useEffect(() => {
+    console.log("Página de redefinição de senha carregada");
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Sessão atual no reset-password:", session ? "Sim" : "Não");
+    });
+  }, []);
+
   const onSubmit = async ({ password }: FormValues) => {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
