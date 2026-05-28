@@ -78,8 +78,8 @@ export const inviteUser = createServerFn({ method: "POST" })
     await assertSuperAdmin(supabase, callerId);
 
     const redirectTo =
-      process.env.LOVABLE_APP_URL ??
-      process.env.SITE_URL ??
+      import.meta.env.VITE_LOVABLE_APP_URL ??
+      import.meta.env.VITE_SITE_URL ??
       "https://app.mtxhub.com.br";
 
     const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
