@@ -50,6 +50,7 @@ interface Phase {
   xp_reward: number;
   has_quiz: boolean;
   status: "publicado" | "rascunho";
+  modules_count?: number;
 }
 
 interface Module {
@@ -79,14 +80,14 @@ function AdminJourneyCatalogPage() {
             Catálogo da Jornada
           </h1>
           <p className="text-sm text-muted-foreground">
-            Gerencie fases, vídeos e quizzes para a jornada dos jovens.
+            Gerencie fases e módulos (vídeos, quizzes e textos) para a jornada dos jovens.
           </p>
         </div>
       </header>
 
       <Tabs defaultValue="fases">
         <TabsList>
-          <TabsTrigger value="fases">Fases & Conteúdo</TabsTrigger>
+          <TabsTrigger value="fases">Fases & Módulos</TabsTrigger>
           <TabsTrigger value="atribuicoes">Atribuições</TabsTrigger>
         </TabsList>
         <TabsContent value="fases" className="mt-4">
@@ -118,10 +119,18 @@ function PhasesTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journey_phase_catalog")
-        .select("*")
+        .select(`
+          *,
+          journey_modules (count)
+        `)
         .order("order_index");
+      
       if (error) throw error;
-      return (data || []) as unknown as Phase[];
+      
+      return (data || []).map(p => ({
+        ...p,
+        modules_count: (p as any).journey_modules?.[0]?.count || 0
+      })) as Phase[];
     },
   });
 
@@ -221,6 +230,12 @@ function PhasesTab({
                               </Badge>
                             </div>
                             <CardTitle className="text-base truncate mt-0.5">{p.title}</CardTitle>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                {p.modules_count || 0} módulos
+                              </span>
+                            </div>
                           </div>
                           <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
                         </CardHeader>
@@ -372,8 +387,9 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
     },
 
     onSuccess: (data) => {
-      toast.success("Conteúdo criado");
+      toast.success("Módulo criado");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      qc.invalidateQueries({ queryKey: ["catalog-phases"] });
       setEditingModule(data as unknown as Module);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -405,7 +421,7 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">Conteúdos da Fase</h3>
+        <h3 className="text-lg font-bold">Módulos da Fase</h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => createModule.mutate("quiz")}>
             <Plus className="h-4 w-4 mr-2" />
@@ -470,7 +486,7 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
               {provided.placeholder}
               {(modules.data ?? []).length === 0 && (
                 <p className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border/60 rounded-lg">
-                  Nenhum conteúdo adicionado ainda.
+                  Nenhum módulo adicionado ainda.
                 </p>
               )}
             </div>
@@ -497,8 +513,9 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Conteúdo removido");
+      toast.success("Módulo removido");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      qc.invalidateQueries({ queryKey: ["catalog-phases"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -508,7 +525,7 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
       variant="ghost" 
       size="sm" 
       className="text-destructive" 
-      onClick={() => confirm("Remover este conteúdo?") && remove.mutate()}
+      onClick={() => confirm("Remover este módulo?") && remove.mutate()}
     >
       <Trash2 className="h-4 w-4" />
     </Button>
