@@ -37,24 +37,49 @@ serve(async (req) => {
     });
 
     // 1. Gerar link de acesso (invite para novos, magiclink para existentes)
-    const redirectTo = `${new URL(req.url).origin}/dashboard`;
+    // Determinando a URL do app a partir do cabeçalho de origem ou referer, ou usando um padrão
+    const origin = req.headers.get("origin") || req.headers.get("referer");
+    let appUrl = "https://https-mtx-talent-hub-vercel-app.lovable.app";
+    
+    if (origin) {
+      try {
+        appUrl = new URL(origin).origin;
+      } catch (e) {
+        console.warn("Erro ao processar origin header:", e);
+      }
+    }
+    
+    console.log("App URL determinada:", appUrl);
+
+    // Para novos usuários, enviamos para redefinir senha primeiro
+    const inviteRedirectTo = `${appUrl}/reset-password`;
+    // Para usuários existentes, enviamos para o dashboard (ou também reset-password se quisermos forçar)
+    const loginRedirectTo = `${appUrl}/dashboard`;
+
     let inviteData: any;
     let { data, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: { redirectTo },
+      options: { redirectTo: inviteRedirectTo },
     });
 
     if (inviteError && /already.*registered|already exists/i.test(inviteError.message)) {
+      console.log("Usuário já existe, gerando magic link para:", email);
       // Usuário já existe → gerar magic link
+      // Se o usuário quer que ele defina uma senha, e o usuário já existe mas talvez não tenha senha,
+      // poderíamos mandar para reset-password também. Vamos seguir o pedido do usuário e mandar para reset-password.
       const retry = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo },
+        options: { redirectTo: inviteRedirectTo },
       });
-      if (retry.error) throw retry.error;
+      if (retry.error) {
+        console.error("Erro ao gerar magic link:", retry.error);
+        throw retry.error;
+      }
       inviteData = retry.data;
     } else if (inviteError) {
+      console.error("Erro ao gerar link de convite:", inviteError);
       throw inviteError;
     } else {
       inviteData = data;
