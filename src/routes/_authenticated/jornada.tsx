@@ -180,13 +180,13 @@ function JourneyPage() {
                 if (module.content_type === "quiz") {
                   setActiveQuizPhaseId(selectedPhase.id);
                 } else {
-                  setSelectedModuleId(module.id);
-                  toast.info(`Abrindo: ${module.title}`);
+                  setSelectedModule(module);
                 }
               }}
             />
           ) : (
             <div className="grid grid-cols-2 gap-4">
+
               {data.phases.map((phase) => (
                 <PhaseGridCard
                   key={phase.id}
