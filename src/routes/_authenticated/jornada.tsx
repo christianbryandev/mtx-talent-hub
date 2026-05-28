@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useJourney } from "@/hooks/useJourney";
+import { usePermissions } from "@/hooks/usePermissions";
 import { startUserJourney } from "@/utils/journeySeed";
 
 import { Card } from "@/components/ui/card";
@@ -33,6 +34,7 @@ import { Button } from "@/components/ui/button";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
