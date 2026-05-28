@@ -44,15 +44,15 @@ serve(async (req) => {
 
     if (inviteError) throw inviteError;
 
-    // 2. Atualizar status na tabela
-    // O usuário mencionou "aplicacoes_jovens", mas no projeto usamos "young_applications"
-    // Vou usar "young_applications" para manter a consistência com o banco atual
-    const { error: updateError } = await supabaseAdmin
-      .from("young_applications")
-      .update({ status: "aprovado" })
-      .eq("id", candidato_id);
+    // 2. Atualizar status na tabela (apenas se candidato_id for fornecido)
+    if (candidato_id) {
+      const { error: updateError } = await supabaseAdmin
+        .from("young_applications")
+        .update({ status: "aprovado" })
+        .eq("id", candidato_id);
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
+    }
 
     // 3. Enviar e-mail via Resend
     if (!RESEND_API_KEY) {
