@@ -9,7 +9,7 @@ interface PhaseGridCardProps {
   onClick: (phase: JourneyPhase) => void;
 }
 
-const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FEDA77, #F58529, #DD2A7B, #C7288B, #8131AF, #515BD4)";
+const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FC9325, #F0562A, #DD2A7B, #C7288B, #8131AF, #515BD4)";
 
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
