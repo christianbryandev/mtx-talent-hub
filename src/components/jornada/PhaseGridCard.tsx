@@ -50,11 +50,12 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     <Card
       onClick={() => !isLocked && onClick(phase)}
       className={cn(
-        "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px]",
+        "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px] shadow-none",
         "bg-gradient-to-br from-[#0a0a0a] to-[#1a0a1a]",
-        isLocked ? "cursor-not-allowed" : "hover:brightness-110 active:scale-[0.98]"
+        isLocked ? "cursor-not-allowed opacity-80" : "hover:brightness-125 active:scale-[0.98]"
       )}
     >
+
       {/* Badge Status */}
       <div className="absolute top-3 right-3 z-10">
         <Badge 
