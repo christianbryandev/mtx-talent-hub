@@ -217,10 +217,10 @@ serve(async (req) => {
                   <div class="card">
                     <h1>Parabéns, ${nome}!</h1>
                     <p>É com grande alegria que informamos que sua inscrição no programa da <span class="highlight">MTX Multiplicando Talentos</span> foi aprovada!</p>
-                    <p>Você agora faz parte da nossa trilha de transformação. Clique no botão abaixo para criar seu acesso e começar sua jornada no MTX Hub.</p>
+                    <p>Você agora faz parte da nossa trilha de transformação. Clique no botão abaixo para <span class="highlight">definir sua senha de acesso</span> e começar sua jornada no MTX Hub.</p>
                     
                     <div class="btn-container">
-                      <a href="${inviteData.properties.action_link}" class="btn">Acessar o MTX Hub →</a>
+                      <a href="${inviteData.properties.action_link}" class="btn">Criar Senha e Acessar →</a>
                     </div>
                     
                     <p class="warning">Este link de convite é pessoal e expira em 24 horas.</p>
