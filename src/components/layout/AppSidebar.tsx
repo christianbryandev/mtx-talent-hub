@@ -201,15 +201,28 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
+                    isActive={isActive("/admin/journey-catalog")}
+                    tooltip="Catálogo Jornada (Fases e Cards)"
+                  >
+                    <Link to="/admin/journey-catalog" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      <span className="font-bold">Painel Administrativo</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
                     isActive={isActive("/users")}
                     tooltip="Usuários e Permissões"
                   >
-                    <Link to="/users" className="flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
+                    <Link to="/users" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                      <Users className="h-4 w-4" />
                       <span>Usuários</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
