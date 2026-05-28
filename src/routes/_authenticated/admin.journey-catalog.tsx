@@ -362,12 +362,12 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
         phase_id: phaseId,
         title: type === "video" ? "Novo Vídeo" : "Novo Quiz",
         content_type: type,
-        order_index: nextOrder,
-        unlocked: true,
+        order_index: nextOrder
       }).select().single();
       if (error) throw error;
       return data;
     },
+
     onSuccess: (data) => {
       toast.success("Conteúdo criado");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
