@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -11,7 +11,13 @@ import {
   ChevronRight,
   UserPlus,
   X,
+  GripVertical,
+  Video,
+  FileText,
+  ArrowLeft,
+  Loader2,
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -24,9 +30,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-catalog")({
   head: () => ({ meta: [{ title: "Admin · Catálogo Jornada — MTX Hub" }] }),
@@ -40,24 +46,7 @@ interface Phase {
   order_index: number;
   xp_reward: number;
   has_quiz: boolean;
-}
-
-interface Card {
-  id: string;
-  phase_id: string;
-  title: string;
-  description: string | null;
-  order_index: number;
-  xp_reward: number;
-}
-
-interface Item {
-  id: string;
-  card_id: string;
-  module_id: string | null;
-  title: string;
-  required: boolean;
-  order_index: number;
+  status: "publicado" | "rascunho";
 }
 
 interface Module {
@@ -68,31 +57,40 @@ interface Module {
   content_type: string;
   content_body: string | null;
   order_index: number;
+  duration_minutes?: number | null;
 }
 
 function AdminJourneyCatalogPage() {
   const { isAdmin, loading } = usePermissions();
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+
   if (loading) return <Skeleton className="h-64 w-full" />;
   if (!isAdmin) return <Navigate to="/dashboard" />;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <GraduationCap className="h-6 w-6 text-primary" />
-          Catálogo da Jornada
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Edite fases, cards e checklists. Atribua fases a jovens específicos.
-        </p>
-      </div>
+      <header className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <GraduationCap className="h-6 w-6 text-primary" />
+            Catálogo da Jornada
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie fases, vídeos e quizzes para a jornada dos jovens.
+          </p>
+        </div>
+      </header>
+
       <Tabs defaultValue="fases">
         <TabsList>
           <TabsTrigger value="fases">Fases & Conteúdo</TabsTrigger>
           <TabsTrigger value="atribuicoes">Atribuições</TabsTrigger>
         </TabsList>
         <TabsContent value="fases" className="mt-4">
-          <PhasesTab />
+          <PhasesTab 
+            selectedPhaseId={selectedPhaseId} 
+            onSelectPhase={setSelectedPhaseId} 
+          />
         </TabsContent>
         <TabsContent value="atribuicoes" className="mt-4">
           <AssignmentsTab />
@@ -104,68 +102,148 @@ function AdminJourneyCatalogPage() {
 
 /* ----------------------------- Phases Tab ----------------------------- */
 
-function PhasesTab() {
+function PhasesTab({ 
+  selectedPhaseId, 
+  onSelectPhase 
+}: { 
+  selectedPhaseId: string | null;
+  onSelectPhase: (id: string | null) => void;
+}) {
   const qc = useQueryClient();
   const phases = useQuery<Phase[]>({
     queryKey: ["catalog-phases"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journey_phase_catalog")
-        .select("id,title,description,order_index,xp_reward,has_quiz")
+        .select("*")
         .order("order_index");
       if (error) throw error;
-      return data as Phase[];
+      return (data || []) as unknown as Phase[];
     },
+  });
+
+  const reorderPhases = useMutation({
+    mutationFn: async (newPhases: Phase[]) => {
+      for (let i = 0; i < newPhases.length; i++) {
+        await supabase
+          .from("journey_phase_catalog")
+          .update({ order_index: i + 1 })
+          .eq("id", newPhases[i].id);
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-phases"] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const createPhase = useMutation({
     mutationFn: async () => {
       const nextOrder = (phases.data?.length ?? 0) + 1;
-      const { error } = await supabase.from("journey_phase_catalog").insert({
+      const { data, error } = await supabase.from("journey_phase_catalog").insert({
         title: `Nova fase ${nextOrder}`,
         order_index: nextOrder,
         xp_reward: 0,
         has_quiz: false,
-      });
+        status: "rascunho"
+      }).select().single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Fase criada");
       qc.invalidateQueries({ queryKey: ["catalog-phases"] });
+      onSelectPhase(data.id);
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || !phases.data) return;
+    const items = Array.from(phases.data);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    reorderPhases.mutate(items);
+  };
+
+  const selectedPhase = phases.data?.find(p => p.id === selectedPhaseId);
+
   if (phases.isLoading) return <Skeleton className="h-48 w-full" />;
+
+  if (selectedPhase) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => onSelectPhase(null)} className="p-0 hover:bg-transparent text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para fases
+        </Button>
+        <PhaseEditor phase={selectedPhase} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-bold">Fases da Jornada</h3>
         <Button onClick={() => createPhase.mutate()} disabled={createPhase.isPending}>
           <Plus className="h-4 w-4 mr-2" />
           Nova fase
         </Button>
       </div>
-      {(phases.data ?? []).length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Nenhuma fase no catálogo. Crie a primeira.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {(phases.data ?? []).map((p) => (
-            <PhaseRow key={p.id} phase={p} />
-          ))}
-        </div>
-      )}
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="phases">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+              {(phases.data ?? []).map((p, index) => (
+                <Draggable key={p.id} draggableId={p.id} index={index}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="group"
+                    >
+                      <Card 
+                        className="cursor-pointer hover:border-primary/40 transition-all border-border/60 bg-card"
+                        onClick={() => onSelectPhase(p.id)}
+                      >
+                        <CardHeader className="p-4 flex flex-row items-center gap-4 space-y-0">
+                          <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">
+                            <GripVertical className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-primary">FASE {p.order_index.toString().padStart(2, "0")}</span>
+                              <Badge variant={p.status === "publicado" ? "secondary" : "outline"} className="text-[10px]">
+                                {(p.status || "rascunho").toUpperCase()}
+                              </Badge>
+                            </div>
+                            <CardTitle className="text-base truncate mt-0.5">{p.title}</CardTitle>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
+                        </CardHeader>
+                      </Card>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              {(phases.data ?? []).length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma fase no catálogo. Crie a primeira.
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
 
-function PhaseRow({ phase }: { phase: Phase }) {
+function PhaseEditor({ phase }: { phase: Phase }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Phase>(phase);
   const dirty = JSON.stringify(draft) !== JSON.stringify(phase);
 
@@ -176,9 +254,8 @@ function PhaseRow({ phase }: { phase: Phase }) {
         .update({
           title: draft.title,
           description: draft.description,
-          order_index: draft.order_index,
+          status: draft.status,
           xp_reward: draft.xp_reward,
-          has_quiz: draft.has_quiz,
         })
         .eq("id", phase.id);
       if (error) throw error;
@@ -186,8 +263,6 @@ function PhaseRow({ phase }: { phase: Phase }) {
     onSuccess: () => {
       toast.success("Fase salva");
       qc.invalidateQueries({ queryKey: ["catalog-phases"] });
-      qc.invalidateQueries({ queryKey: ["catalog-phases-metadata"] });
-      qc.invalidateQueries({ queryKey: ["user-journey"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -208,447 +283,55 @@ function PhaseRow({ phase }: { phase: Phase }) {
   });
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setOpen((v) => !v)}
-            className="h-8 w-8 shrink-0"
-          >
-            {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </Button>
-          <CardTitle className="text-base flex-1 truncate">
-            #{phase.order_index} · {phase.title}
-          </CardTitle>
-          {phase.has_quiz && <Badge variant="secondary">Quiz</Badge>}
-          <Badge variant="outline">{phase.xp_reward} XP</Badge>
-        </div>
-      </CardHeader>
-      {open && (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-lg">Configurações da Fase</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label>Título</Label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Título da Fase</Label>
               <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
             </div>
-            <div className="space-y-1">
-              <Label>Ordem</Label>
-              <Input
-                type="number"
-                value={draft.order_index}
-                onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
-              />
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select 
+                value={draft.status || "rascunho"} 
+                onValueChange={(v: "publicado" | "rascunho") => setDraft({ ...draft, status: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rascunho">Rascunho</SelectItem>
+                  <SelectItem value="publicado">Publicado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-1 sm:col-span-2">
-              <Label>Descrição</Label>
-              <Textarea
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Descrição (Opcional)</Label>
+              <Textarea 
+                value={draft.description ?? ""} 
+                onChange={(e) => setDraft({ ...draft, description: e.target.value })} 
                 rows={2}
-                value={draft.description ?? ""}
-                onChange={(e) => setDraft({ ...draft, description: e.target.value || null })}
               />
-            </div>
-            <div className="space-y-1">
-              <Label>XP de recompensa</Label>
-              <Input
-                type="number"
-                value={draft.xp_reward}
-                onChange={(e) => setDraft({ ...draft, xp_reward: Number(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <Switch
-                id={`quiz-${phase.id}`}
-                checked={draft.has_quiz}
-                onCheckedChange={(v) => setDraft({ ...draft, has_quiz: v })}
-              />
-              <Label htmlFor={`quiz-${phase.id}`}>Possui quiz</Label>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+          <div className="flex items-center gap-3 pt-2">
+            <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
               <Save className="h-4 w-4 mr-2" />
-              Salvar fase
+              Salvar Alterações
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive"
-              onClick={() => {
-                if (confirm("Remover esta fase e todos os cards/itens dela?")) remove.mutate();
-              }}
-            >
+            <Button variant="ghost" className="text-destructive" onClick={() => confirm("Excluir esta fase?") && remove.mutate()}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
+              Excluir Fase
             </Button>
-          </div>
-          <Separator />
-          <div className="grid gap-6 md:grid-cols-2">
-            <ModulesEditor phaseId={phase.id} />
-            <CardsEditor phaseId={phase.id} />
           </div>
         </CardContent>
-      )}
-    </Card>
-  );
-}
+      </Card>
 
-/* ------------------------------- Cards -------------------------------- */
-
-function CardsEditor({ phaseId }: { phaseId: string }) {
-  const qc = useQueryClient();
-  const cards = useQuery<Card[]>({
-    queryKey: ["catalog-cards", phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journey_cards")
-        .select("id,phase_id,title,description,order_index,xp_reward")
-        .eq("phase_id", phaseId)
-        .order("order_index");
-      if (error) throw error;
-      return data as Card[];
-    },
-  });
-
-  const createCard = useMutation({
-    mutationFn: async () => {
-      const nextOrder = (cards.data?.length ?? 0) + 1;
-      const { error } = await supabase.from("journey_cards").insert({
-        phase_id: phaseId,
-        title: `Novo card ${nextOrder}`,
-        order_index: nextOrder,
-        xp_reward: 0,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Card criado");
-      qc.invalidateQueries({ queryKey: ["catalog-cards", phaseId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">Cards desta fase</h4>
-        <Button size="sm" variant="outline" onClick={() => createCard.mutate()} disabled={createCard.isPending}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Novo card
-        </Button>
-      </div>
-      {cards.isLoading ? (
-        <Skeleton className="h-24" />
-      ) : (cards.data ?? []).length === 0 ? (
-        <p className="text-xs text-muted-foreground">Nenhum card ainda.</p>
-      ) : (
-        <div className="space-y-2">
-          {(cards.data ?? []).map((c) => (
-            <CardRow key={c.id} card={c} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CardRow({ card }: { card: Card }) {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Card>(card);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(card);
-
-  const save = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("journey_cards")
-        .update({
-          title: draft.title,
-          description: draft.description,
-          order_index: draft.order_index,
-          xp_reward: draft.xp_reward,
-        })
-        .eq("id", card.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Card salvo");
-      qc.invalidateQueries({ queryKey: ["catalog-cards", card.phase_id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("journey_cards").delete().eq("id", card.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Card removido");
-      qc.invalidateQueries({ queryKey: ["catalog-cards", card.phase_id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return (
-    <div className="rounded-md border bg-muted/30">
-      <div className="flex items-center gap-2 p-2">
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setOpen((v) => !v)}>
-          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        </Button>
-        <span className="text-sm flex-1 truncate">
-          #{card.order_index} · {card.title}
-        </span>
-        <Badge variant="outline" className="text-[10px]">
-          {card.xp_reward} XP
-        </Badge>
-      </div>
-      {open && (
-        <div className="space-y-3 p-3 pt-0">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="sm:col-span-2 space-y-1">
-              <Label className="text-xs">Título</Label>
-              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Ordem</Label>
-              <Input
-                type="number"
-                value={draft.order_index}
-                onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="sm:col-span-2 space-y-1">
-              <Label className="text-xs">Descrição</Label>
-              <Textarea
-                rows={2}
-                value={draft.description ?? ""}
-                onChange={(e) => setDraft({ ...draft, description: e.target.value || null })}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">XP</Label>
-              <Input
-                type="number"
-                value={draft.xp_reward}
-                onChange={(e) => setDraft({ ...draft, xp_reward: Number(e.target.value) || 0 })}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-              <Save className="h-3.5 w-3.5 mr-1" />
-              Salvar card
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive"
-              onClick={() => {
-                if (confirm("Remover este card e seus itens?")) remove.mutate();
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Excluir
-            </Button>
-          </div>
-          <ItemsEditor cardId={card.id} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------- Items -------------------------------- */
-
-function ItemsEditor({ cardId }: { cardId: string }) {
-  const qc = useQueryClient();
-  const items = useQuery<Item[]>({
-    queryKey: ["catalog-items", cardId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journey_checklist_items")
-        .select("id,card_id,module_id,title,required,order_index")
-        .eq("card_id", cardId)
-        .order("order_index");
-      if (error) throw error;
-      return data as Item[];
-    },
-  });
-
-  const [newTitle, setNewTitle] = useState("");
-
-  const create = useMutation({
-    mutationFn: async () => {
-      const title = newTitle.trim();
-      if (!title) throw new Error("Informe o título do item");
-      const nextOrder = (items.data?.length ?? 0) + 1;
-      const { error } = await supabase.from("journey_checklist_items").insert({
-        card_id: cardId,
-        title,
-        required: true,
-        order_index: nextOrder,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setNewTitle("");
-      qc.invalidateQueries({ queryKey: ["catalog-items", cardId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const update = useMutation({
-    mutationFn: async (it: Item) => {
-      const { error } = await supabase
-        .from("journey_checklist_items")
-        .update({ 
-          title: it.title, 
-          required: it.required, 
-          order_index: it.order_index,
-          module_id: it.module_id 
-        })
-        .eq("id", it.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-items", cardId] }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("journey_checklist_items").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-items", cardId] }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const { data: phaseModules } = useQuery<Module[]>({
-    queryKey: ["catalog-modules-for-card", cardId],
-    queryFn: async () => {
-      const { data: card } = await supabase.from("journey_cards").select("phase_id").eq("id", cardId).single();
-      if (!card) return [];
-      const { data, error } = await supabase
-        .from("journey_modules")
-        .select("*")
-        .eq("phase_id", card.phase_id)
-        .order("order_index");
-      if (error) throw error;
-      return data as Module[];
-    }
-  });
-
-  return (
-    <div className="space-y-2">
-      <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4">Itens do checklist</h5>
-      {items.isLoading ? (
-        <Skeleton className="h-16" />
-      ) : (
-        <div className="space-y-2">
-          {(items.data ?? []).map((it) => (
-            <ItemRow 
-              key={it.id} 
-              item={it} 
-              modules={phaseModules ?? []}
-              onSave={update.mutate} 
-              onRemove={remove.mutate} 
-            />
-          ))}
-        </div>
-      )}
-      <div className="flex gap-2 pt-1">
-        <Input
-          placeholder="Novo item do checklist"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && create.mutate()}
-        />
-        <Button size="sm" variant="outline" onClick={() => create.mutate()} disabled={create.isPending || !newTitle.trim()}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Adicionar
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function ItemRow({
-  item,
-  modules,
-  onSave,
-  onRemove,
-}: {
-  item: Item;
-  modules: Module[];
-  onSave: (it: Item) => void;
-  onRemove: (id: string) => void;
-}) {
-  const [draft, setDraft] = useState<Item>(item);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(item);
-
-  return (
-    <div className="flex flex-col gap-2 rounded border bg-background p-3">
-      <div className="flex items-center gap-2">
-        <Input
-          className="h-8 flex-1"
-          value={draft.title}
-          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 text-destructive shrink-0"
-          onClick={() => onRemove(item.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Label className="text-[10px] whitespace-nowrap">Vincular Módulo:</Label>
-          <Select 
-            value={draft.module_id || "none"} 
-            onValueChange={(val) => setDraft({ ...draft, module_id: val === "none" ? null : val })}
-          >
-            <SelectTrigger className="w-[180px] h-8 text-xs">
-              <SelectValue placeholder="Sem módulo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Nenhum</SelectItem>
-              {modules.map(m => (
-                <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-1 shrink-0">
-          <Switch
-            checked={draft.required}
-            onCheckedChange={(v) => setDraft({ ...draft, required: v })}
-          />
-          <span className="text-[10px] text-muted-foreground">obrigatório</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Label className="text-[10px]">Ordem:</Label>
-          <Input
-            type="number"
-            className="h-8 w-14 text-xs"
-            value={draft.order_index}
-            onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
-          />
-        </div>
-
-        {dirty && (
-          <Button size="sm" className="h-8 ml-auto" onClick={() => onSave(draft)}>
-            <Save className="h-3.5 w-3.5 mr-1" />
-            Salvar
-          </Button>
-        )}
-      </div>
+      <ModulesEditor phaseId={phase.id} />
     </div>
   );
 }
@@ -657,6 +340,8 @@ function ItemRow({
 
 function ModulesEditor({ phaseId }: { phaseId: string }) {
   const qc = useQueryClient();
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+
   const modules = useQuery<Module[]>({
     queryKey: ["catalog-modules", phaseId],
     queryFn: async () => {
@@ -666,55 +351,163 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
         .eq("phase_id", phaseId)
         .order("order_index");
       if (error) throw error;
-      return data as Module[];
+      return (data || []) as unknown as Module[];
     },
   });
 
   const createModule = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (type: "video" | "quiz") => {
       const nextOrder = (modules.data?.length ?? 0) + 1;
-      const { error } = await supabase.from("journey_modules").insert({
+      const { data, error } = await supabase.from("journey_modules").insert({
         phase_id: phaseId,
-        title: `Novo módulo ${nextOrder}`,
-        order_index: nextOrder,
-      });
+        title: type === "video" ? "Novo Vídeo" : "Novo Quiz",
+        content_type: type,
+        order_index: nextOrder
+      }).select().single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Módulo criado");
+
+    onSuccess: (data) => {
+      toast.success("Conteúdo criado");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
-      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
+      setEditingModule(data as unknown as Module);
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const reorderModules = useMutation({
+    mutationFn: async (newModules: Module[]) => {
+      for (let i = 0; i < newModules.length; i++) {
+        await supabase
+          .from("journey_modules")
+          .update({ order_index: i + 1 })
+          .eq("id", newModules[i].id);
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || !modules.data) return;
+    const items = Array.from(modules.data);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    reorderModules.mutate(items);
+  };
+
+  if (modules.isLoading) return <Skeleton className="h-32 w-full" />;
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">Módulos desta fase</h4>
-        <Button size="sm" variant="outline" onClick={() => createModule.mutate()} disabled={createModule.isPending}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Novo módulo
-        </Button>
-      </div>
-      {modules.isLoading ? (
-        <Skeleton className="h-24" />
-      ) : (modules.data ?? []).length === 0 ? (
-        <p className="text-xs text-muted-foreground">Nenhum módulo ainda.</p>
-      ) : (
-        <div className="space-y-2">
-          {(modules.data ?? []).map((m) => (
-            <ModuleRow key={m.id} module={m} />
-          ))}
+        <h3 className="text-lg font-bold">Conteúdos da Fase</h3>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => createModule.mutate("quiz")}>
+            <Plus className="h-4 w-4 mr-2" />
+            + Quiz
+          </Button>
+          <Button size="sm" onClick={() => createModule.mutate("video")}>
+            <Plus className="h-4 w-4 mr-2" />
+            + Vídeo
+          </Button>
         </div>
+      </div>
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="modules">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+              {(modules.data ?? []).map((m, index) => (
+                <Draggable key={m.id} draggableId={m.id} index={index}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="flex items-center gap-3 p-3 bg-muted/20 border border-border/60 rounded-lg group hover:border-primary/20 transition-all"
+                    >
+                      <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">
+                        <GripVertical className="h-5 w-5" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-muted/50 rounded flex items-center justify-center shrink-0">
+                          {m.content_type === "quiz" ? (
+                            <FileText className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Video className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] h-4">
+                              {m.content_type.toUpperCase()}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground font-mono">#{m.order_index}</span>
+                          </div>
+                          <h4 className="text-sm font-bold truncate">{m.title}</h4>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingModule(m)}>Editar</Button>
+                        <ModuleDeleteButton moduleId={m.id} phaseId={phaseId} />
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              {(modules.data ?? []).length === 0 && (
+                <p className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                  Nenhum conteúdo adicionado ainda.
+                </p>
+              )}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      {editingModule && (
+        <ModuleEditDialog 
+          module={editingModule} 
+          onClose={() => setEditingModule(null)} 
+          phaseId={phaseId}
+        />
       )}
     </div>
   );
 }
 
-function ModuleRow({ module }: { module: Module }) {
+function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: string }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const remove = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("journey_modules").delete().eq("id", moduleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Conteúdo removido");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className="text-destructive" 
+      onClick={() => confirm("Remover este conteúdo?") && remove.mutate()}
+    >
+      <Trash2 className="h-4 w-4" />
+    </Button>
+  );
+}
+
+function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClose: () => void; phaseId: string }) {
+  const qc = useQueryClient();
   const [draft, setDraft] = useState<Module>(module);
   const dirty = JSON.stringify(draft) !== JSON.stringify(module);
 
@@ -725,87 +518,61 @@ function ModuleRow({ module }: { module: Module }) {
         .update({
           title: draft.title,
           description: draft.description,
-          order_index: draft.order_index,
           content_body: draft.content_body,
+          duration_minutes: draft.duration_minutes,
         })
         .eq("id", module.id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Módulo salvo");
-      qc.invalidateQueries({ queryKey: ["catalog-modules", module.phase_id] });
-      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("journey_modules").delete().eq("id", module.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Módulo removido");
-      qc.invalidateQueries({ queryKey: ["catalog-modules", module.phase_id] });
-      qc.invalidateQueries({ queryKey: ["catalog-modules-for-card"] });
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      onClose();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <div className="rounded-md border bg-muted/30">
-      <div className="flex items-center gap-2 p-2">
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setOpen((v) => !v)}>
-          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        </Button>
-        <span className="text-sm flex-1 truncate font-medium">
-          #{module.order_index} · {module.title}
-        </span>
-      </div>
-      {open && (
-        <div className="space-y-3 p-3 pt-0">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="sm:col-span-2 space-y-1">
-              <Label className="text-xs">Título</Label>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Editar {module.content_type === "video" ? "Vídeo" : "Quiz"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Título</Label>
               <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Ordem</Label>
-              <Input
-                type="number"
-                value={draft.order_index}
-                onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) || 0 })}
+            {module.content_type === "video" && (
+              <div className="space-y-1.5">
+                <Label>Duração (minutos)</Label>
+                <Input 
+                  type="number" 
+                  value={draft.duration_minutes ?? ""} 
+                  onChange={(e) => setDraft({ ...draft, duration_minutes: e.target.value ? Number(e.target.value) : null })} 
+                />
+              </div>
+            )}
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>{module.content_type === "video" ? "URL do Vídeo / Conteúdo" : "Instruções do Quiz"}</Label>
+              <Textarea 
+                value={draft.content_body ?? ""} 
+                onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
+                rows={4}
               />
             </div>
-            <div className="sm:col-span-3 space-y-1">
-              <Label className="text-xs">Conteúdo (Markdown/Texto)</Label>
-              <Textarea
-                rows={3}
-                value={draft.content_body ?? ""}
-                onChange={(e) => setDraft({ ...draft, content_body: e.target.value || null })}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-              <Save className="h-3.5 w-3.5 mr-1" />
-              Salvar módulo
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive"
-              onClick={() => {
-                if (confirm("Remover este módulo? Itens vinculados ficarão sem módulo.")) remove.mutate();
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Excluir
-            </Button>
           </div>
         </div>
-      )}
-    </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar Alterações
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -821,10 +588,10 @@ function AssignmentsTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journey_phase_catalog")
-        .select("id,title,description,order_index,xp_reward,has_quiz")
+        .select("*")
         .order("order_index");
       if (error) throw error;
-      return data as Phase[];
+      return (data || []) as unknown as Phase[];
     },
   });
 
@@ -879,7 +646,7 @@ function AssignmentsTab() {
   const available = (phases.data ?? []).filter((p) => !assignedIds.has(p.id));
 
   return (
-    <Card>
+    <Card className="border-border/60">
       <CardHeader>
         <CardTitle className="text-base">Atribuir fases a um jovem</CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -929,7 +696,7 @@ function AssignmentsTab() {
               ) : (assignments.data ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma atribuição individual.</p>
               ) : (
-                <div className="divide-y rounded-md border">
+                <div className="divide-y rounded-md border border-border/60">
                   {(assignments.data ?? []).map((a) => {
                     const p = phaseMap.get(a.phase_id);
                     return (
