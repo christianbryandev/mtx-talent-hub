@@ -39,18 +39,24 @@ serve(async (req) => {
     // 1. Gerar link de acesso (invite para novos, magiclink para existentes)
     // Determinando a URL do app a partir do cabeçalho de origem ou referer, ou usando um padrão
     const origin = req.headers.get("origin") || req.headers.get("referer");
-    let appUrl = "https://https-mtx-talent-hub-vercel-app.lovable.app";
+    // Preferência pelo domínio personalizado do usuário
+    let appUrl = "https://mtxmarketing.com";
     
-    // Check for origin and strip double https if present in the variable (safety check)
+    // Se a requisição vier de uma origem conhecida (como o preview ou o domínio padrão da Lovable), 
+    // podemos usar essa origem, mas o domínio personalizado é o ideal para produção.
     if (origin) {
       try {
-        appUrl = new URL(origin).origin;
+        const originUrl = new URL(origin).origin;
+        // Se for um domínio da Lovable (preview ou app), mantemos a detecção dinâmica
+        if (originUrl.includes("lovable.app")) {
+          appUrl = originUrl;
+        }
       } catch (e) {
         console.warn("Erro ao processar origin header:", e);
       }
     }
     
-    // Ensure appUrl doesn't have double protocol
+    // Limpeza de segurança para evitar protocolos duplicados
     appUrl = appUrl.replace(/^https?:\/\/https?:\/\//, "https://");
     
     console.log("App URL determinada:", appUrl);
@@ -214,7 +220,7 @@ serve(async (req) => {
               <div class="wrapper">
                 <div class="container">
                   <div class="logo-container">
-                    <img src="https://https-mtx-talent-hub-vercel-app.lovable.app/mtx-hub-logo.png" alt="MTX Hub Logo" class="logo">
+                    <img src="${appUrl}/mtx-hub-logo.png" alt="MTX Hub Logo" class="logo">
                   </div>
                   <div class="card">
                     <h1>Parabéns, ${nome}!</h1>
