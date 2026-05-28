@@ -18,8 +18,8 @@ serve(async (req) => {
   try {
     const { candidato_id, email, nome } = await req.json();
 
-    if (!candidato_id || !email || !nome) {
-      throw new Error("candidato_id, email e nome são obrigatórios");
+    if (!email || !nome) {
+      throw new Error("E-mail e nome são obrigatórios");
     }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
