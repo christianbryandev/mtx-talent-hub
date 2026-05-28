@@ -282,6 +282,17 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive("/configuracoes")}
+                      tooltip="Configurações de E-mail"
+                    >
+                      <Link to="/configuracoes" className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        <span>Configurações E-mail</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 )}
               </SidebarMenu>
             </SidebarGroupContent>
