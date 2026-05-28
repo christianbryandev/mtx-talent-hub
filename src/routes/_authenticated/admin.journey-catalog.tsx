@@ -50,6 +50,7 @@ interface Phase {
   xp_reward: number;
   has_quiz: boolean;
   status: "publicado" | "rascunho";
+  modules_count?: number;
 }
 
 interface Module {
@@ -79,7 +80,7 @@ function AdminJourneyCatalogPage() {
             Catálogo da Jornada
           </h1>
           <p className="text-sm text-muted-foreground">
-            Gerencie fases, vídeos e quizzes para a jornada dos jovens.
+            Gerencie fases e módulos (vídeos, quizzes e textos) para a jornada dos jovens.
           </p>
         </div>
       </header>
@@ -118,10 +119,18 @@ function PhasesTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("journey_phase_catalog")
-        .select("*")
+        .select(`
+          *,
+          journey_modules (count)
+        `)
         .order("order_index");
+      
       if (error) throw error;
-      return (data || []) as unknown as Phase[];
+      
+      return (data || []).map(p => ({
+        ...p,
+        modules_count: (p as any).journey_modules?.[0]?.count || 0
+      })) as Phase[];
     },
   });
 
@@ -221,6 +230,12 @@ function PhasesTab({
                               </Badge>
                             </div>
                             <CardTitle className="text-base truncate mt-0.5">{p.title}</CardTitle>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                {p.modules_count || 0} módulos
+                              </span>
+                            </div>
                           </div>
                           <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
                         </CardHeader>
@@ -372,8 +387,9 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
     },
 
     onSuccess: (data) => {
-      toast.success("Conteúdo criado");
+      toast.success("Módulo criado");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      qc.invalidateQueries({ queryKey: ["catalog-phases"] });
       setEditingModule(data as unknown as Module);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -405,7 +421,7 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">Conteúdos da Fase</h3>
+        <h3 className="text-lg font-bold">Módulos da Fase</h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => createModule.mutate("quiz")}>
             <Plus className="h-4 w-4 mr-2" />
