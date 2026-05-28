@@ -104,7 +104,30 @@ function JourneyPage() {
   if (!data) return <p className="text-muted-foreground">Sem dados.</p>;
 
   if (data.phases.length === 0) {
-    return (
+  const qc = useQueryClient();
+  const { user } = useAuth();
+
+  const completeModule = async (moduleId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("user_module_progress")
+        .upsert({ 
+          user_id: user.id, 
+          module_id: moduleId, 
+          completed: true, 
+          completed_at: new Date().toISOString() 
+        }, { onConflict: "user_id,module_id" });
+      
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["journey"] });
+    } catch (err) {
+      console.error("Error marking module as completed", err);
+    }
+  };
+
+  return (
+
       <Card className="p-8 text-center flex flex-col items-center justify-center">
         <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
         <p className="text-sm text-muted-foreground mb-6">
