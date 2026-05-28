@@ -104,14 +104,22 @@ function JourneyPage() {
 
   if (data.phases.length === 0) {
     return (
-      <Card className="p-8 text-center">
+      <Card className="p-8 text-center flex flex-col items-center justify-center">
         <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
-        <p className="text-sm text-muted-foreground">
-          Peça a um administrador para popular o catálogo de fases.
+        <p className="text-sm text-muted-foreground mb-6">
+          {isAdmin 
+            ? "Você pode começar populando o catálogo de fases no painel administrativo." 
+            : "Peça a um administrador para popular o catálogo de fases."}
         </p>
+        {isAdmin && (
+          <Button asChild>
+            <Link to="/admin/journey-catalog">Configurar Jornada</Link>
+          </Button>
+        )}
       </Card>
     );
   }
+
 
   const selectedPhase = data.phases.find((p) => p.id === selectedPhaseId);
 
