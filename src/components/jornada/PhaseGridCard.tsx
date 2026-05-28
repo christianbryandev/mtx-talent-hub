@@ -10,8 +10,13 @@ interface PhaseGridCardProps {
 }
 
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
+  const modulesCount = phase.modules?.length || phase.cards_total || 0;
+  const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
+  
+  const phasePct = modulesCount > 0 ? Math.round((modulesDone / modulesCount) * 100) : 0;
+  
   const isLocked = phase.status === "bloqueada";
-  const isCompleted = phase.status === "concluida";
+  const isCompleted = phase.status === "concluida" || phasePct === 100;
   const isInProgress = !isLocked && !isCompleted;
 
   const phaseNumber = phase.order_index.toString().padStart(2, "0");
@@ -28,11 +33,7 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   };
   
   const PhaseIcon = getPhaseIcon(phase.order_index);
-  const phasePct = phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
   
-  const modulesCount = phase.modules?.length || phase.cards_total || 0;
-  const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
-
   // Cinematic Dark Style Colors
   let badgeStyles = "";
   let textPrimary = "text-[#ffffff]";
