@@ -16,9 +16,12 @@ serve(async (req) => {
   }
 
   try {
-    const { candidato_id, email, nome } = await req.json();
+    const body = await req.json();
+    console.log("Recebendo requisição:", JSON.stringify(body, null, 2));
+    const { candidato_id, email, nome } = body;
 
     if (!email || !nome) {
+      console.error("Erro: E-mail e nome são obrigatórios");
       throw new Error("E-mail e nome são obrigatórios");
     }
 
@@ -120,13 +123,21 @@ serve(async (req) => {
         }),
       });
 
+      console.log("Status da resposta da API do Resend:", res.status);
+      const responseData = await res.json();
+      console.log("Corpo da resposta da API do Resend:", JSON.stringify(responseData, null, 2));
+
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Erro Resend:", errorText);
+        throw new Error(`Erro Resend (${res.status}): ${JSON.stringify(responseData)}`);
       }
+      
+      return new Response(JSON.stringify({ success: true, resend_response: responseData }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, message: "Modo de teste ou ID não fornecido" }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -19,6 +19,7 @@ function SettingsPage() {
   const [testEmail, setTestEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [configStatus, setConfigStatus] = useState<"not_configured" | "configured" | "unknown">("configured");
+  const [lastResponse, setLastResponse] = useState<any>(null);
 
   const sendTestEmail = useMutation({
     mutationFn: async (email: string) => {
@@ -34,12 +35,14 @@ function SettingsPage() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setLastResponse(data);
       toast.success("E-mail de teste enviado! Verifique sua caixa de entrada ✅");
       setConfigStatus("configured");
-      setIsDialogOpen(false);
+      // Keep dialog open to show response
     },
     onError: (error: any) => {
+      setLastResponse({ error: error.message });
       console.error("Erro ao enviar e-mail de teste:", error);
       toast.error(`Erro ao enviar e-mail de teste: ${error.message}`);
       setConfigStatus("not_configured");
@@ -132,14 +135,17 @@ function SettingsPage() {
             </div>
           </CardContent>
           <CardFooter className="border-t pt-6">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) setLastResponse(null);
+            }}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
-                  <Send className="h-4 w-4" />
+                  <Mail className="h-4 w-4" />
                   Enviar e-mail de teste
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Testar envio de e-mail</DialogTitle>
                   <DialogDescription>
@@ -175,6 +181,17 @@ function SettingsPage() {
                     </Button>
                   </DialogFooter>
                 </form>
+
+                {lastResponse && (
+                  <div className="mt-6 space-y-2">
+                    <Label className="text-sm font-semibold">Resposta da Edge Function:</Label>
+                    <div className={`p-4 rounded-md border text-xs font-mono overflow-auto max-h-[300px] ${
+                      lastResponse.error ? "bg-red-500/10 border-red-500/50 text-red-400" : "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
+                    }`}>
+                      <pre>{JSON.stringify(lastResponse, null, 2)}</pre>
+                    </div>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </CardFooter>
