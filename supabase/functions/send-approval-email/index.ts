@@ -89,31 +89,121 @@ serve(async (req) => {
             <html>
             <head>
               <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                body { font-family: sans-serif; background-color: #0f0f0f; color: #ffffff; margin: 0; padding: 0; }
-                .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-                .card { background-color: #1a1a1a; border-radius: 12px; padding: 40px; border: 1px solid #333; }
-                h1 { color: #10b981; font-size: 24px; margin-bottom: 20px; }
-                p { font-size: 16px; line-height: 1.6; color: #cccccc; }
-                .btn { display: inline-block; background-color: #10b981; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 30px; }
-                .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; font-size: 14px; color: #666; }
-                .warning { font-size: 12px; color: #888; margin-top: 20px; }
+                body { 
+                  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                  background-color: #050505; 
+                  color: #ffffff; 
+                  margin: 0; 
+                  padding: 0; 
+                  -webkit-font-smoothing: antialiased;
+                }
+                .wrapper {
+                  width: 100%;
+                  table-layout: fixed;
+                  background-color: #050505;
+                  padding-bottom: 40px;
+                }
+                .container { 
+                  max-width: 600px; 
+                  margin: 0 auto; 
+                  padding: 40px 20px; 
+                }
+                .logo-container {
+                  text-align: center;
+                  margin-bottom: 40px;
+                }
+                .logo {
+                  height: 48px;
+                  width: auto;
+                }
+                .card { 
+                  background-color: #0B0B12; 
+                  border-radius: 16px; 
+                  padding: 40px; 
+                  border: 1px solid rgba(255, 255, 255, 0.06);
+                  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+                }
+                h1 { 
+                  color: #ffffff; 
+                  font-size: 24px; 
+                  font-weight: 700;
+                  margin-bottom: 24px; 
+                  margin-top: 0;
+                  letter-spacing: -0.02em;
+                }
+                p { 
+                  font-size: 16px; 
+                  line-height: 1.6; 
+                  color: #A1A1AA; 
+                  margin-bottom: 20px;
+                }
+                .highlight {
+                  color: #ffffff;
+                  font-weight: 600;
+                }
+                .btn-container {
+                  text-align: center;
+                  margin: 32px 0;
+                }
+                .btn { 
+                  display: inline-block; 
+                  background-color: #10b981; 
+                  color: #ffffff !important; 
+                  padding: 16px 32px; 
+                  text-decoration: none; 
+                  border-radius: 10px; 
+                  font-weight: 600; 
+                  font-size: 16px;
+                  transition: all 0.2s ease;
+                }
+                .footer { 
+                  margin-top: 40px; 
+                  padding-top: 24px; 
+                  border-top: 1px solid rgba(255, 255, 255, 0.06); 
+                  font-size: 14px; 
+                  color: #71717a; 
+                  text-align: center;
+                }
+                .footer a {
+                  color: #10b981;
+                  text-decoration: none;
+                }
+                .warning { 
+                  font-size: 12px; 
+                  color: #52525b; 
+                  margin-top: 24px; 
+                  text-align: center;
+                }
+                @media only screen and (max-width: 480px) {
+                  .card { padding: 32px 24px; }
+                  h1 { font-size: 20px; }
+                  .btn { width: 100%; box-sizing: border-box; }
+                }
               </style>
             </head>
             <body>
-              <div class="container">
-                <div class="card">
-                  <h1>Parabéns, ${nome}!</h1>
-                  <p>É com grande alegria que informamos que sua inscrição no programa da <strong>MTX Multiplicando Talentos</strong> foi aprovada!</p>
-                  <p>Você agora faz parte da nossa trilha de transformação. Clique no botão abaixo para criar seu acesso e começar sua jornada no MTX Hub.</p>
-                  
-                  <a href="${inviteData.properties.action_link}" class="btn">Acessar o MTX Hub →</a>
-                  
-                  <p class="warning">Este link de convite é pessoal e expira em 24 horas.</p>
-                  
-                  <div class="footer">
-                    Equipe MTX • Multiplicando Talentos<br>
-                    <a href="https://mtxhub.com.br" style="color: #10b981;">mtxhub.com.br</a>
+              <div class="wrapper">
+                <div class="container">
+                  <div class="logo-container">
+                    <img src="https://https-mtx-talent-hub-vercel-app.lovable.app/mtx-hub-logo.png" alt="MTX Hub Logo" class="logo">
+                  </div>
+                  <div class="card">
+                    <h1>Parabéns, ${nome}!</h1>
+                    <p>É com grande alegria que informamos que sua inscrição no programa da <span class="highlight">MTX Multiplicando Talentos</span> foi aprovada!</p>
+                    <p>Você agora faz parte da nossa trilha de transformação. Clique no botão abaixo para criar seu acesso e começar sua jornada no MTX Hub.</p>
+                    
+                    <div class="btn-container">
+                      <a href="${inviteData.properties.action_link}" class="btn">Acessar o MTX Hub →</a>
+                    </div>
+                    
+                    <p class="warning">Este link de convite é pessoal e expira em 24 horas.</p>
+                    
+                    <div class="footer">
+                      <span class="highlight">Equipe MTX • Multiplicando Talentos</span><br>
+                      <a href="https://mtxhub.com.br">mtxhub.com.br</a>
+                    </div>
                   </div>
                 </div>
               </div>
