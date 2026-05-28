@@ -122,10 +122,7 @@ function JourneyPage() {
   if (!data) return <p className="text-muted-foreground">Sem dados.</p>;
 
   if (data.phases.length === 0) {
-
-
-  return (
-
+    return (
       <Card className="p-8 text-center flex flex-col items-center justify-center">
         <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
         <p className="text-sm text-muted-foreground mb-6">
@@ -141,6 +138,7 @@ function JourneyPage() {
       </Card>
     );
   }
+
 
 
   const selectedPhase = data.phases.find((p) => p.id === selectedPhaseId);
