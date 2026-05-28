@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+
 import {
   Lock,
   CheckCircle2,
@@ -25,6 +26,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useJourney } from "@/hooks/useJourney";
+import { usePermissions } from "@/hooks/usePermissions";
 import { startUserJourney } from "@/utils/journeySeed";
 
 import { Card } from "@/components/ui/card";
@@ -33,10 +35,11 @@ import { Button } from "@/components/ui/button";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { externalLinkProps, normalizeExternalUrl } from "@/lib/external-url";
-import type { JourneyPhase, PhaseStatus, UserJourney } from "@/services/journeyService";
+import type { JourneyPhase, PhaseStatus, UserJourney, JourneyModule } from "@/services/journeyService";
 import { QuizCard } from "@/components/jornada/QuizCard";
 import {
   AchievementsSection,
@@ -47,6 +50,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhaseGridCard } from "@/components/jornada/PhaseGridCard";
 import { PhaseContentList } from "@/components/jornada/PhaseContentList";
 import { QuizView } from "@/components/jornada/QuizView";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+
 
 
 export const Route = createFileRoute("/_authenticated/jornada")({
@@ -55,17 +61,37 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 });
 
 function JourneyPage() {
-  const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
+  const { isAdmin } = usePermissions();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const { data, isLoading, isError, error, isFetching } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-
+  const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
 
   useEffect(() => {
     if (!selectedPhaseId && !activeQuizPhaseId) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedPhaseId, activeQuizPhaseId]);
 
+  const completeModule = async (moduleId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("user_module_progress")
+        .upsert({ 
+          user_id: user.id, 
+          module_id: moduleId, 
+          completed: true, 
+          completed_at: new Date().toISOString() 
+        }, { onConflict: "user_id,module_id" });
+      
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["journey"] });
+    } catch (err) {
+      console.error("Error marking module as completed", err);
+    }
+  };
 
   const phasesDone = useMemo(
     () => (data ? data.phases.filter((p) => p.status === "concluida").length : 0),
@@ -97,14 +123,23 @@ function JourneyPage() {
 
   if (data.phases.length === 0) {
     return (
-      <Card className="p-8 text-center">
+      <Card className="p-8 text-center flex flex-col items-center justify-center">
         <h2 className="text-xl font-bold mb-2">Jornada ainda não configurada</h2>
-        <p className="text-sm text-muted-foreground">
-          Peça a um administrador para popular o catálogo de fases.
+        <p className="text-sm text-muted-foreground mb-6">
+          {isAdmin 
+            ? "Você pode começar populando o catálogo de fases no painel administrativo." 
+            : "Peça a um administrador para popular o catálogo de fases."}
         </p>
+        {isAdmin && (
+          <Button asChild>
+            <Link to="/admin/journey-catalog">Configurar Jornada</Link>
+          </Button>
+        )}
       </Card>
     );
   }
+
+
 
   const selectedPhase = data.phases.find((p) => p.id === selectedPhaseId);
 
@@ -164,13 +199,13 @@ function JourneyPage() {
                 if (module.content_type === "quiz") {
                   setActiveQuizPhaseId(selectedPhase.id);
                 } else {
-                  setSelectedModuleId(module.id);
-                  toast.info(`Abrindo: ${module.title}`);
+                  setSelectedModule(module);
                 }
               }}
             />
           ) : (
             <div className="grid grid-cols-2 gap-4">
+
               {data.phases.map((phase) => (
                 <PhaseGridCard
                   key={phase.id}
@@ -192,6 +227,60 @@ function JourneyPage() {
           <JourneyLeaderboard />
         </TabsContent>
       </Tabs>
+      {/* Modal de Vídeo */}
+      <Dialog open={!!selectedModule} onOpenChange={(open) => !open && setSelectedModule(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none shadow-2xl sm:rounded-2xl">
+          {selectedModule && (
+            <div className="flex flex-col">
+              <DialogHeader className="p-4 bg-background border-b border-border/10">
+                <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] h-4">AULA</Badge>
+                  {selectedModule.title}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                {selectedModule.content_body ? (
+                  <video 
+                    src={selectedModule.content_body} 
+                    controls 
+                    autoPlay 
+                    className="w-full h-full"
+                    onEnded={() => {
+                      completeModule(selectedModule.id);
+                      toast.success("Aula concluída! Próximo item liberado.");
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <XCircle className="h-10 w-10 opacity-20" />
+                    <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 bg-background border-t border-border/10 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Conteúdo da Fase</span>
+                  <span className="text-sm font-medium">{selectedPhase?.title}</span>
+                </div>
+                <Button 
+                  onClick={() => {
+                    completeModule(selectedModule.id);
+                    setSelectedModule(null);
+                    toast.success("Aula concluída!");
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Marcar como assistida
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
