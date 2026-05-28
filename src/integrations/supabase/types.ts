@@ -842,6 +842,7 @@ export type Database = {
           id: string
           order_index: number
           phase_id: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -854,6 +855,7 @@ export type Database = {
           id?: string
           order_index?: number
           phase_id: string
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
         }
@@ -866,6 +868,7 @@ export type Database = {
           id?: string
           order_index?: number
           phase_id?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -3152,6 +3155,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_module_indices: {
+        Args: { _phase_id: string; _start_index: number }
+        Returns: undefined
       }
       log_system_event: {
         Args: {

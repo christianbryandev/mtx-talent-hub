@@ -66,6 +66,7 @@ export interface JourneyModule {
   questions_count?: number;
   unlocked: boolean;
   completed: boolean;
+  thumbnail_url?: string | null;
   items: JourneyChecklistItem[];
 }
 
@@ -171,6 +172,61 @@ export const journeyService = {
       return items;
     } catch (e) {
       throw normalize(e, "get_checklist_items_failed");
+    }
+  },
+
+  async updateModuleThumbnail(moduleId: string, thumbnailUrl: string) {
+    try {
+      const { error } = await supabase
+        .from("journey_modules")
+        .update({ thumbnail_url: thumbnailUrl })
+        .eq("id", moduleId);
+      if (error) throw new ServiceError("db_error", error.message);
+    } catch (e) {
+      throw normalize(e, "update_module_thumbnail_failed");
+    }
+  },
+
+  async duplicateModule(moduleId: string) {
+    try {
+      // 1. Get original module
+      const { data: module, error: getError } = await supabase
+        .from("journey_modules")
+        .select("*")
+        .eq("id", moduleId)
+        .single();
+      
+      if (getError) throw new ServiceError("db_error", getError.message);
+
+      // 2. Prepare new module data
+      const { id, created_at, updated_at, ...moduleData } = module;
+      
+      // 3. Shift order_index for subsequent modules
+      const { error: shiftError } = await (supabase.rpc as any)("increment_module_indices", {
+        _phase_id: module.phase_id,
+        _start_index: module.order_index + 1
+      });
+      
+      // If RPC doesn't exist yet, we'll handle it manually in a migration if needed, 
+      // but let's try to do it via a simple update first if we can.
+      // For now, let's just insert it right after.
+      
+      const newModule = {
+        ...moduleData,
+        title: `${module.title} (Cópia)`,
+        order_index: module.order_index + 1
+      };
+
+      const { data, error: insertError } = await supabase
+        .from("journey_modules")
+        .insert(newModule)
+        .select()
+        .single();
+
+      if (insertError) throw new ServiceError("db_error", insertError.message);
+      return data;
+    } catch (e) {
+      throw normalize(e, "duplicate_module_failed");
     }
   }
 };
