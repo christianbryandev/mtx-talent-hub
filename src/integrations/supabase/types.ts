@@ -838,6 +838,7 @@ export type Database = {
           content_type: string | null
           created_at: string
           description: string | null
+          duration_minutes: number | null
           id: string
           order_index: number
           phase_id: string
@@ -849,6 +850,7 @@ export type Database = {
           content_type?: string | null
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           id?: string
           order_index?: number
           phase_id: string
@@ -860,6 +862,7 @@ export type Database = {
           content_type?: string | null
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           id?: string
           order_index?: number
           phase_id?: string
@@ -919,6 +922,7 @@ export type Database = {
           has_quiz: boolean
           id: string
           order_index: number
+          status: string | null
           title: string
           updated_at: string
           xp_reward: number
@@ -929,6 +933,7 @@ export type Database = {
           has_quiz?: boolean
           id?: string
           order_index: number
+          status?: string | null
           title: string
           updated_at?: string
           xp_reward?: number
@@ -939,6 +944,7 @@ export type Database = {
           has_quiz?: boolean
           id?: string
           order_index?: number
+          status?: string | null
           title?: string
           updated_at?: string
           xp_reward?: number
