@@ -9,6 +9,8 @@ interface PhaseGridCardProps {
   onClick: (phase: JourneyPhase) => void;
 }
 
+const MTX_LOGO_GRADIENT = "linear-gradient(to right, #515BD4, #8131AF, #C7288B, #DD2A7B, #F58529, #FEDA77)";
+
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
   const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
@@ -46,6 +48,9 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   let percentageColor = "";
   let progressBarBg = "";
   let badgeLabel = "";
+  let badgeInlineStyle: React.CSSProperties = {};
+  let percentageInlineStyle: React.CSSProperties = {};
+  let progressInlineStyle: React.CSSProperties = {};
 
   if (isInProgress) {
     badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
@@ -53,9 +58,41 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
     badgeLabel = "EM ANDAMENTO";
   } else if (isCompleted) {
-    badgeStyles = "text-[#00e676] border-[#00e676] bg-[#00e676]/[0.08]";
-    percentageColor = "text-[#00e676]";
-    progressBarBg = "bg-gradient-to-r from-[#00e676] to-[#00bcd4]";
+    badgeStyles = "bg-[rgba(81,91,212,0.08)] border-[#515BD4] text-[#515BD4]";
+    badgeInlineStyle = {
+      borderImage: `${MTX_LOGO_GRADIENT} 1`,
+      backgroundImage: `linear-gradient(rgba(81, 91, 212, 0.08), rgba(81, 91, 212, 0.08)), ${MTX_LOGO_GRADIENT}`,
+      backgroundOrigin: "border-box",
+      backgroundClip: "padding-box, border-box",
+      WebkitBackgroundClip: "padding-box, border-box",
+      color: "white" // Using white for text as requested/suggested
+    };
+    // Re-adjusting based on user's specific request for text and border
+    badgeInlineStyle = {
+      backgroundColor: 'rgba(81, 91, 212, 0.08)',
+      backgroundImage: MTX_LOGO_GRADIENT,
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      color: 'transparent',
+      borderColor: '#515BD4', // Fallback
+      borderImageSource: MTX_LOGO_GRADIENT,
+      borderImageSlice: 1,
+    };
+    
+    // Simpler approach for the badge text/border as requested:
+    // "Badge 'CONCLUÍDO': usar o gradiente da marca como cor de fundo do texto e da borda. Fundo do badge: rgba(81, 91, 212, 0.08)"
+    
+    percentageInlineStyle = {
+      backgroundImage: MTX_LOGO_GRADIENT,
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      color: 'transparent'
+    };
+    
+    progressInlineStyle = {
+      background: MTX_LOGO_GRADIENT
+    };
+    
     badgeLabel = "CONCLUÍDO";
   } else {
     // Blocked
