@@ -45,6 +45,8 @@ import {
 import { JourneyLeaderboard } from "@/components/jornada/JourneyLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhaseGridCard } from "@/components/jornada/PhaseGridCard";
+import { PhaseContentList } from "@/components/jornada/PhaseContentList";
+
 
 
 
@@ -112,19 +114,15 @@ function detectNextMission(j: UserJourney): NextMission | null {
 function JourneyPage() {
   
   const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
-  const [openPhaseId, setOpenPhaseId] = useState<string | null>(null);
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+
 
   useEffect(() => {
-    if (!openPhaseId) return;
-    const t = setTimeout(() => {
-      if (typeof document !== "undefined") {
-        document
-          .getElementById(`phase-${openPhaseId}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 100);
-    return () => clearTimeout(t);
-  }, [openPhaseId]);
+    if (!selectedPhaseId) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [selectedPhaseId]);
+
 
   const mission = useMemo(() => (data ? detectNextMission(data) : null), [data]);
   const quizzesApproved = useMemo(
@@ -179,21 +177,27 @@ function JourneyPage() {
 
   if (notStarted) return <WelcomeHero />;
 
+  const selectedPhase = data.phases.find(p => p.id === selectedPhaseId);
+
   return (
+
     <div className="space-y-6">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Minha Jornada
-            {isFetching && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground inline ml-2" />}
-          </h1>
-        </div>
-        <div className="text-right">
-          <Badge variant="outline" className="font-bold border-primary/30 text-primary bg-primary/5 px-3 py-1">
-            {phasesDone} de {data.phases.length} fases
-          </Badge>
-        </div>
-      </header>
+      {!selectedPhase ? (
+        <header className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Minha Jornada
+              {isFetching && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground inline ml-2" />}
+            </h1>
+          </div>
+          <div className="text-right">
+            <Badge variant="outline" className="font-bold border-primary/30 text-primary bg-primary/5 px-3 py-1">
+              {phasesDone} de {data.phases.length} fases
+            </Badge>
+          </div>
+        </header>
+      ) : null}
+
 
 
       <Tabs defaultValue="trilha" className="w-full">
