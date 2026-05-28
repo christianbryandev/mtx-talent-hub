@@ -16,7 +16,10 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const phasePctRaw = modulesCount > 0 ? Math.round((modulesDone / modulesCount) * 100) : 0;
   
   const isLocked = phase.status === "bloqueada";
-  const isCompleted = phase.status === "concluida" || (phase as any).status === "concluido" || phase.raw_status === "concluido" || phasePctRaw === 100;
+  const isCompleted = phase.status?.toLowerCase().includes("conclu") || 
+                     phase.raw_status?.toLowerCase().includes("conclu") || 
+                     (phase as any).status === "concluido" || 
+                     phasePctRaw === 100;
   const isInProgress = !isLocked && !isCompleted;
 
   // Se estiver concluída, forçamos 100% para evitar inconsistências com dados legados
