@@ -62,18 +62,36 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 
 function JourneyPage() {
   const { isAdmin } = usePermissions();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const { data, isLoading, isError, error, isFetching } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
-
-
 
   useEffect(() => {
     if (!selectedPhaseId && !activeQuizPhaseId) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedPhaseId, activeQuizPhaseId]);
 
+  const completeModule = async (moduleId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("user_module_progress")
+        .upsert({ 
+          user_id: user.id, 
+          module_id: moduleId, 
+          completed: true, 
+          completed_at: new Date().toISOString() 
+        }, { onConflict: "user_id,module_id" });
+      
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["journey"] });
+    } catch (err) {
+      console.error("Error marking module as completed", err);
+    }
+  };
 
   const phasesDone = useMemo(
     () => (data ? data.phases.filter((p) => p.status === "concluida").length : 0),
@@ -104,27 +122,7 @@ function JourneyPage() {
   if (!data) return <p className="text-muted-foreground">Sem dados.</p>;
 
   if (data.phases.length === 0) {
-  const qc = useQueryClient();
-  const { user } = useAuth();
 
-  const completeModule = async (moduleId: string) => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from("user_module_progress")
-        .upsert({ 
-          user_id: user.id, 
-          module_id: moduleId, 
-          completed: true, 
-          completed_at: new Date().toISOString() 
-        }, { onConflict: "user_id,module_id" });
-      
-      if (error) throw error;
-      qc.invalidateQueries({ queryKey: ["journey"] });
-    } catch (err) {
-      console.error("Error marking module as completed", err);
-    }
-  };
 
   return (
 
