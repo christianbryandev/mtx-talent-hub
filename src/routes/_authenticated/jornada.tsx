@@ -55,10 +55,12 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 });
 
 function JourneyPage() {
-  const { data, isLoading, isError, error, isFetching, toggleItem } = useJourney();
+  const { isAdmin } = usePermissions();
+  const { data, isLoading, isError, error, isFetching } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
+
 
 
   useEffect(() => {
