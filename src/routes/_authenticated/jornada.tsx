@@ -231,6 +231,60 @@ function JourneyPage() {
           <JourneyLeaderboard />
         </TabsContent>
       </Tabs>
+      {/* Modal de Vídeo */}
+      <Dialog open={!!selectedModule} onOpenChange={(open) => !open && setSelectedModule(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none shadow-2xl sm:rounded-2xl">
+          {selectedModule && (
+            <div className="flex flex-col">
+              <DialogHeader className="p-4 bg-background border-b border-border/10">
+                <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] h-4">AULA</Badge>
+                  {selectedModule.title}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                {selectedModule.content_body ? (
+                  <video 
+                    src={selectedModule.content_body} 
+                    controls 
+                    autoPlay 
+                    className="w-full h-full"
+                    onEnded={() => {
+                      completeModule(selectedModule.id);
+                      toast.success("Aula concluída! Próximo item liberado.");
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <XCircle className="h-10 w-10 opacity-20" />
+                    <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 bg-background border-t border-border/10 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Conteúdo da Fase</span>
+                  <span className="text-sm font-medium">{selectedPhase?.title}</span>
+                </div>
+                <Button 
+                  onClick={() => {
+                    completeModule(selectedModule.id);
+                    setSelectedModule(null);
+                    toast.success("Aula concluída!");
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Marcar como assistida
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
