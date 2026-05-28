@@ -65,14 +65,14 @@ export function ContentItemCard({
   return (
     <Card
       onClick={() => !isLocked && onClick()}
-      className={`relative overflow-hidden transition-all border-[1px] border-white/10 p-4 flex items-center gap-4 bg-[#111118] rounded-[12px] ${
+      className={`relative overflow-hidden transition-all border-[1px] border-[rgba(255,255,255,0.07)] p-4 flex items-center gap-4 bg-[#111118] rounded-[12px] ${
         isLocked 
           ? "opacity-60 cursor-not-allowed" 
           : "hover:border-white/20 active:scale-[0.99] cursor-pointer"
       }`}
     >
       {/* Bloco da esquerda (tipo + número) */}
-      <div className="shrink-0 flex items-center gap-3 bg-white/5 rounded-[8px] px-3 py-2">
+      <div className="shrink-0 flex items-center gap-4 bg-[rgba(255,255,255,0.05)] rounded-[8px] px-[12px] py-[8px]">
         <div className="flex flex-col">
           <span className="text-[9px] font-medium text-[#888888] tracking-[2px] leading-none mb-1">
             {getTypeLabel()}
@@ -81,7 +81,7 @@ export function ContentItemCard({
             {itemNumber}
           </span>
         </div>
-        <div className="h-8 w-[1px] bg-white/10 mx-1" />
+        <div className="h-8 w-[1px] bg-white/10" />
         <TypeIcon />
       </div>
 
