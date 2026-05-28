@@ -50,102 +50,79 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
     <Card
       onClick={() => !isLocked && onClick(phase)}
       className={cn(
-        "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px] shadow-none",
+        "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-72 rounded-[12px] shadow-none",
         "bg-[#0a0a0a]",
         isLocked ? "cursor-not-allowed" : "hover:brightness-125 active:scale-[0.98] group"
       )}
     >
-      {/* Cinematic Background Art */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#0d0a0d] to-[#1a0a1a]" />
+      {/* Cinematic Background Gradient */}
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#0a0a0a_0%,#1a0a1a_100%)]" />
       
-      {/* Decorative Glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Subtle Background Art Layers */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.4]">
+        {/* Glows */}
         <div className={cn(
           "absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full blur-[100px] transition-all duration-700",
-          isInProgress ? "bg-[#e040fb] opacity-[0.12]" : isCompleted ? "bg-[#00e676] opacity-[0.1]" : "bg-[#ffffff] opacity-[0.04]"
+          isInProgress ? "bg-[#e040fb] opacity-[0.1]" : isCompleted ? "bg-[#00e676] opacity-[0.08]" : "bg-[#ffffff] opacity-[0.02]"
         )} />
         <div className={cn(
           "absolute -bottom-[30%] -left-[20%] w-[90%] h-[90%] rounded-full blur-[120px] transition-all duration-700",
-          isInProgress ? "bg-[#ff6d00] opacity-[0.08]" : isCompleted ? "bg-[#00bcd4] opacity-[0.06]" : "bg-[#ffffff] opacity-[0.02]"
+          isInProgress ? "bg-[#ff6d00] opacity-[0.06]" : isCompleted ? "bg-[#00bcd4] opacity-[0.04]" : "bg-[#ffffff] opacity-[0.01]"
         )} />
         
-        {/* Subtle Noise/Grain Texture */}
-        <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
+        {/* Subtle Noise/Grain */}
+        <div className="absolute inset-0 opacity-[0.1] mix-blend-soft-light bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
 
         {/* Subtle Geometric Pattern */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.03] text-white" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg className="absolute inset-0 w-full h-full opacity-[0.02] text-white" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             <pattern id={`pattern-${phase.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
               <circle cx="1" cy="1" r="0.5" fill="currentColor" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill={`url(#pattern-${phase.id})`} />
-          <path d="M0 30 L100 70 M0 70 L100 30" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 2" />
         </svg>
 
-        {/* Floating Accent Lines (animated on hover via group) */}
+        {/* Floating Accent Lines */}
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 translate-x-[-100%] group-hover:translate-x-[100%]" />
       </div>
 
-      {/* Badge Status */}
-      <div className="absolute top-3 right-3 z-10">
-        <Badge 
-          variant="outline" 
-          className={cn(
-            "text-[10px] font-bold px-2 py-0.5 border backdrop-blur-sm",
-            badgeStyles
-          )}
-        >
-          {badgeLabel}
-        </Badge>
-      </div>
-
-      {/* Visual Upper Area */}
-      <div className="pt-8 pb-4 px-6 flex flex-col items-start relative z-10">
-        <span className="text-[9px] font-medium text-[#aaaaaa] tracking-[3px] uppercase mb-0">
-          FASE
-        </span>
-        <span className={cn(
-          "text-[72px] font-bold tracking-tighter leading-[0.9] drop-shadow-2xl transition-colors duration-500",
-          textPrimary
-        )}>
-          {phaseNumber}
-        </span>
-      </div>
-
-      {/* Footer / Content */}
-      <div className="px-6 pb-6 pt-2 flex-1 flex flex-col justify-end">
-        <h3 className={cn(
-          "font-bold text-[15px] line-clamp-1 mb-3",
-          textPrimary
-        )}>
-          {phase.title}
-        </h3>
-        
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-[#888888]">
-            {isLocked ? (
-              <>
-                <Lock className="h-3 w-3" />
-                <span>Bloqueada</span>
-              </>
-            ) : (
-              <span>
-                {isCompleted 
-                  ? `${modulesCount} módulos · 100%` 
-                  : `${modulesDone} de ${modulesCount} módulos`
-                }
-              </span>
-            )}
-          </div>
-          <span className={cn("font-bold", percentageColor)}>
-            {isLocked ? "0%" : `${phasePct}%`}
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col h-full p-6">
+        {/* Top Section: Number and Title */}
+        <div className="flex flex-col">
+          <span className={cn(
+            "text-[72px] font-bold tracking-tighter leading-[1.1] transition-colors duration-500",
+            textPrimary
+          )}>
+            {phaseNumber}
           </span>
+          <h3 className={cn(
+            "font-bold text-[18px] mt-[-10px] line-clamp-2",
+            textPrimary
+          )}>
+            {phase.title}
+          </h3>
+        </div>
+
+        {/* Bottom Section: Progress Info */}
+        <div className="mt-auto flex items-end justify-between pb-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[12px] text-[#aaaaaa]">
+              {isLocked ? "Fase Bloqueada" : `${modulesCount} módulos`}
+            </span>
+          </div>
+          
+          <div className="flex flex-col items-end">
+            <span className={cn("text-[14px] font-bold", percentageColor)}>
+              {isLocked ? "0%" : `${phasePct}%`}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Custom Progress Bar at bottom */}
-      <div className={cn("h-[3px] w-full", progressBarBg)} />
+      {/* Progress Bar (Bottom Edge) */}
+      <div className={cn("absolute bottom-0 left-0 h-[4px] w-full", progressBarBg)} />
     </Card>
   );
 }
