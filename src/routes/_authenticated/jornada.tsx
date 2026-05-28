@@ -286,7 +286,7 @@ function JourneyPage() {
                   onClick={() => {
                     completeModule(selectedModule.id);
                     setSelectedModule(null);
-                    toast.success("Aula concluída!");
+                    toast.success(selectedModule.content_type === "video" ? "Aula concluída!" : "Leitura concluída!");
                   }}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
