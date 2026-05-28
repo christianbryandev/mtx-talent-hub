@@ -15,6 +15,7 @@ import {
   Video,
   FileText,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
@@ -29,9 +30,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-catalog")({
   head: () => ({ meta: [{ title: "Admin · Catálogo Jornada — MTX Hub" }] }),
@@ -56,7 +57,7 @@ interface Module {
   content_type: string;
   content_body: string | null;
   order_index: number;
-  duration?: string;
+  duration_minutes?: number | null;
 }
 
 function AdminJourneyCatalogPage() {
@@ -117,22 +118,17 @@ function PhasesTab({
         .select("*")
         .order("order_index");
       if (error) throw error;
-      return data as Phase[];
+      return (data || []) as unknown as Phase[];
     },
   });
 
   const reorderPhases = useMutation({
     mutationFn: async (newPhases: Phase[]) => {
-      const updates = newPhases.map((p, idx) => ({
-        id: p.id,
-        order_index: idx + 1,
-      }));
-      
-      for (const update of updates) {
+      for (let i = 0; i < newPhases.length; i++) {
         await supabase
           .from("journey_phase_catalog")
-          .update({ order_index: update.order_index })
-          .eq("id", update.id);
+          .update({ order_index: i + 1 })
+          .eq("id", newPhases[i].id);
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-phases"] }),
@@ -175,7 +171,7 @@ function PhasesTab({
   if (selectedPhase) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => onSelectPhase(null)} className="p-0 hover:bg-transparent">
+        <Button variant="ghost" onClick={() => onSelectPhase(null)} className="p-0 hover:bg-transparent text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar para fases
         </Button>
@@ -218,7 +214,7 @@ function PhasesTab({
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-sm text-primary">FASE {p.order_index.toString().padStart(2, "0")}</span>
                               <Badge variant={p.status === "publicado" ? "secondary" : "outline"} className="text-[10px]">
-                                {p.status.toUpperCase()}
+                                {(p.status || "rascunho").toUpperCase()}
                               </Badge>
                             </div>
                             <CardTitle className="text-base truncate mt-0.5">{p.title}</CardTitle>
@@ -231,6 +227,13 @@ function PhasesTab({
                 </Draggable>
               ))}
               {provided.placeholder}
+              {(phases.data ?? []).length === 0 && (
+                <Card className="border-dashed">
+                  <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma fase no catálogo. Crie a primeira.
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </Droppable>
@@ -280,8 +283,8 @@ function PhaseEditor({ phase }: { phase: Phase }) {
   });
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <Card className="border-border/60">
         <CardHeader>
           <CardTitle className="text-lg">Configurações da Fase</CardTitle>
         </CardHeader>
@@ -294,7 +297,7 @@ function PhaseEditor({ phase }: { phase: Phase }) {
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select 
-                value={draft.status} 
+                value={draft.status || "rascunho"} 
                 onValueChange={(v: "publicado" | "rascunho") => setDraft({ ...draft, status: v })}
               >
                 <SelectTrigger>
@@ -328,22 +331,7 @@ function PhaseEditor({ phase }: { phase: Phase }) {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">Conteúdos da Fase</h3>
-          <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={() => toast.info("Funcionalidade de Quiz em breve")}>
-              <Plus className="h-4 w-4 mr-2" />
-              + Quiz
-            </Button>
-            <Button size="sm" onClick={() => toast.info("Funcionalidade de Vídeo em breve")}>
-              <Plus className="h-4 w-4 mr-2" />
-              + Vídeo
-            </Button>
-          </div>
-        </div>
-        <ModulesEditor phaseId={phase.id} />
-      </div>
+      <ModulesEditor phaseId={phase.id} />
     </div>
   );
 }
@@ -352,6 +340,8 @@ function PhaseEditor({ phase }: { phase: Phase }) {
 
 function ModulesEditor({ phaseId }: { phaseId: string }) {
   const qc = useQueryClient();
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+
   const modules = useQuery<Module[]>({
     queryKey: ["catalog-modules", phaseId],
     queryFn: async () => {
@@ -361,28 +351,41 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
         .eq("phase_id", phaseId)
         .order("order_index");
       if (error) throw error;
-      return data as Module[];
+      return (data || []) as unknown as Module[];
     },
+  });
+
+  const createModule = useMutation({
+    mutationFn: async (type: "video" | "quiz") => {
+      const nextOrder = (modules.data?.length ?? 0) + 1;
+      const { data, error } = await supabase.from("journey_modules").insert({
+        phase_id: phaseId,
+        title: type === "video" ? "Novo Vídeo" : "Novo Quiz",
+        content_type: type,
+        order_index: nextOrder,
+        unlocked: true,
+      }).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success("Conteúdo criado");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      setEditingModule(data as unknown as Module);
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const reorderModules = useMutation({
     mutationFn: async (newModules: Module[]) => {
-      const updates = newModules.map((m, idx) => ({
-        id: m.id,
-        order_index: idx + 1,
-      }));
-      
-      for (const update of updates) {
+      for (let i = 0; i < newModules.length; i++) {
         await supabase
           .from("journey_modules")
-          .update({ order_index: update.order_index })
-          .eq("id", update.id);
+          .update({ order_index: i + 1 })
+          .eq("id", newModules[i].id);
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
-      qc.invalidateQueries({ queryKey: ["user-journey"] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -397,61 +400,179 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
   if (modules.isLoading) return <Skeleton className="h-32 w-full" />;
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="modules">
-        {(provided) => (
-          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-            {(modules.data ?? []).map((m, index) => (
-              <Draggable key={m.id} draggableId={m.id} index={index}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    className="flex items-center gap-3 p-3 bg-muted/20 border border-border/60 rounded-lg group hover:border-primary/20 transition-all"
-                  >
-                    <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">
-                      <GripVertical className="h-5 w-5" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-muted/50 rounded flex items-center justify-center shrink-0">
-                        {m.content_type === "quiz" ? (
-                          <FileText className="h-5 w-5 text-primary" />
-                        ) : (
-                          <Video className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[9px] h-4">
-                            {m.content_type === "quiz" ? "QUIZ" : "VÍDEO"}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground font-mono">#{m.order_index}</span>
-                        </div>
-                        <h4 className="text-sm font-bold truncate">{m.title}</h4>
-                      </div>
-                    </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold">Conteúdos da Fase</h3>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => createModule.mutate("quiz")}>
+            <Plus className="h-4 w-4 mr-2" />
+            + Quiz
+          </Button>
+          <Button size="sm" onClick={() => createModule.mutate("video")}>
+            <Plus className="h-4 w-4 mr-2" />
+            + Vídeo
+          </Button>
+        </div>
+      </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => toast.info("Edição em breve")}>Editar</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => toast.info("Remoção em breve")}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="modules">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+              {(modules.data ?? []).map((m, index) => (
+                <Draggable key={m.id} draggableId={m.id} index={index}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className="flex items-center gap-3 p-3 bg-muted/20 border border-border/60 rounded-lg group hover:border-primary/20 transition-all"
+                    >
+                      <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">
+                        <GripVertical className="h-5 w-5" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-muted/50 rounded flex items-center justify-center shrink-0">
+                          {m.content_type === "quiz" ? (
+                            <FileText className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Video className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] h-4">
+                              {m.content_type.toUpperCase()}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground font-mono">#{m.order_index}</span>
+                          </div>
+                          <h4 className="text-sm font-bold truncate">{m.title}</h4>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingModule(m)}>Editar</Button>
+                        <ModuleDeleteButton moduleId={m.id} phaseId={phaseId} />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
-            {(modules.data ?? []).length === 0 && (
-              <p className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border/60 rounded-lg">
-                Nenhum conteúdo adicionado ainda.
-              </p>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              {(modules.data ?? []).length === 0 && (
+                <p className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                  Nenhum conteúdo adicionado ainda.
+                </p>
+              )}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      {editingModule && (
+        <ModuleEditDialog 
+          module={editingModule} 
+          onClose={() => setEditingModule(null)} 
+          phaseId={phaseId}
+        />
+      )}
+    </div>
+  );
+}
+
+function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: string }) {
+  const qc = useQueryClient();
+  const remove = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("journey_modules").delete().eq("id", moduleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Conteúdo removido");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className="text-destructive" 
+      onClick={() => confirm("Remover este conteúdo?") && remove.mutate()}
+    >
+      <Trash2 className="h-4 w-4" />
+    </Button>
+  );
+}
+
+function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClose: () => void; phaseId: string }) {
+  const qc = useQueryClient();
+  const [draft, setDraft] = useState<Module>(module);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(module);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("journey_modules")
+        .update({
+          title: draft.title,
+          description: draft.description,
+          content_body: draft.content_body,
+          duration_minutes: draft.duration_minutes,
+        })
+        .eq("id", module.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Módulo salvo");
+      qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Editar {module.content_type === "video" ? "Vídeo" : "Quiz"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Título</Label>
+              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+            </div>
+            {module.content_type === "video" && (
+              <div className="space-y-1.5">
+                <Label>Duração (minutos)</Label>
+                <Input 
+                  type="number" 
+                  value={draft.duration_minutes ?? ""} 
+                  onChange={(e) => setDraft({ ...draft, duration_minutes: e.target.value ? Number(e.target.value) : null })} 
+                />
+              </div>
             )}
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>{module.content_type === "video" ? "URL do Vídeo / Conteúdo" : "Instruções do Quiz"}</Label>
+              <Textarea 
+                value={draft.content_body ?? ""} 
+                onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
+                rows={4}
+              />
+            </div>
           </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+            {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar Alterações
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -470,7 +591,7 @@ function AssignmentsTab() {
         .select("*")
         .order("order_index");
       if (error) throw error;
-      return data as Phase[];
+      return (data || []) as unknown as Phase[];
     },
   });
 
@@ -525,7 +646,7 @@ function AssignmentsTab() {
   const available = (phases.data ?? []).filter((p) => !assignedIds.has(p.id));
 
   return (
-    <Card>
+    <Card className="border-border/60">
       <CardHeader>
         <CardTitle className="text-base">Atribuir fases a um jovem</CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -575,7 +696,7 @@ function AssignmentsTab() {
               ) : (assignments.data ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma atribuição individual.</p>
               ) : (
-                <div className="divide-y rounded-md border">
+                <div className="divide-y rounded-md border border-border/60">
                   {(assignments.data ?? []).map((a) => {
                     const p = phaseMap.get(a.phase_id);
                     return (
