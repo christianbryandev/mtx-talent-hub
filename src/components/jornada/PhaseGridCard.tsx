@@ -51,10 +51,35 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       onClick={() => !isLocked && onClick(phase)}
       className={cn(
         "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px] shadow-none",
-        "bg-gradient-to-br from-[#0a0a0a] to-[#1a0a1a]",
+        "bg-[#0a0a0a]",
         isLocked ? "cursor-not-allowed" : "hover:brightness-125 active:scale-[0.98]"
       )}
     >
+      {/* Cinematic Background Art */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#0d0a0d] to-[#1a0a1a]" />
+      
+      {/* Decorative Glows */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={cn(
+          "absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full blur-[100px] transition-opacity duration-500",
+          isInProgress ? "bg-[#e040fb] opacity-[0.08]" : isCompleted ? "bg-[#00e676] opacity-[0.06]" : "bg-[#ffffff] opacity-[0.02]"
+        )} />
+        <div className={cn(
+          "absolute -bottom-[30%] -left-[20%] w-[90%] h-[90%] rounded-full blur-[120px] transition-opacity duration-500",
+          isInProgress ? "bg-[#ff6d00] opacity-[0.05]" : isCompleted ? "bg-[#00bcd4] opacity-[0.04]" : "bg-[#ffffff] opacity-[0.01]"
+        )} />
+        
+        {/* Subtle Geometric Pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03] text-white" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <pattern id={`pattern-${phase.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.5" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill={`url(#pattern-${phase.id})`} />
+          <path d="M0 30 L100 70 M0 70 L100 30" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 2" />
+        </svg>
+      </div>
 
 
       {/* Badge Status */}
