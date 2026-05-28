@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "re_WnMrGQb9_5WLbGYytSN71N5wicb1vB1rD";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -18,8 +18,8 @@ serve(async (req) => {
   try {
     const { candidato_id, email, nome } = await req.json();
 
-    if (!candidato_id || !email || !nome) {
-      throw new Error("candidato_id, email e nome são obrigatórios");
+    if (!email || !nome) {
+      throw new Error("E-mail e nome são obrigatórios");
     }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
