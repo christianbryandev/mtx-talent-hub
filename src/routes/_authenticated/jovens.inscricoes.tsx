@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Copy, X } from "lucide-react";
+import { ArrowLeft, Check, Copy, X, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -91,84 +91,29 @@ function InscricoesPage() {
 
   const approve = useMutation({
     mutationFn: async (app: YoungApplication) => {
-      const today = new Date().toISOString().split("T")[0];
-      const { data: created, error } = await supabase
-        .from("young_people")
-        .insert({
-          full_name: app.full_name,
-          birth_date: app.birth_date,
-          phone: app.phone,
-          whatsapp: app.whatsapp,
-          email: app.email,
-          address: app.address,
-          city: app.city,
-          state: app.state,
-          education_level: app.education_level,
-          family_income: app.family_income,
-          testimony: app.personal_story,
-          dreams: app.dreams,
-          skills: app.perceived_skills,
-          interest_area: app.interest_area,
-          has_laptop: !!app.has_laptop,
-          has_phone: !!app.has_phone,
-          has_internet: !!app.has_internet,
-          status: "aprovado",
-          trail_phase: "fase_1",
-          entry_date: today,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.functions.invoke("send-approval-email", {
+        body: { 
+          candidato_id: app.id, 
+          email: app.email, 
+          nome: app.full_name 
+        },
+      });
+      
       if (error) throw error;
-      await supabase.from("young_applications").update({ status: "aprovado" }).eq("id", app.id);
-      await supabase.from("young_evolution").insert({
-        young_id: created.id,
-        recorded_by: user?.id ?? null,
-        type: "status_change",
-        new_value: "aprovado",
-        description: "Inscrição aprovada e cadastro criado",
-      });
-      await supabase.from("activity_logs").insert({
-        user_id: user?.id ?? null,
-        action: "application_approved",
-        entity_type: "young_applications",
-        entity_id: app.id,
-        description: `Inscrição aprovada: ${app.full_name}`,
-      });
-
-      // Criar convite e enviar e-mail de aprovação
-      try {
-        const res = await createInviteFn({
-          data: {
-            email: app.email,
-            fullName: app.full_name,
-            role: "jovem_aprendiz",
-          },
-        });
-        const token = (res as { invite: { token: string } }).invite.token;
-        const link = `${window.location.origin}/convite/${token}`;
-
-        await supabase.functions.invoke("send-approval-email", {
-          body: { 
-            email: app.email, 
-            full_name: app.full_name,
-            invite_link: link 
-          },
-        });
-      } catch (err) {
-        console.error("Erro ao processar convite/e-mail:", err);
-      }
-
-      return { created, app };
+      if (data?.error) throw new Error(data.error);
+      
+      return { app };
     },
-    onSuccess: ({ created, app }) => {
-      toast.success(`${app.full_name} foi aprovado(a)! E-mail de boas-vindas enviado.`);
+    onSuccess: ({ app }) => {
+      toast.success("Candidato aprovado e e-mail enviado! ✅");
       qc.invalidateQueries({ queryKey: ["young_applications"] });
-      qc.invalidateQueries({ queryKey: ["young_people"] });
       qc.invalidateQueries({ queryKey: ["pending-applications-count"] });
       setDetail(null);
-      setComplement({ youngId: created.id, app });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      console.error("Erro na aprovação:", e);
+      toast.error("Erro ao aprovar candidato. Tente novamente.");
+    },
   });
 
   return (
@@ -234,14 +179,34 @@ function InscricoesPage() {
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
-                      {a.status === "pendente" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateStatus.mutate({ appId: a.id, status: "em_analise" })}
-                        >
-                          Analisar
-                        </Button>
+                      {a.status === "aprovado" ? (
+                        <Badge variant="outline" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                          Aprovado
+                        </Badge>
+                      ) : (
+                        <div className="flex gap-1">
+                          {a.status === "pendente" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateStatus.mutate({ appId: a.id, status: "em_analise" })}
+                            >
+                              Analisar
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={() => approve.mutate(a)}
+                            disabled={approve.isPending && approve.variables?.id === a.id}
+                          >
+                            {approve.isPending && approve.variables?.id === a.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Aprovar"
+                            )}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </TableCell>
@@ -303,8 +268,13 @@ function InscricoesPage() {
                   <Button
                     onClick={() => approve.mutate(detail)}
                     disabled={detail.status === "aprovado" || approve.isPending}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    <Check className="mr-1.5 h-4 w-4" />
+                    {approve.isPending ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1.5 h-4 w-4" />
+                    )}
                     {approve.isPending ? "Aprovando..." : "Aprovar"}
                   </Button>
                 </div>
