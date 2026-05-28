@@ -153,9 +153,10 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
             )}
             style={isCompleted ? {
               backgroundColor: 'rgba(81, 91, 212, 0.08)',
-              borderImage: `${MTX_LOGO_GRADIENT} 1`,
-              borderStyle: 'solid',
-              borderWidth: '1px',
+              border: '1px solid transparent',
+              backgroundImage: `linear-gradient(rgba(81, 91, 212, 0.08), rgba(81, 91, 212, 0.08)), ${MTX_LOGO_GRADIENT}`,
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
             } : {}}
           >
             {isCompleted ? (
