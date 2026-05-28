@@ -359,11 +359,11 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
   });
 
   const createModule = useMutation({
-    mutationFn: async (type: "video" | "quiz") => {
+    mutationFn: async (type: "video" | "quiz" | "texto") => {
       const nextOrder = (modules.data?.length ?? 0) + 1;
       const { data, error } = await supabase.from("journey_modules").insert({
         phase_id: phaseId,
-        title: type === "video" ? "Novo Vídeo" : "Novo Quiz",
+        title: type === "video" ? "Novo Vídeo" : type === "quiz" ? "Novo Quiz" : "Novo Texto",
         content_type: type,
         order_index: nextOrder
       }).select().single();
@@ -411,6 +411,10 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
             <Plus className="h-4 w-4 mr-2" />
             + Quiz
           </Button>
+          <Button variant="outline" size="sm" onClick={() => createModule.mutate("texto")}>
+            <Plus className="h-4 w-4 mr-2" />
+            + Texto
+          </Button>
           <Button size="sm" onClick={() => createModule.mutate("video")}>
             <Plus className="h-4 w-4 mr-2" />
             + Vídeo
@@ -437,6 +441,8 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
                       <div className="flex-1 min-w-0 flex items-center gap-3">
                         <div className="w-10 h-10 bg-muted/50 rounded flex items-center justify-center shrink-0">
                           {m.content_type === "quiz" ? (
+                            <FileText className="h-5 w-5 text-primary" />
+                          ) : m.content_type === "texto" ? (
                             <FileText className="h-5 w-5 text-primary" />
                           ) : (
                             <Video className="h-5 w-5 text-primary" />
@@ -570,7 +576,7 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Editar {module.content_type === "video" ? "Vídeo" : "Quiz"}</DialogTitle>
+          <DialogTitle>Editar {draft.content_type === "video" ? "Vídeo" : draft.content_type === "quiz" ? "Quiz" : "Texto"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -630,6 +636,16 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
                     onChange={handleFileUpload}
                   />
                 </div>
+              </div>
+            ) : draft.content_type === "texto" ? (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Conteúdo do Texto</Label>
+                <Textarea 
+                  value={draft.content_body ?? ""} 
+                  onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
+                  rows={10}
+                  placeholder="Escreva aqui o conteúdo que o jovem irá ler..."
+                />
               </div>
             ) : (
               <div className="space-y-1.5 sm:col-span-2">

@@ -52,7 +52,7 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
               key={module.id}
               orderIndex={index + 1}
               title={module.title}
-              type={module.content_type === "quiz" ? "quiz" : "video"}
+              type={module.content_type as any}
               isCompleted={module.completed}
               isLocked={!module.unlocked}
               onClick={() => onSelectItem(module)}

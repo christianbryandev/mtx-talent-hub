@@ -2,7 +2,7 @@ import { CheckCircle2, Circle, Lock, FileText, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-export type ContentType = "video" | "quiz" | "text";
+export type ContentType = "video" | "quiz" | "texto" | "text";
 
 interface ContentItemCardProps {
   type: ContentType;
@@ -44,6 +44,15 @@ export function ContentItemCard({
           <div className="w-16 h-12 bg-muted/80 rounded flex flex-col items-center justify-center border border-border/40 relative">
             <span className="text-[8px] font-black text-muted-foreground/60 tracking-tighter uppercase leading-none">
               AULA
+            </span>
+            <span className="text-xl font-black text-foreground/80 leading-none">
+              {itemNumber}
+            </span>
+          </div>
+        ) : type === "texto" || type === "text" ? (
+          <div className="w-16 h-12 bg-muted/80 rounded flex flex-col items-center justify-center border border-border/40 relative">
+            <span className="text-[8px] font-black text-muted-foreground/60 tracking-tighter uppercase leading-none">
+              TEXTO
             </span>
             <span className="text-xl font-black text-foreground/80 leading-none">
               {itemNumber}
