@@ -12,6 +12,7 @@ import {
   BookOpen,
   Target,
   Trophy,
+  Award,
   Zap,
   GraduationCap,
   ArrowRight,
@@ -208,6 +209,9 @@ function JourneyPage() {
       <Tabs defaultValue="trilha" className="w-full">
         <TabsList>
           <TabsTrigger value="trilha">Trilha</TabsTrigger>
+          <TabsTrigger value="conquistas">
+            <Award className="h-3.5 w-3.5 mr-1.5" /> Conquistas
+          </TabsTrigger>
           <TabsTrigger value="ranking">
             <Trophy className="h-3.5 w-3.5 mr-1.5" /> Ranking
           </TabsTrigger>
@@ -215,8 +219,6 @@ function JourneyPage() {
 
         <TabsContent value="trilha" className="space-y-6 mt-4">
           <NextMissionBlock mission={mission} onOpenPhase={(id) => setOpenPhaseId(id)} />
-
-          <JourneyCompletedBanner journey={data} />
 
           <IndicatorsRow
             xp={data.total_xp}
@@ -226,8 +228,6 @@ function JourneyPage() {
             quizzesApproved={quizzesApproved}
             quizzesTotal={quizzesTotal}
           />
-
-          <AchievementsSection journey={data} />
 
           <div className="space-y-4">
             {data.phases.map((phase) => (
@@ -240,6 +240,11 @@ function JourneyPage() {
               />
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="conquistas" className="space-y-6 mt-4">
+          <JourneyCompletedBanner journey={data} />
+          <AchievementsSection journey={data} />
         </TabsContent>
 
         <TabsContent value="ranking" className="mt-4">
