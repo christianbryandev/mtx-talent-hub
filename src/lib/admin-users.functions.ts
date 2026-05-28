@@ -38,7 +38,11 @@ export const deleteAuthUser = createServerFn({ method: "POST" })
 
     await assertSuperAdmin(supabase, callerId);
 
+    // Sign out user first to disconnect from app
+    await supabaseAdmin.auth.admin.signOut(data.userId).catch(() => {});
+    
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    // Deleting the profile will cascade to young_people if configured
     await supabaseAdmin.from("profiles").delete().eq("id", data.userId);
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,6 +35,14 @@ function ResetPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
+
+  // Log para depuração
+  useEffect(() => {
+    console.log("Página de redefinição de senha carregada");
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Sessão atual no reset-password:", session ? "Sim" : "Não");
+    });
+  }, []);
 
   const onSubmit = async ({ password }: FormValues) => {
     setLoading(true);
