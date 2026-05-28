@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 function SettingsPage() {
   const [testEmail, setTestEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [configStatus, setConfigStatus] = useState<"not_configured" | "configured" | "unknown">("unknown");
+  const [configStatus, setConfigStatus] = useState<"not_configured" | "configured" | "unknown">("configured");
 
   const sendTestEmail = useMutation({
     mutationFn: async (email: string) => {
