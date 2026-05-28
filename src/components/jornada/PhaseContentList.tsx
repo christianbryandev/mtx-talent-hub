@@ -1,0 +1,68 @@
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { JourneyPhase } from "@/services/journeyService";
+import { ContentItemCard } from "./ContentItemCard";
+import { Badge } from "@/components/ui/badge";
+
+interface PhaseContentListProps {
+  phase: JourneyPhase;
+  onBack: () => void;
+  onSelectItem: (item: any) => void;
+}
+
+export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentListProps) {
+  const phaseNumber = phase.order_index.toString().padStart(2, "0");
+
+  // Modules are the main content units now
+  const modules = phase.modules || [];
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      {/* Header */}
+      <div className="space-y-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBack}
+          className="p-0 h-auto hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Minha Jornada
+        </Button>
+        
+        <div>
+          <span className="text-xs font-bold text-primary tracking-widest uppercase">
+            Fase {phaseNumber}
+          </span>
+          <h2 className="text-3xl font-black text-foreground mt-1">
+            {phase.title}
+          </h2>
+        </div>
+      </div>
+
+      {/* List of contents */}
+      <div className="space-y-3">
+        {modules.length === 0 ? (
+          <div className="py-12 text-center border border-dashed border-border/60 rounded-lg">
+            <p className="text-muted-foreground text-sm">Nenhum conteúdo disponível nesta fase.</p>
+          </div>
+        ) : (
+          modules.map((module, index) => (
+            <ContentItemCard
+              key={module.id}
+              orderIndex={index + 1}
+              title={module.title}
+              type={module.content_type === "quiz" ? "quiz" : "video"}
+              isCompleted={module.completed}
+              isLocked={!module.unlocked}
+              onClick={() => onSelectItem(module)}
+              // Duration/Date/QuestionsCount would ideally come from the module data
+              duration={module.content_type === "video" ? "42min" : undefined}
+              questionsCount={module.content_type === "quiz" ? 5 : undefined}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
