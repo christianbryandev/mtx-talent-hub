@@ -2,6 +2,7 @@ import { JourneyPhase } from "@/services/journeyService";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PhaseGridCardProps {
   phase: JourneyPhase;
@@ -11,54 +12,86 @@ interface PhaseGridCardProps {
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const isLocked = phase.status === "bloqueada";
   const isCompleted = phase.status === "concluida";
-  const isInProgress = phase.status === "em_andamento" || phase.status === "aguardando_quiz" || phase.status === "reprovada";
+  const isInProgress = !isLocked && !isCompleted;
 
   const phaseNumber = phase.order_index.toString().padStart(2, "0");
   const phasePct = phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
   
-  // Modules count - using cards as modules for now as per current data structure or modules if available
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
   const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
+
+  // Cinematic Dark Style Colors
+  let badgeStyles = "";
+  let textPrimary = "text-[#ffffff]";
+  let percentageColor = "";
+  let progressBarBg = "";
+  let badgeLabel = "";
+
+  if (isInProgress) {
+    badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
+    percentageColor = "text-[#e040fb]";
+    progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
+    badgeLabel = "EM ANDAMENTO";
+  } else if (isCompleted) {
+    badgeStyles = "text-[#00e676] border-[#00e676] bg-[#00e676]/[0.08]";
+    percentageColor = "text-[#00e676]";
+    progressBarBg = "bg-gradient-to-r from-[#00e676] to-[#00bcd4]";
+    badgeLabel = "CONCLUÍDO";
+  } else {
+    // Blocked
+    badgeStyles = "text-[#666666] border-[#666666] bg-[#666666]/[0.08]";
+    textPrimary = "text-[#555555]";
+    percentageColor = "text-[#666666]";
+    progressBarBg = "bg-[#2a2a2a]";
+    badgeLabel = "BLOQUEADA";
+  }
 
   return (
     <Card
       onClick={() => !isLocked && onClick(phase)}
-      className={`relative overflow-hidden cursor-pointer transition-all border-border/60 flex flex-col h-full ${
-        isLocked ? "opacity-60 grayscale-[0.5] cursor-not-allowed bg-muted/30" : "hover:border-primary/40 bg-card active:scale-[0.98]"
-      }`}
+      className={cn(
+        "relative overflow-hidden cursor-pointer transition-all border-none flex flex-col h-full rounded-[12px]",
+        "bg-gradient-to-br from-[#0a0a0a] to-[#1a0a1a]",
+        isLocked ? "cursor-not-allowed" : "hover:brightness-110 active:scale-[0.98]"
+      )}
     >
       {/* Badge Status */}
       <div className="absolute top-3 right-3 z-10">
-        {isCompleted && (
-          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none text-[10px] font-bold px-2 py-0.5">
-            CONCLUÍDA
-          </Badge>
-        )}
-        {isInProgress && (
-          <Badge variant="outline" className="border-primary text-primary text-[10px] font-bold px-2 py-0.5 bg-primary/5">
-            EM ANDAMENTO
-          </Badge>
-        )}
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "text-[10px] font-bold px-2 py-0.5 border",
+            badgeStyles
+          )}
+        >
+          {badgeLabel}
+        </Badge>
       </div>
 
-      {/* Visual Upper Area (Thumbnail) */}
-      <div className="aspect-[16/9] w-full bg-muted/50 flex flex-col items-center justify-center relative border-b border-border/40">
-        <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">
-          Fase
+      {/* Visual Upper Area */}
+      <div className="pt-8 pb-4 px-6 flex flex-col items-start relative">
+        <span className="text-[9px] font-medium text-[#aaaaaa] tracking-[3px] uppercase mb-0">
+          FASE
         </span>
-        <span className="text-5xl font-black text-foreground tracking-tighter">
+        <span className={cn(
+          "text-[72px] font-bold tracking-tighter leading-[0.9]",
+          textPrimary
+        )}>
           {phaseNumber}
         </span>
       </div>
 
       {/* Footer / Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <h3 className="font-bold text-base line-clamp-1 text-foreground">
+      <div className="px-6 pb-6 pt-2 flex-1 flex flex-col justify-end">
+        <h3 className={cn(
+          "font-bold text-[15px] line-clamp-1 mb-3",
+          textPrimary
+        )}>
           {phase.title}
         </h3>
         
-        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-[#888888]">
             {isLocked ? (
               <>
                 <Lock className="h-3 w-3" />
@@ -73,11 +106,15 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
               </span>
             )}
           </div>
-          {!isLocked && !isCompleted && (
-            <span className="font-medium text-primary">{phasePct}%</span>
-          )}
+          <span className={cn("font-bold", percentageColor)}>
+            {isLocked ? "0%" : `${phasePct}%`}
+          </span>
         </div>
       </div>
+
+      {/* Custom Progress Bar at bottom */}
+      <div className={cn("h-[3px] w-full", progressBarBg)} />
     </Card>
   );
 }
+
