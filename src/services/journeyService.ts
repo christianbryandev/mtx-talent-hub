@@ -62,6 +62,8 @@ export interface JourneyModule {
   content_type: string;
   content_body: string | null;
   order_index: number;
+  duration_minutes: number | null;
+  questions_count?: number;
   unlocked: boolean;
   completed: boolean;
   items: JourneyChecklistItem[];
