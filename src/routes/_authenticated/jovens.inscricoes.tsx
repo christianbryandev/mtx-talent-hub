@@ -268,8 +268,13 @@ function InscricoesPage() {
                   <Button
                     onClick={() => approve.mutate(detail)}
                     disabled={detail.status === "aprovado" || approve.isPending}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    <Check className="mr-1.5 h-4 w-4" />
+                    {approve.isPending ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1.5 h-4 w-4" />
+                    )}
                     {approve.isPending ? "Aprovando..." : "Aprovar"}
                   </Button>
                 </div>
