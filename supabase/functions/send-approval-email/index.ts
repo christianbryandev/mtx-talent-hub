@@ -38,33 +38,14 @@ serve(async (req) => {
 
     // 1. Gerar link de acesso (invite para novos, magiclink para existentes)
     // Determinando a URL do app a partir do cabeçalho de origem ou referer, ou usando um padrão
-    const origin = req.headers.get("origin") || req.headers.get("referer");
-    // Preferência pelo domínio personalizado do usuário
-    let appUrl = "https://mtxmarketing.com";
-    
-    // Priorizamos o domínio personalizado, mas permitimos detecção dinâmica para ambientes de preview
-    if (origin) {
-      try {
-        const originUrl = new URL(origin).origin;
-        if (originUrl.includes("lovable.app") && !originUrl.includes("https-mtx-talent-hub-vercel-app")) {
-          appUrl = originUrl;
-        }
-      } catch (e) {
-        console.warn("Erro ao processar origin header:", e);
-      }
-    }
-    
-    // Limpeza rigorosa para evitar o prefixo "https-https-" ou similares
-    appUrl = appUrl.replace(/^https?:\/\/https?-/, "https://");
-    // Se o domínio for o indesejado, forçamos o correto
-    if (appUrl.includes("https-mtx-talent-hub-vercel-app.lovable.app")) {
-      appUrl = "https://mtxmarketing.com";
-    }
+    // 1. Gerar link de acesso (invite para novos, magiclink para existentes)
+    // Definimos o domínio oficial como padrão conforme solicitado
+    const appUrl = "https://mtxmarketing.com";
     
     console.log("App URL determinada:", appUrl);
 
-    // Redireciona para /reset-password para que o jovem defina a senha
-    const redirectTo = `${appUrl}/reset-password`;
+    // Redireciona para /criar-senha para que o jovem defina a senha
+    const redirectTo = `${appUrl}/criar-senha`;
 
     let inviteData: any;
     let { data, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
