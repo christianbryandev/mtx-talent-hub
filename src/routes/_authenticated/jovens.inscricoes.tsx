@@ -134,10 +134,20 @@ function InscricoesPage() {
         entity_id: app.id,
         description: `Inscrição aprovada: ${app.full_name}`,
       });
+
+      // Enviar e-mail de aprovação (mesmo que ainda precise configurar o domínio)
+      try {
+        await supabase.functions.invoke("send-approval-email", {
+          body: { email: app.email, full_name: app.full_name },
+        });
+      } catch (err) {
+        console.error("Erro ao chamar função de e-mail:", err);
+      }
+
       return { created, app };
     },
     onSuccess: ({ created, app }) => {
-      toast.success(`${app.full_name} foi aprovado(a) e já tem perfil criado!`);
+      toast.success(`${app.full_name} foi aprovado(a)! E-mail de boas-vindas enviado.`);
       qc.invalidateQueries({ queryKey: ["young_applications"] });
       qc.invalidateQueries({ queryKey: ["young_people"] });
       qc.invalidateQueries({ queryKey: ["pending-applications-count"] });
