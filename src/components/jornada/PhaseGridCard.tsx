@@ -1,7 +1,7 @@
 import { JourneyPhase } from "@/services/journeyService";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lock } from "lucide-react";
+import { Lock, BookOpen, Wrench, Compass, Rocket, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PhaseGridCardProps {
@@ -15,6 +15,19 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const isInProgress = !isLocked && !isCompleted;
 
   const phaseNumber = phase.order_index.toString().padStart(2, "0");
+  
+  const getPhaseIcon = (index: number) => {
+    switch (index) {
+      case 1: return BookOpen;
+      case 2: return Wrench;
+      case 3: return Compass;
+      case 4: return Rocket;
+      case 5: return TrendingUp;
+      default: return BookOpen;
+    }
+  };
+  
+  const PhaseIcon = getPhaseIcon(phase.order_index);
   const phasePct = phase.cards_total > 0 ? Math.round((phase.cards_done / phase.cards_total) * 100) : 0;
   
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
@@ -93,6 +106,11 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
             <path d="M0,20 Q50,50 100,20" fill="none" stroke={`url(#grad-${phase.id})`} strokeWidth="0.1" className={textPrimary} />
             <path d="M0,80 Q50,50 100,80" fill="none" stroke={`url(#grad-${phase.id})`} strokeWidth="0.1" className={textPrimary} />
           </svg>
+        </div>
+
+        {/* Phase Background Icon */}
+        <div className="absolute right-[-20px] top-[50%] translate-y-[-50%] opacity-[0.07] text-white pointer-events-none">
+          <PhaseIcon size={160} strokeWidth={1} />
         </div>
 
         {/* Scanlines effect */}
