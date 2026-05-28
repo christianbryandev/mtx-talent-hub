@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Activity,
   Bell,
+  Mail,
 } from "lucide-react";
 import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
@@ -270,29 +271,32 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {isSuperAdmin && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive("/settings")}
-                      tooltip="Configurações"
-                    >
-                      <Link to="/settings" className="flex items-center gap-2">
-                        <SettingsIcon className="h-4 w-4" />
-                        <span>Configurações</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive("/configuracoes")}
-                      tooltip="Configurações de E-mail"
-                    >
-                      <Link to="/configuracoes" className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>Configurações E-mail</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive("/settings")}
+                        tooltip="Configurações"
+                      >
+                        <Link to="/settings" className="flex items-center gap-2">
+                          <SettingsIcon className="h-4 w-4" />
+                          <span>Configurações</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive("/configuracoes")}
+                        tooltip="Configurações de E-mail"
+                      >
+                        <Link to="/configuracoes" className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          <span>Configurações E-mail</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
                 )}
               </SidebarMenu>
             </SidebarGroupContent>
