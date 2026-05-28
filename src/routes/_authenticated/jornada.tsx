@@ -229,35 +229,53 @@ function JourneyPage() {
       </Tabs>
       {/* Modal de Vídeo */}
       <Dialog open={!!selectedModule} onOpenChange={(open) => !open && setSelectedModule(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none shadow-2xl sm:rounded-2xl">
+        <DialogContent className={`p-0 overflow-hidden bg-background border-none shadow-2xl sm:rounded-2xl ${selectedModule?.content_type === 'texto' ? 'max-w-3xl max-h-[90vh]' : 'max-w-4xl bg-black'}`}>
           {selectedModule && (
             <div className="flex flex-col">
               <DialogHeader className="p-4 bg-background border-b border-border/10">
                 <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] h-4">AULA</Badge>
+                  <Badge variant="outline" className="text-[10px] h-4">
+                    {selectedModule.content_type === "video" ? "AULA" : "LEITURA"}
+                  </Badge>
                   {selectedModule.title}
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
-                {selectedModule.content_body ? (
-                  <video 
-                    src={selectedModule.content_body} 
-                    controls 
-                    autoPlay 
-                    className="w-full h-full"
-                    onEnded={() => {
-                      completeModule(selectedModule.id);
-                      toast.success("Aula concluída! Próximo item liberado.");
-                    }}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                    <XCircle className="h-10 w-10 opacity-20" />
-                    <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+              {selectedModule.content_type === "video" ? (
+                <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                  {selectedModule.content_body ? (
+                    <video 
+                      src={selectedModule.content_body} 
+                      controls 
+                      autoPlay 
+                      className="w-full h-full"
+                      onEnded={() => {
+                        completeModule(selectedModule.id);
+                        toast.success("Aula concluída! Próximo item liberado.");
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <XCircle className="h-10 w-10 opacity-20" />
+                      <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-8 overflow-y-auto max-h-[60vh] bg-background">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {selectedModule.content_body ? (
+                      <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
+                        {selectedModule.content_body}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground italic text-center py-12">
+                        Nenhum conteúdo de texto cadastrado.
+                      </p>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
               
               <div className="p-4 bg-background border-t border-border/10 flex items-center justify-between">
                 <div className="flex flex-col">
@@ -273,7 +291,7 @@ function JourneyPage() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Marcar como assistida
+                  {selectedModule.content_type === "video" ? "Marcar como assistida" : "Concluir leitura"}
                 </Button>
               </div>
             </div>
