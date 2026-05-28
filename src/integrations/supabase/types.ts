@@ -3156,6 +3156,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_module_indices: {
+        Args: { _phase_id: string; _start_index: number }
+        Returns: undefined
+      }
       log_system_event: {
         Args: {
           _action: string
