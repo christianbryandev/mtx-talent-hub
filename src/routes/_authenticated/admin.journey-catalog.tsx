@@ -87,7 +87,7 @@ function AdminJourneyCatalogPage() {
 
       <Tabs defaultValue="fases">
         <TabsList>
-          <TabsTrigger value="fases">Fases & Conteúdo</TabsTrigger>
+          <TabsTrigger value="fases">Fases & Módulos</TabsTrigger>
           <TabsTrigger value="atribuicoes">Atribuições</TabsTrigger>
         </TabsList>
         <TabsContent value="fases" className="mt-4">
@@ -486,7 +486,7 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
               {provided.placeholder}
               {(modules.data ?? []).length === 0 && (
                 <p className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border/60 rounded-lg">
-                  Nenhum conteúdo adicionado ainda.
+                  Nenhum módulo adicionado ainda.
                 </p>
               )}
             </div>
@@ -513,8 +513,9 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Conteúdo removido");
+      toast.success("Módulo removido");
       qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] });
+      qc.invalidateQueries({ queryKey: ["catalog-phases"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -524,7 +525,7 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
       variant="ghost" 
       size="sm" 
       className="text-destructive" 
-      onClick={() => confirm("Remover este conteúdo?") && remove.mutate()}
+      onClick={() => confirm("Remover este módulo?") && remove.mutate()}
     >
       <Trash2 className="h-4 w-4" />
     </Button>
