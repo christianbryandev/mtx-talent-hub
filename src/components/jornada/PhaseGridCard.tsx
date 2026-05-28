@@ -9,7 +9,7 @@ interface PhaseGridCardProps {
   onClick: (phase: JourneyPhase) => void;
 }
 
-const MTX_LOGO_GRADIENT = "linear-gradient(to right, #515BD4, #8131AF, #C7288B, #DD2A7B, #F58529, #FEDA77)";
+const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FEDA77, #F58529, #DD2A7B, #C7288B, #8131AF, #515BD4)";
 
 export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
@@ -93,8 +93,9 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
           className="absolute inset-0" 
           style={{ 
             background: isCompleted 
-              ? "linear-gradient(135deg, rgba(81, 91, 212, 0.15), rgba(245, 133, 41, 0.05))" 
+              ? "linear-gradient(135deg, rgba(245, 133, 41, 0.15), rgba(81, 91, 212, 0.05))" 
               : "linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%)" 
+
           }} 
         />
       )}
