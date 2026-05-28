@@ -101,8 +101,21 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
 
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full p-6">
+        {/* Status Badge Top Right */}
+        <div className="absolute top-6 right-6">
+          <div className={cn(
+            "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
+            badgeStyles
+          )}>
+            {badgeLabel}
+          </div>
+        </div>
+
         {/* Top Section: Number and Title */}
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start mt-2">
+          <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-[3px] mb-1">
+            FASE
+          </span>
           <span className={cn(
             "text-[72px] font-bold tracking-tighter leading-[0.9] transition-all duration-500",
             textPrimary,
@@ -122,13 +135,13 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
         <div className="mt-auto flex items-end justify-between pb-4">
           <div className="flex flex-col gap-0.5">
             <span className="text-[12px] font-medium text-[#aaaaaa] uppercase tracking-wider">
-              {isLocked ? "Fase Bloqueada" : `${modulesCount} módulos`}
+              {modulesCount} módulos
             </span>
           </div>
           
           <div className="flex flex-col items-end">
             <span className={cn("text-[16px] font-black italic tracking-tighter", percentageColor)}>
-              {isLocked ? "0%" : `${phasePct}%`}
+              {phasePct}%
             </span>
           </div>
         </div>
