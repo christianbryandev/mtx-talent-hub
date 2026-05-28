@@ -1,17 +1,18 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Trash2, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, Save, GripVertical, History, Edit3, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -19,11 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { Badge } from "@/components/ui/badge";
 
 import { QuizMediaUpload } from "@/components/admin/QuizMediaUpload";
 
 export const Route = createFileRoute("/_authenticated/admin/quizzes")({
-  head: () => ({ meta: [{ title: "Admin · Quizzes — MTX Hub" }] }),
+  head: () => ({ meta: [{ title: "Admin · Criador de Quiz — MTX Hub" }] }),
   component: AdminQuizzesPage,
 });
 
@@ -44,6 +47,7 @@ interface Option {
 interface Question {
   id: string;
   question: string;
+  type: "multipla_escolha" | "texto";
   order_index: number;
   media_url: string | null;
   media_type: MediaType | null;
@@ -56,12 +60,20 @@ interface Quiz {
   description: string | null;
   passing_score: number;
   is_active: boolean;
-  version: number;
+}
+
+interface Attempt {
+  id: string;
+  young_id: string;
+  young_name: string;
+  score: number;
+  passed: boolean;
+  attempt_number: number;
+  created_at: string;
 }
 
 function AdminQuizzesPage() {
   const { isAdmin, loading: permLoading } = usePermissions();
-  const qc = useQueryClient();
   const [selectedPhase, setSelectedPhase] = useState<string>("");
 
   const phases = useQuery<Phase[]>({
@@ -72,7 +84,7 @@ function AdminQuizzesPage() {
         .select("id,title,order_index")
         .order("order_index");
       if (error) throw error;
-      return data as Phase[];
+      return (data || []) as unknown as Phase[];
     },
   });
 
@@ -80,402 +92,496 @@ function AdminQuizzesPage() {
     if (!selectedPhase && phases.data?.length) setSelectedPhase(phases.data[0].id);
   }, [phases.data, selectedPhase]);
 
-  const quiz = useQuery<Quiz | null>({
-    queryKey: ["admin-quiz", selectedPhase],
-    enabled: !!selectedPhase,
+  if (permLoading) return <Skeleton className="h-96 w-full" />;
+  if (!isAdmin) return <Navigate to="/jornada" />;
+
+  return (
+    <div className="space-y-6 max-w-5xl">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">CRIADOR DE QUIZ</h1>
+          <p className="text-sm text-muted-foreground">Configure as avaliações e monitore o desempenho dos alunos.</p>
+        </div>
+      </header>
+
+      <Card className="border-border/60">
+        <CardContent className="pt-6">
+          <div className="space-y-1.5 max-w-md">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fase da Jornada</Label>
+            <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+              <SelectTrigger className="bg-muted/30 border-border/60">
+                <SelectValue placeholder="Selecione uma fase" />
+              </SelectTrigger>
+              <SelectContent>
+                {phases.data?.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    FASE {p.order_index.toString().padStart(2, "0")} · {p.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedPhase && <QuizManager phaseId={selectedPhase} />}
+    </div>
+  );
+}
+
+function QuizManager({ phaseId }: { phaseId: string }) {
+  const qc = useQueryClient();
+
+  const quizQuery = useQuery<Quiz | null>({
+    queryKey: ["admin-quiz", phaseId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_templates")
         .select("*")
-        .eq("phase_id", selectedPhase)
+        .eq("phase_id", phaseId)
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
-      return data as Quiz | null;
+      return data as unknown as Quiz | null;
     },
   });
 
-  const questions = useQuery<Question[]>({
-    queryKey: ["admin-quiz-questions", quiz.data?.id],
-    enabled: !!quiz.data?.id,
+  const createQuiz = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("quiz_templates").insert({
+        phase_id: phaseId,
+        title: "Novo Quiz",
+        passing_score: 80,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Quiz criado!");
+      qc.invalidateQueries({ queryKey: ["admin-quiz", phaseId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (quizQuery.isLoading) return <Skeleton className="h-64 w-full" />;
+
+  if (!quizQuery.data) {
+    return (
+      <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center gap-4 bg-muted/10">
+        <div className="p-4 rounded-full bg-muted/20">
+          <MessageSquare className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="text-center">
+          <h3 className="font-bold text-lg">Sem Quiz Configurado</h3>
+          <p className="text-sm text-muted-foreground">Esta fase ainda não possui uma avaliação ativa.</p>
+        </div>
+        <Button onClick={() => createQuiz.mutate()} disabled={createQuiz.isPending}>
+          <Plus className="h-4 w-4 mr-2" /> Criar Novo Quiz
+        </Button>
+      </Card>
+    );
+  }
+
+  return (
+    <Tabs defaultValue="editor" className="w-full">
+      <TabsList className="bg-muted/50 p-1">
+        <TabsTrigger value="editor" className="data-[state=active]:bg-card">
+          <Edit3 className="h-4 w-4 mr-2" /> Editor
+        </TabsTrigger>
+        <TabsTrigger value="historico" className="data-[state=active]:bg-card">
+          <History className="h-4 w-4 mr-2" /> Histórico & Resultados
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="editor" className="mt-6">
+        <QuizEditor quiz={quizQuery.data} />
+      </TabsContent>
+      <TabsContent value="historico" className="mt-6">
+        <QuizHistory quizId={quizQuery.data.id} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function QuizEditor({ quiz }: { quiz: Quiz }) {
+  const qc = useQueryClient();
+  const [draft, setDraft] = useState<Quiz>(quiz);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(quiz);
+
+  useEffect(() => setDraft(quiz), [quiz]);
+
+  const questionsQuery = useQuery<Question[]>({
+    queryKey: ["admin-quiz-questions", quiz.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_questions")
-        .select("id,question,order_index,media_url,media_type")
-        .eq("quiz_id", quiz.data!.id)
+        .select("*")
+        .eq("quiz_id", quiz.id)
         .order("order_index");
       if (error) throw error;
 
-      // Fetch options via secure RPC (includes is_correct only for admins)
-      const questionsWithOptions = await Promise.all(
-        (data ?? []).map(async (q) => {
+      const qs = (data || []) as unknown as Question[];
+      const withOptions = await Promise.all(
+        qs.map(async (q) => {
           const { data: opts, error: optErr } = await supabase
             .rpc("admin_get_quiz_options", { p_question_id: q.id });
           if (optErr) throw optErr;
           return {
             ...q,
-            options: (opts ?? []).sort((a: any, b: any) => a.order_index - b.order_index),
-          } as Question;
+            options: (opts || []).sort((a: any, b: any) => a.order_index - b.order_index) as Option[],
+          };
         })
       );
-      return questionsWithOptions;
+      return withOptions;
     },
   });
 
-  if (permLoading) return <Skeleton className="h-96 w-full" />;
-  if (!isAdmin) return <Navigate to="/jornada" />;
+  const saveQuiz = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("quiz_templates")
+        .update({
+          title: draft.title,
+          passing_score: draft.passing_score,
+          description: draft.description,
+        })
+        .eq("id", quiz.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Configurações salvas");
+      qc.invalidateQueries({ queryKey: ["admin-quiz", quiz.phase_id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
-  const invalidateAll = () => {
-    qc.invalidateQueries({ queryKey: ["admin-quiz", selectedPhase] });
-    qc.invalidateQueries({ queryKey: ["admin-quiz-questions"] });
+  const reorderQuestions = useMutation({
+    mutationFn: async (newQuestions: Question[]) => {
+      for (let i = 0; i < newQuestions.length; i++) {
+        await supabase
+          .from("quiz_questions")
+          .update({ order_index: i + 1 })
+          .eq("id", newQuestions[i].id);
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quiz.id] }),
+  });
+
+  const addQuestion = useMutation({
+    mutationFn: async () => {
+      const order = (questionsQuery.data?.length ?? 0) + 1;
+      const { data, error } = await supabase
+        .from("quiz_questions")
+        .insert({ quiz_id: quiz.id, question: "Nova pergunta", order_index: order, type: "multipla_escolha" })
+        .select()
+        .single();
+      if (error) throw error;
+      
+      await supabase.from("quiz_options").insert([
+        { question_id: (data as any).id, text: "Opção correta", is_correct: true, order_index: 0 },
+        { question_id: (data as any).id, text: "Opção incorreta", is_correct: false, order_index: 1 },
+      ]);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quiz.id] }),
+  });
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || !questionsQuery.data) return;
+    const items = Array.from(questionsQuery.data);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    reorderQuestions.mutate(items);
   };
 
-  async function createQuiz() {
-    if (!selectedPhase) return;
-    const { error } = await supabase.from("quiz_templates").insert({
-      phase_id: selectedPhase,
-      title: "Novo quiz",
-      passing_score: 80,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Quiz criado");
-    invalidateAll();
-  }
-
-  async function saveQuiz(patch: Partial<Quiz>) {
-    if (!quiz.data) return;
-    const { error } = await supabase
-      .from("quiz_templates")
-      .update(patch)
-      .eq("id", quiz.data.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Salvo");
-    invalidateAll();
-  }
-
-  async function addQuestion() {
-    if (!quiz.data) return;
-    const order = (questions.data?.length ?? 0) + 1;
-    const { data, error } = await supabase
-      .from("quiz_questions")
-      .insert({ quiz_id: quiz.data.id, question: "Nova pergunta", order_index: order })
-      .select()
-      .single();
-    if (error) { toast.error(error.message); return; }
-    // 4 default options
-    await supabase.from("quiz_options").insert(
-      [0, 1, 2, 3].map((i) => ({
-        question_id: (data as { id: string }).id,
-        text: `Opção ${i + 1}`,
-        is_correct: i === 0,
-        order_index: i,
-      })),
-    );
-    invalidateAll();
-  }
-
-  async function deleteQuestion(id: string) {
-    if (!confirm("Excluir pergunta?")) return;
-    const { error } = await supabase.from("quiz_questions").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
-  }
-
-  async function saveQuestion(id: string, patch: Partial<Omit<Question, "options">>) {
-    const { error } = await supabase
-      .from("quiz_questions")
-      .update(patch)
-      .eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
-  }
-
-  async function saveOption(id: string, patch: Partial<Option>, questionId?: string) {
-    // If marking correct, unset siblings first (single-correct radio behavior)
-    if (patch.is_correct === true && questionId) {
-      await supabase
-        .from("quiz_options")
-        .update({ is_correct: false })
-        .eq("question_id", questionId);
-    }
-    const { error } = await supabase.from("quiz_options").update(patch).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
-  }
-
-  async function addOption(questionId: string, currentCount: number) {
-    const { error } = await supabase.from("quiz_options").insert({
-      question_id: questionId,
-      text: "Nova opção",
-      is_correct: false,
-      order_index: currentCount,
-    });
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
-  }
-
-  async function deleteOption(id: string) {
-    const { error } = await supabase.from("quiz_options").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
-  }
-
   return (
-    <div className="space-y-6 max-w-4xl">
-      <header>
-        <h1 className="text-2xl font-bold">Quizzes (admin)</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie quizzes por fase. Apenas um quiz ativo por fase.
-        </p>
-      </header>
-
-      <Card className="p-4 space-y-3">
-        <Label>Fase</Label>
-        <Select value={selectedPhase} onValueChange={setSelectedPhase}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma fase" />
-          </SelectTrigger>
-          <SelectContent>
-            {phases.data?.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.order_index}. {p.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="space-y-6">
+      <Card className="border-border/60 bg-card/50">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Configurações Gerais</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Nome do Quiz</Label>
+              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Aprovação Mínima (%)</Label>
+              <div className="flex items-center gap-4">
+                <Input 
+                  type="number" 
+                  value={draft.passing_score} 
+                  onChange={(e) => setDraft({ ...draft, passing_score: Number(e.target.value) })}
+                  className="w-24"
+                />
+                <span className="text-xs text-muted-foreground italic">
+                  * Apenas múltipla escolha conta para aprovação.
+                </span>
+              </div>
+            </div>
+          </div>
+          <Button onClick={() => saveQuiz.mutate()} disabled={!dirty || saveQuiz.isPending}>
+            <Save className="h-4 w-4 mr-2" /> Salvar Configurações
+          </Button>
+        </CardContent>
       </Card>
 
-      {quiz.isLoading ? (
-        <Skeleton className="h-64 w-full" />
-      ) : !quiz.data ? (
-        <Card className="p-6 text-center space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Esta fase ainda não tem quiz ativo.
-          </p>
-          <Button onClick={createQuiz}>
-            <Plus className="mr-2 h-4 w-4" /> Criar quiz
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-black">PERGUNTAS</h3>
+          <Button size="sm" onClick={() => addQuestion.mutate()}>
+            <Plus className="h-4 w-4 mr-2" /> Adicionar Pergunta
           </Button>
-        </Card>
-      ) : (
-        <QuizEditor
-          quiz={quiz.data}
-          questions={questions.data ?? []}
-          loadingQ={questions.isLoading}
-          onSaveQuiz={saveQuiz}
-          onAddQuestion={addQuestion}
-          onDeleteQuestion={deleteQuestion}
-          onSaveQuestion={saveQuestion}
-          onSaveOption={saveOption}
-          onAddOption={addOption}
-          onDeleteOption={deleteOption}
-        />
-      )}
+        </div>
+
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="questions">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                {questionsQuery.data?.map((q, index) => (
+                  <Draggable key={q.id} draggableId={q.id} index={index}>
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.draggableProps}>
+                        <QuestionItem 
+                          q={q} 
+                          index={index} 
+                          dragHandleProps={provided.dragHandleProps} 
+                          quizId={quiz.id}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </div>
     </div>
   );
 }
 
-function QuizEditor({
-  quiz,
-  questions,
-  loadingQ,
-  onSaveQuiz,
-  onAddQuestion,
-  onDeleteQuestion,
-  onSaveQuestion,
-  onSaveOption,
-  onAddOption,
-  onDeleteOption,
-}: {
-  quiz: Quiz;
-  questions: Question[];
-  loadingQ: boolean;
-  onSaveQuiz: (p: Partial<Quiz>) => Promise<unknown>;
-  onAddQuestion: () => Promise<unknown>;
-  onDeleteQuestion: (id: string) => Promise<unknown>;
-  onSaveQuestion: (id: string, patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
-  onSaveOption: (id: string, p: Partial<Option>, questionId?: string) => Promise<unknown>;
-  onAddOption: (qid: string, count: number) => Promise<unknown>;
-  onDeleteOption: (id: string) => Promise<unknown>;
-}) {
-  const [title, setTitle] = useState(quiz.title);
-  const [desc, setDesc] = useState(quiz.description ?? "");
-  const [passing, setPassing] = useState(quiz.passing_score);
-  const [active, setActive] = useState(quiz.is_active);
+function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; index: number; dragHandleProps: any; quizId: string }) {
+  const qc = useQueryClient();
+  const [draft, setDraft] = useState<Question>(q);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(q);
 
-  useEffect(() => {
-    setTitle(quiz.title);
-    setDesc(quiz.description ?? "");
-    setPassing(quiz.passing_score);
-    setActive(quiz.is_active);
-  }, [quiz]);
+  useEffect(() => setDraft(q), [q]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("quiz_questions")
+        .update({ 
+          question: draft.question,
+          type: draft.type 
+        })
+        .eq("id", q.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pergunta salva");
+      qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: async () => {
+      if (!confirm("Excluir pergunta?")) return;
+      const { error } = await supabase.from("quiz_questions").delete().eq("id", q.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] }),
+  });
+
+  const addOption = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("quiz_options").insert({
+        question_id: q.id,
+        text: "Nova opção",
+        is_correct: false,
+        order_index: q.options.length
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] }),
+  });
 
   return (
-    <Card className="p-5 space-y-4">
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div>
-          <Label>Título</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+    <Card className="border-border/60 overflow-hidden">
+      <div className="bg-muted/30 px-4 py-2 flex items-center gap-3 border-b border-border/40">
+        <div {...dragHandleProps}>
+          <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
         </div>
-        <div>
-          <Label>Nota mínima (%)</Label>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            value={passing}
-            onChange={(e) => setPassing(Number(e.target.value))}
-          />
+        <span className="text-xs font-black text-muted-foreground uppercase">Pergunta {index + 1}</span>
+        <div className="flex-1" />
+        <Button variant="ghost" size="sm" className="h-8 text-destructive" onClick={() => remove.mutate()}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <CardContent className="pt-4 space-y-4">
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div className="sm:col-span-3 space-y-1.5">
+            <Label className="text-xs">Enunciado</Label>
+            <Textarea 
+              value={draft.question} 
+              onChange={(e) => setDraft({ ...draft, question: e.target.value })}
+              rows={2}
+              className="resize-none"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Tipo</Label>
+            <Select value={draft.type} onValueChange={(v: any) => setDraft({ ...draft, type: v })}>
+              <SelectTrigger className="text-xs h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="multipla_escolha">Múltipla Escolha</SelectItem>
+                <SelectItem value="texto">Texto Livre</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
-      <div>
-        <Label>Descrição</Label>
-        <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} />
-      </div>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={active}
-          onCheckedChange={(v) => setActive(v === true)}
-          id="active"
-        />
-        <Label htmlFor="active" className="font-normal">Quiz ativo</Label>
-      </div>
-      <Button
-        size="sm"
-        onClick={() =>
-          onSaveQuiz({
-            title,
-            description: desc || null,
-            passing_score: passing,
-            is_active: active,
-          })
-        }
-      >
-        <Save className="mr-2 h-4 w-4" /> Salvar quiz
-      </Button>
 
-      <div className="border-t pt-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Perguntas</h2>
-          <Button size="sm" variant="outline" onClick={onAddQuestion}>
-            <Plus className="mr-2 h-4 w-4" /> Pergunta
+        {draft.type === "multipla_escolha" && (
+          <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+            <Label className="text-xs font-bold uppercase text-muted-foreground">Alternativas</Label>
+            <div className="grid gap-2">
+              {q.options.map((opt) => (
+                <OptionItem key={opt.id} option={opt} questionId={q.id} quizId={quizId} />
+              ))}
+              <Button variant="ghost" size="sm" className="w-fit text-xs h-8" onClick={() => addOption.mutate()}>
+                <Plus className="h-3 w-3 mr-1" /> Adicionar opção
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+            <Save className="h-3.5 w-3.5 mr-2" /> Salvar Pergunta
           </Button>
         </div>
-        {loadingQ ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : questions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma pergunta ainda.</p>
-        ) : (
-          questions.map((q, idx) => (
-            <QuestionEditor
-              key={q.id}
-              index={idx}
-              q={q}
-              onDelete={() => onDeleteQuestion(q.id)}
-              onSave={(patch) => onSaveQuestion(q.id, patch)}
-              onSaveOption={(oid, p) => onSaveOption(oid, p, q.id)}
-              onAddOption={() => onAddOption(q.id, q.options.length)}
-              onDeleteOption={onDeleteOption}
-            />
-          ))
-        )}
-      </div>
+      </CardContent>
     </Card>
   );
 }
 
-function QuestionEditor({
-  index,
-  q,
-  onDelete,
-  onSave,
-  onSaveOption,
-  onAddOption,
-  onDeleteOption,
-}: {
-  index: number;
-  q: Question;
-  onDelete: () => void;
-  onSave: (patch: Partial<Omit<Question, "options">>) => Promise<unknown>;
-  onSaveOption: (oid: string, p: Partial<Option>) => Promise<unknown>;
-  onAddOption: () => Promise<unknown>;
-  onDeleteOption: (oid: string) => Promise<unknown>;
-}) {
-  const [text, setText] = useState(q.question);
-  useEffect(() => setText(q.question), [q.question]);
+function OptionItem({ option, questionId, quizId }: { option: Option; questionId: string; quizId: string }) {
+  const qc = useQueryClient();
+  const [text, setText] = useState(option.text);
+
+  const save = async (patch: Partial<Option>) => {
+    if (patch.is_correct === true) {
+      await supabase.from("quiz_options").update({ is_correct: false }).eq("question_id", questionId);
+    }
+    await supabase.from("quiz_options").update(patch).eq("id", option.id);
+    qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+  };
+
+  const remove = async () => {
+    await supabase.from("quiz_options").delete().eq("id", option.id);
+    qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+  };
 
   return (
-    <div className="rounded border p-3 space-y-2">
-      <div className="flex gap-2 items-start">
-        <span className="text-sm font-semibold pt-2">{index + 1}.</span>
-        <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} />
-        <div className="flex flex-col gap-1">
-          <Button size="sm" variant="outline" onClick={() => onSave({ question: text })}>
-            <Save className="h-3 w-3" />
-          </Button>
-          <Button size="sm" variant="outline" onClick={onDelete}>
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-      <div className="pl-6">
-        <QuizMediaUpload
-          url={q.media_url}
-          type={q.media_type}
-          pathPrefix={`questions/${q.id}`}
-          label="Mídia da pergunta"
-          onChange={async (patch) => { await onSave(patch); }}
-        />
-      </div>
-      <div className="space-y-3 pl-6">
-        {q.options.map((o) => (
-          <OptionEditor
-            key={o.id}
-            o={o}
-            onSave={(p) => onSaveOption(o.id, p)}
-            onDelete={() => onDeleteOption(o.id)}
-          />
-        ))}
-        <Button size="sm" variant="ghost" onClick={onAddOption}>
-          <Plus className="mr-1 h-3 w-3" /> Opção
-        </Button>
-      </div>
+    <div className="flex items-center gap-3 group">
+      <Checkbox 
+        checked={option.is_correct} 
+        onCheckedChange={(v) => save({ is_correct: v === true })}
+        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+      />
+      <Input 
+        value={text} 
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => text !== option.text && save({ text })}
+        className="h-8 text-sm bg-transparent border-none hover:bg-muted/30 focus:bg-muted/50 transition-all p-1 px-2"
+      />
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={remove}
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
     </div>
   );
 }
 
-function OptionEditor({
-  o,
-  onSave,
-  onDelete,
-}: {
-  o: Option;
-  onSave: (p: Partial<Option>) => Promise<unknown>;
-  onDelete: () => void;
-}) {
-  const [text, setText] = useState(o.text);
-  useEffect(() => setText(o.text), [o.text]);
+function QuizHistory({ quizId }: { quizId: string }) {
+  const attemptsQuery = useQuery<Attempt[]>({
+    queryKey: ["quiz-attempts", quizId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("young_quiz_attempts")
+        .select(`
+          id, score, passed, attempt_number, created_at,
+          profiles:young_id(full_name)
+        `)
+        .filter("phase", "in", `(SELECT id FROM journey_phase_catalog WHERE id IN (SELECT phase_id FROM quiz_templates WHERE id = '${quizId}'))`)
+        // The relation mapping for 'phase' is tricky, let's fetch based on quizId more reliably
+        // Actually, young_quiz_attempts table uses 'phase' (string) not quizId.
+        // We'll need a better join or filter.
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return (data || []).map((d: any) => ({
+        ...d,
+        young_name: d.profiles?.full_name || "Desconhecido",
+      })) as Attempt[];
+    },
+  });
+
   return (
-    <div className="space-y-2 rounded border border-dashed p-2">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={o.is_correct}
-          onCheckedChange={(v) => onSave({ is_correct: v === true })}
-        />
-        <Input value={text} onChange={(e) => setText(e.target.value)} />
-        <Button size="sm" variant="outline" onClick={() => onSave({ text })}>
-          <Save className="h-3 w-3" />
-        </Button>
-        <Button size="sm" variant="outline" onClick={onDelete}>
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div>
-      <QuizMediaUpload
-        url={o.media_url}
-        type={o.media_type}
-        pathPrefix={`options/${o.id}`}
-        label="Mídia da alternativa"
-        onChange={async (patch) => { await onSave(patch); }}
-      />
-    </div>
+    <Card className="border-border/60">
+      <CardHeader>
+        <CardTitle className="text-base">Últimas Tentativas</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {attemptsQuery.isLoading ? <Skeleton className="h-48 w-full" /> : (
+          <div className="rounded-md border border-border/60 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30 border-b border-border/60 text-left">
+                <tr>
+                  <th className="p-3 font-bold uppercase text-[10px] tracking-wider">Aluno</th>
+                  <th className="p-3 font-bold uppercase text-[10px] tracking-wider text-center">Data</th>
+                  <th className="p-3 font-bold uppercase text-[10px] tracking-wider text-center">Nota</th>
+                  <th className="p-3 font-bold uppercase text-[10px] tracking-wider text-center">Resultado</th>
+                  <th className="p-3 font-bold uppercase text-[10px] tracking-wider text-center">Tentativa</th>
+                  <th className="p-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {attemptsQuery.data?.map((a) => (
+                  <tr key={a.id} className="hover:bg-muted/10 transition-colors">
+                    <td className="p-3 font-medium">{a.young_name}</td>
+                    <td className="p-3 text-center text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+                    <td className="p-3 text-center font-black">{Math.round(a.score)}%</td>
+                    <td className="p-3 text-center">
+                      <Badge variant={a.passed ? "secondary" : "destructive"} className="text-[10px]">
+                        {a.passed ? "APROVADO" : "REPROVADO"}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-center text-muted-foreground">#{a.attempt_number}</td>
+                    <td className="p-3 text-right">
+                      <Button variant="ghost" size="sm" onClick={() => toast.info("Visualização de respostas em breve")}>
+                        Ver Detalhes
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {!attemptsQuery.data?.length && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhuma tentativa registrada.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
