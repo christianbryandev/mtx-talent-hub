@@ -202,7 +202,7 @@ export const journeyService = {
       const { id, created_at, updated_at, ...moduleData } = module;
       
       // 3. Shift order_index for subsequent modules
-      const { error: shiftError } = await supabase.rpc("increment_module_indices", {
+      const { error: shiftError } = await (supabase.rpc as any)("increment_module_indices", {
         _phase_id: module.phase_id,
         _start_index: module.order_index + 1
       });
