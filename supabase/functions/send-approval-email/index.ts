@@ -81,7 +81,7 @@ serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "MTX Multiplicando Talentos <onboarding@resend.dev>",
+          from: "MTX Multiplicando Talentos <noreply@mtxmarketing.com>",
           to: [email],
           subject: "🎉 Você foi aprovado! Acesse o MTX Hub",
           html: `
