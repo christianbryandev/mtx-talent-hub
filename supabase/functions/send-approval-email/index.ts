@@ -33,16 +33,29 @@ serve(async (req) => {
       },
     });
 
-    // 1. Gerar link de convite
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+    // 1. Gerar link de acesso (invite para novos, magiclink para existentes)
+    const redirectTo = `${new URL(req.url).origin}/dashboard`;
+    let inviteData: any;
+    let { data, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: {
-        redirectTo: `${new URL(req.url).origin}/dashboard`,
-      },
+      options: { redirectTo },
     });
 
-    if (inviteError) throw inviteError;
+    if (inviteError && /already.*registered|already exists/i.test(inviteError.message)) {
+      // Usuário já existe → gerar magic link
+      const retry = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo },
+      });
+      if (retry.error) throw retry.error;
+      inviteData = retry.data;
+    } else if (inviteError) {
+      throw inviteError;
+    } else {
+      inviteData = data;
+    }
 
     // 2. Atualizar status na tabela (apenas se candidato_id for fornecido)
     if (candidato_id) {
