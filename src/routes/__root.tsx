@@ -39,33 +39,37 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error("Critical error at root:", error);
-  // Optional: you can also log to an external service here
   const router = useRouter();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Esta página não carregou
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Algo deu errado. Tente novamente ou volte para o início.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="max-w-md text-center space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Ops, algo deu errado!
+          </h1>
+          <p className="text-muted-foreground">
+            Não se preocupe, seu progresso foi salvo. Clique em continuar para retomar de onde parou.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md px-6 py-2 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+            style={{
+              background: "linear-gradient(to right, #DD2A7B, #8131AF)",
+            }}
           >
-            Tentar novamente
+            Continuar inscrição
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Início
+            Ir para o início
           </a>
         </div>
       </div>
