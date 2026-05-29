@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import * as z from "zod";
 import { differenceInYears, parseISO } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
+import { withRetry } from "@/utils/supabase-retry";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
