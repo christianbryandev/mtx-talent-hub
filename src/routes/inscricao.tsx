@@ -164,11 +164,16 @@ function PublicApplicationPage() {
   ];
 
   const nextStep = async () => {
-    const fields = getFieldsForStep(step);
-    const isValid = await form.trigger(fields as any);
-    if (isValid) {
-      setStep((s) => Math.min(s + 1, steps.length - 1));
-      window.scrollTo(0, 0);
+    try {
+      const fields = getFieldsForStep(step);
+      const isValid = await form.trigger(fields as any);
+      if (isValid) {
+        setStep((s) => Math.min(s + 1, steps.length - 1));
+        window.scrollTo(0, 0);
+      }
+    } catch (error) {
+      console.error("Erro ao validar etapa:", error);
+      toast.error("Erro ao processar. Tente novamente.");
     }
   };
 
