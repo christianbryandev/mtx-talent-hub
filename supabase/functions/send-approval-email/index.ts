@@ -109,8 +109,8 @@ serve(async (req) => {
               <style>
                 body { 
                   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                  background-color: #050505; 
-                  color: #ffffff; 
+                  background-color: #0a0a0a; 
+                  color: #cccccc; 
                   margin: 0; 
                   padding: 0; 
                   -webkit-font-smoothing: antialiased;
@@ -118,7 +118,7 @@ serve(async (req) => {
                 .wrapper {
                   width: 100%;
                   table-layout: fixed;
-                  background-color: #050505;
+                  background-color: #0a0a0a;
                   padding-bottom: 40px;
                 }
                 .container { 
@@ -128,31 +128,30 @@ serve(async (req) => {
                 }
                 .logo-container {
                   text-align: center;
-                  margin-bottom: 40px;
+                  margin-bottom: 32px;
                 }
                 .logo {
-                  height: 48px;
+                  height: 60px;
                   width: auto;
                 }
                 .card { 
-                  background-color: #0B0B12; 
-                  border-radius: 16px; 
+                  background-color: #111118; 
+                  border-radius: 12px; 
                   padding: 40px; 
-                  border: 1px solid rgba(255, 255, 255, 0.06);
-                  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+                  border: 1px solid rgba(255, 255, 255, 0.07);
                 }
                 h1 { 
                   color: #ffffff; 
-                  font-size: 24px; 
+                  font-size: 28px; 
                   font-weight: 700;
                   margin-bottom: 24px; 
                   margin-top: 0;
-                  letter-spacing: -0.02em;
+                  text-align: left;
                 }
                 p { 
-                  font-size: 16px; 
-                  line-height: 1.6; 
-                  color: #A1A1AA; 
+                  font-size: 15px; 
+                  line-height: 1.7; 
+                  color: #cccccc; 
                   margin-bottom: 20px;
                 }
                 .highlight {
@@ -165,37 +164,45 @@ serve(async (req) => {
                 }
                 .btn { 
                   display: inline-block; 
-                  background-color: #10b981; 
+                  background: linear-gradient(to right, #DD2A7B, #8131AF); 
                   color: #ffffff !important; 
                   padding: 16px 32px; 
                   text-decoration: none; 
-                  border-radius: 10px; 
-                  font-weight: 600; 
+                  border-radius: 8px; 
+                  font-weight: 700; 
                   font-size: 16px;
-                  transition: all 0.2s ease;
+                }
+                .divider {
+                  height: 1px;
+                  background-color: rgba(255, 255, 255, 0.06);
+                  margin: 32px 0;
                 }
                 .footer { 
-                  margin-top: 40px; 
-                  padding-top: 24px; 
-                  border-top: 1px solid rgba(255, 255, 255, 0.06); 
                   font-size: 14px; 
-                  color: #71717a; 
+                  color: #ffffff; 
                   text-align: center;
                 }
                 .footer a {
-                  color: #10b981;
+                  color: #C7288B;
                   text-decoration: none;
+                  font-weight: 600;
                 }
                 .warning { 
                   font-size: 12px; 
-                  color: #52525b; 
+                  color: #666666; 
                   margin-top: 24px; 
                   text-align: center;
                 }
+                .copyright {
+                  font-size: 11px;
+                  color: #444444;
+                  margin-top: 16px;
+                  text-align: center;
+                }
                 @media only screen and (max-width: 480px) {
-                  .card { padding: 32px 24px; }
-                  h1 { font-size: 20px; }
-                  .btn { width: 100%; box-sizing: border-box; }
+                  .card { padding: 32px 20px; }
+                  h1 { font-size: 24px; }
+                  .btn { width: 100%; box-sizing: border-box; text-align: center; }
                 }
               </style>
             </head>
@@ -214,11 +221,17 @@ serve(async (req) => {
                       <a href="${inviteData.properties.action_link}" class="btn">Criar Senha e Acessar →</a>
                     </div>
                     
-                    <p class="warning">Este link de convite é pessoal e expira em 24 horas.</p>
+                    <p class="warning">Este link de acesso é pessoal e expira em 24 horas.</p>
+                    
+                    <div class="divider"></div>
                     
                     <div class="footer">
-                      <span class="highlight">Equipe MTX • Multiplicando Talentos</span><br>
-                      <a href="https://mtxhub.com.br">mtxhub.com.br</a>
+                      <strong>Equipe MTX • Multiplicando Talentos</strong><br>
+                      <a href="https://mtxmarketing.com">mtxmarketing.com</a>
+                    </div>
+                    
+                    <div class="copyright">
+                      © 2026 MTX Marketing. Todos os direitos reservados.
                     </div>
                   </div>
                 </div>
