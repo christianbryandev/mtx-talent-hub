@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Copy, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Copy, X, Loader2, Trash2, Edit, Plus, Trash } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { createInvite } from "@/lib/invites.functions";
 import {
   APPLICATION_STATUS_LABELS,
@@ -48,6 +59,8 @@ function InscricoesPage() {
   const { isAdmin, loading: permissionsLoading } = usePermissions();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [detail, setDetail] = useState<YoungApplication | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingApp, setEditingApp] = useState<YoungApplication | null>(null);
   const [complement, setComplement] = useState<{ youngId: string; app: YoungApplication } | null>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const createInviteFn = useServerFn(createInvite);
@@ -116,6 +129,49 @@ function InscricoesPage() {
     },
   });
 
+  const deleteApp = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("young_applications").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Inscrição excluída");
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteAllApps = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("young_applications").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Todas as inscrições foram excluídas");
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveApp = useMutation({
+    mutationFn: async (values: Partial<YoungApplication>) => {
+      if (editingApp) {
+        const { error } = await supabase.from("young_applications").update(values).eq("id", editingApp.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("young_applications").insert([{ ...values, status: "pendente" } as any]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editingApp ? "Inscrição atualizada" : "Inscrição criada");
+      setIsFormOpen(false);
+      setEditingApp(null);
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -128,16 +184,55 @@ function InscricoesPage() {
             <p className="text-sm text-muted-foreground">Candidatos enviados pelo formulário público</p>
           </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Filtrar" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="pendente">Pendente</SelectItem>
-            <SelectItem value="em_analise">Em análise</SelectItem>
-            <SelectItem value="aprovado">Aprovado</SelectItem>
-            <SelectItem value="reprovado">Reprovado</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:flex"
+            onClick={() => {
+              setEditingApp(null);
+              setIsFormOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Adicionar
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10">
+                <Trash className="mr-2 h-4 w-4" /> Apagar Tudo
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação excluirá permanentemente todas as inscrições recebidas. Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => deleteAllApps.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Excluir Tudo
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-44"><SelectValue placeholder="Filtrar" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="em_analise">Em análise</SelectItem>
+              <SelectItem value="aprovado">Aprovado</SelectItem>
+              <SelectItem value="reprovado">Reprovado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
@@ -179,35 +274,73 @@ function InscricoesPage() {
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
-                      {a.status === "aprovado" ? (
-                        <Badge variant="outline" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-                          Aprovado
-                        </Badge>
-                      ) : (
-                        <div className="flex gap-1">
-                          {a.status === "pendente" && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingApp(a);
+                          setIsFormOpen(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir inscrição?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Deseja realmente excluir a inscrição de <b>{a.full_name}</b>?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteApp.mutate(a.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      <div className="flex gap-1">
+                        {a.status === "aprovado" ? (
+                          <Badge variant="outline" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                            Aprovado
+                          </Badge>
+                        ) : (
+                          <div className="flex gap-1">
+                            {a.status === "pendente" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateStatus.mutate({ appId: a.id, status: "em_analise" })}
+                              >
+                                Analisar
+                              </Button>
+                            )}
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => updateStatus.mutate({ appId: a.id, status: "em_analise" })}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              onClick={() => approve.mutate(a)}
+                              disabled={approve.isPending && approve.variables?.id === a.id}
                             >
-                              Analisar
+                              {approve.isPending && approve.variables?.id === a.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Aprovar"
+                              )}
                             </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                            onClick={() => approve.mutate(a)}
-                            disabled={approve.isPending && approve.variables?.id === a.id}
-                          >
-                            {approve.isPending && approve.variables?.id === a.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              "Aprovar"
-                            )}
-                          </Button>
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -216,6 +349,59 @@ function InscricoesPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={isFormOpen} onOpenChange={(o) => {
+        setIsFormOpen(o);
+        if (!o) setEditingApp(null);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingApp ? "Editar Inscrição" : "Adicionar Inscrição"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const values = Object.fromEntries(formData.entries());
+            saveApp.mutate(values as any);
+          }} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Nome completo</Label>
+              <Input id="full_name" name="full_name" defaultValue={editingApp?.full_name} required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input id="email" name="email" type="email" defaultValue={editingApp?.email || ""} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Input id="whatsapp" name="whatsapp" defaultValue={editingApp?.whatsapp || ""} required />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input id="city" name="city" defaultValue={editingApp?.city || ""} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="age">Idade</Label>
+                <Input id="age" name="age" type="number" defaultValue={editingApp?.age || ""} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="interest_area">Área de Interesse</Label>
+              <Input id="interest_area" name="interest_area" defaultValue={editingApp?.interest_area || ""} />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saveApp.isPending}>
+                {saveApp.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingApp ? "Salvar Alterações" : "Criar Inscrição"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
