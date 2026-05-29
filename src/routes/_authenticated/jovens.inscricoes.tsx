@@ -172,7 +172,6 @@ function InscricoesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -274,7 +273,7 @@ function InscricoesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -341,7 +340,15 @@ function InscricoesPage() {
                             </Button>
                           </div>
                         )}
-      </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
 
       <Dialog open={isFormOpen} onOpenChange={(o) => {
         setIsFormOpen(o);
@@ -395,14 +402,6 @@ function InscricoesPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
