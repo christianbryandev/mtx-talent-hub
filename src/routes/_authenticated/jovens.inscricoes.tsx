@@ -159,7 +159,7 @@ function InscricoesPage() {
         const { error } = await supabase.from("young_applications").update(values).eq("id", editingApp.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("young_applications").insert([{ ...values, status: "pendente" }]);
+        const { error } = await supabase.from("young_applications").insert([{ ...values, status: "pendente" } as any]);
         if (error) throw error;
       }
     },
