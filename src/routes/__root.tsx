@@ -5,6 +5,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -40,17 +41,28 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error("Critical error at root:", error);
   const router = useRouter();
+  const location = useLocation();
+  const isInscricao = location.pathname === "/inscricao";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Ops, algo deu errado!
+            {isInscricao ? "Ops, algo deu errado!" : "Esta página não carregou"}
           </h1>
           <p className="text-muted-foreground">
-            Não se preocupe, seu progresso foi salvo. Clique em continuar para retomar de onde parou.
+            {isInscricao 
+              ? "Não se preocupe, seu progresso foi salvo. Clique em continuar para retomar de onde parou."
+              : "Algo deu errado. Tente novamente ou volte para o início."}
           </p>
+          {!isInscricao && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-left overflow-auto max-h-40">
+              <p className="text-xs font-mono text-red-400">
+                {error.message || "Erro desconhecido"}
+              </p>
+            </div>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row justify-center gap-3">
           <button
@@ -60,16 +72,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md px-6 py-2 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
             style={{
-              background: "linear-gradient(to right, #DD2A7B, #8131AF)",
+              background: isInscricao 
+                ? "linear-gradient(to right, #DD2A7B, #8131AF)"
+                : "var(--primary)",
             }}
           >
-            Continuar inscrição
+            {isInscricao ? "Continuar inscrição" : "Tentar novamente"}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Ir para o início
+            {isInscricao ? "Ir para o início" : "Início"}
           </a>
         </div>
       </div>
