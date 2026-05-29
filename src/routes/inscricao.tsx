@@ -191,36 +191,41 @@ function PublicApplicationPage() {
 
   const submit = useMutation({
     mutationFn: async (values: ApplicationValues) => {
-      const { error } = await supabase.from("young_applications").insert({
-        full_name: values.full_name,
-        email: values.email.trim().toLowerCase(),
-        phone: values.phone,
-        whatsapp: values.whatsapp,
-        birth_date: values.birth_date,
-        age: age,
-        address: values.address,
-        city: values.city,
-        state: values.state.toUpperCase(),
-        education_level: values.education_level,
-        currently_studying: values.currently_studying,
-        currently_working: values.currently_working,
-        family_income: values.family_income,
-        personal_story: values.personal_story,
-        dreams: values.dreams,
-        why_mtx: values.why_mtx,
-        perceived_skills: values.perceived_skills,
-        interest_area: values.interest_area,
-        has_laptop: values.has_laptop,
-        has_phone: values.has_phone,
-        has_internet: values.has_internet,
-        how_found_mtx: values.how_found_mtx,
-        data_authorization: values.data_authorization,
-        guardian_authorization: isUnderage ? values.guardian_authorization : true,
-        status: "pendente",
+      await withRetry(async () => {
+        const { error } = await supabase.from("young_applications").insert({
+          full_name: values.full_name,
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone,
+          whatsapp: values.whatsapp,
+          birth_date: values.birth_date,
+          age: age,
+          address: values.address,
+          city: values.city,
+          state: values.state.toUpperCase(),
+          education_level: values.education_level,
+          currently_studying: values.currently_studying,
+          currently_working: values.currently_working,
+          family_income: values.family_income,
+          personal_story: values.personal_story,
+          dreams: values.dreams,
+          why_mtx: values.why_mtx,
+          perceived_skills: values.perceived_skills,
+          interest_area: values.interest_area,
+          has_laptop: values.has_laptop,
+          has_phone: values.has_phone,
+          has_internet: values.has_internet,
+          how_found_mtx: values.how_found_mtx,
+          data_authorization: values.data_authorization,
+          guardian_authorization: isUnderage ? values.guardian_authorization : true,
+          status: "pendente",
+        });
+        if (error) throw error;
       });
-      if (error) throw error;
     },
-    onSuccess: () => setDone(true),
+    onSuccess: () => {
+      setDone(true);
+      localStorage.removeItem(DRAFT_KEY);
+    },
     onError: (e: Error) => {
       console.error("Erro ao enviar inscrição:", e);
       toast.error("Erro ao enviar sua inscrição. Verifique os dados e tente novamente.");
