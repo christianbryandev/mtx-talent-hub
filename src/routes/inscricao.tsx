@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import * as z from "zod";
 import { differenceInYears, parseISO } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
+import { withRetry } from "@/utils/supabase-retry";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +85,8 @@ export const Route = createFileRoute("/inscricao")({
   component: PublicApplicationPage,
 });
 
+const DRAFT_KEY = "mtx_application_draft";
+
 function PublicApplicationPage() {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -117,6 +120,28 @@ function PublicApplicationPage() {
     },
   });
 
+  // Restore draft on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (saved) {
+      try {
+        const { step: savedStep, values } = JSON.parse(saved);
+        setStep(savedStep);
+        form.reset(values);
+      } catch (e) {
+        console.error("Erro ao carregar rascunho:", e);
+      }
+    }
+  }, [form]);
+
+  // Save draft on changes
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, values }));
+    });
+    return () => subscription.unsubscribe();
+  }, [form, step]);
+
   const birthDate = form.watch("birth_date");
   const age = useMemo(() => {
     if (!birthDate) return null;
@@ -139,11 +164,16 @@ function PublicApplicationPage() {
   ];
 
   const nextStep = async () => {
-    const fields = getFieldsForStep(step);
-    const isValid = await form.trigger(fields as any);
-    if (isValid) {
-      setStep((s) => Math.min(s + 1, steps.length - 1));
-      window.scrollTo(0, 0);
+    try {
+      const fields = getFieldsForStep(step);
+      const isValid = await form.trigger(fields as any);
+      if (isValid) {
+        setStep((s) => Math.min(s + 1, steps.length - 1));
+        window.scrollTo(0, 0);
+      }
+    } catch (error) {
+      console.error("Erro ao validar etapa:", error);
+      toast.error("Erro ao processar. Tente novamente.");
     }
   };
 
@@ -166,36 +196,41 @@ function PublicApplicationPage() {
 
   const submit = useMutation({
     mutationFn: async (values: ApplicationValues) => {
-      const { error } = await supabase.from("young_applications").insert({
-        full_name: values.full_name,
-        email: values.email.trim().toLowerCase(),
-        phone: values.phone,
-        whatsapp: values.whatsapp,
-        birth_date: values.birth_date,
-        age: age,
-        address: values.address,
-        city: values.city,
-        state: values.state.toUpperCase(),
-        education_level: values.education_level,
-        currently_studying: values.currently_studying,
-        currently_working: values.currently_working,
-        family_income: values.family_income,
-        personal_story: values.personal_story,
-        dreams: values.dreams,
-        why_mtx: values.why_mtx,
-        perceived_skills: values.perceived_skills,
-        interest_area: values.interest_area,
-        has_laptop: values.has_laptop,
-        has_phone: values.has_phone,
-        has_internet: values.has_internet,
-        how_found_mtx: values.how_found_mtx,
-        data_authorization: values.data_authorization,
-        guardian_authorization: isUnderage ? values.guardian_authorization : true,
-        status: "pendente",
+      await withRetry(async () => {
+        const { error } = await supabase.from("young_applications").insert({
+          full_name: values.full_name,
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone,
+          whatsapp: values.whatsapp,
+          birth_date: values.birth_date,
+          age: age,
+          address: values.address,
+          city: values.city,
+          state: values.state.toUpperCase(),
+          education_level: values.education_level,
+          currently_studying: values.currently_studying,
+          currently_working: values.currently_working,
+          family_income: values.family_income,
+          personal_story: values.personal_story,
+          dreams: values.dreams,
+          why_mtx: values.why_mtx,
+          perceived_skills: values.perceived_skills,
+          interest_area: values.interest_area,
+          has_laptop: values.has_laptop,
+          has_phone: values.has_phone,
+          has_internet: values.has_internet,
+          how_found_mtx: values.how_found_mtx,
+          data_authorization: values.data_authorization,
+          guardian_authorization: isUnderage ? values.guardian_authorization : true,
+          status: "pendente",
+        });
+        if (error) throw error;
       });
-      if (error) throw error;
     },
-    onSuccess: () => setDone(true),
+    onSuccess: () => {
+      setDone(true);
+      localStorage.removeItem(DRAFT_KEY);
+    },
     onError: (e: Error) => {
       console.error("Erro ao enviar inscrição:", e);
       toast.error("Erro ao enviar sua inscrição. Verifique os dados e tente novamente.");
