@@ -17,6 +17,48 @@ serve(async (req) => {
   }
 
   try {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Configurações do Supabase ausentes");
+    }
+
+    // --- AuthN/AuthZ: only admins/super_admins may approve applications ---
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: roles, error: rolesError } = await supabaseAuth
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    const isAdmin = !rolesError && (roles ?? []).some(
+      (r: { role: string }) => r.role === "admin" || r.role === "super_admin"
+    );
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // --- end auth check ---
+
     const body = await req.json();
     console.log("Recebendo requisição:", JSON.stringify(body, null, 2));
     const { candidato_id, email, nome } = body;
@@ -24,10 +66,6 @@ serve(async (req) => {
     if (!email || !nome) {
       console.error("Erro: E-mail e nome são obrigatórios");
       throw new Error("E-mail e nome são obrigatórios");
-    }
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Configurações do Supabase ausentes");
     }
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
