@@ -85,6 +85,8 @@ export const Route = createFileRoute("/inscricao")({
   component: PublicApplicationPage,
 });
 
+const DRAFT_KEY = "mtx_application_draft";
+
 function PublicApplicationPage() {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -117,6 +119,28 @@ function PublicApplicationPage() {
       guardian_authorization: false,
     },
   });
+
+  // Restore draft on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (saved) {
+      try {
+        const { step: savedStep, values } = JSON.parse(saved);
+        setStep(savedStep);
+        form.reset(values);
+      } catch (e) {
+        console.error("Erro ao carregar rascunho:", e);
+      }
+    }
+  }, [form]);
+
+  // Save draft on changes
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, values }));
+    });
+    return () => subscription.unsubscribe();
+  }, [form, step]);
 
   const birthDate = form.watch("birth_date");
   const age = useMemo(() => {
