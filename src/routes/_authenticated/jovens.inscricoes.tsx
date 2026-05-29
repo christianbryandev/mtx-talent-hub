@@ -129,6 +129,50 @@ function InscricoesPage() {
     },
   });
 
+  const deleteApp = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("young_applications").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Inscrição excluída");
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteAllApps = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("young_applications").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Todas as inscrições foram excluídas");
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveApp = useMutation({
+    mutationFn: async (values: Partial<YoungApplication>) => {
+      if (editingApp) {
+        const { error } = await supabase.from("young_applications").update(values).eq("id", editingApp.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("young_applications").insert([{ ...values, status: "pendente" }]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editingApp ? "Inscrição atualizada" : "Inscrição criada");
+      setIsFormOpen(false);
+      setEditingApp(null);
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
