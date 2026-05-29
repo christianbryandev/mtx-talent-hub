@@ -2,6 +2,5 @@ project_id = "iancuqduuotmrxrvvcfd"
 
 [auth.hook.send_email]
 enabled = true
-uri = "pg-functions://auth-email-hook"
-# or if it's an edge function:
-# uri = "https://iancuqduuotmrxrvvcfd.supabase.co/functions/v1/auth-email-hook"
+uri = "https://iancuqduuotmrxrvvcfd.supabase.co/functions/v1/auth-email-hook"
+secrets = ["RESEND_API_KEY"]
