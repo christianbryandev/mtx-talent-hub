@@ -56,7 +56,14 @@ export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGr
   let percentageInlineStyle: React.CSSProperties = {};
   let progressInlineStyle: React.CSSProperties = {};
 
-  if (isInProgress) {
+  if (lockedByRole) {
+    // Concluída, porém bloqueada para o perfil atual: cinza + cadeado.
+    badgeStyles = "text-[#666666] border-[#666666] bg-[#666666]/[0.08]";
+    textPrimary = "text-[#555555]";
+    percentageColor = "text-[#666666]";
+    progressBarBg = "bg-[#2a2a2a]";
+    badgeLabel = "CONCLUÍDO";
+  } else if (isInProgress) {
     badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
     percentageColor = "text-[#e040fb]";
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
