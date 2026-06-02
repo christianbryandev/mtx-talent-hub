@@ -209,6 +209,7 @@ function JourneyPage() {
                 <PhaseGridCard
                   key={phase.id}
                   phase={phase}
+                  lockCompleted={!isAdmin}
                   onClick={(p) => setSelectedPhaseId(p.id)}
                 />
               ))}
