@@ -204,7 +204,7 @@ function PublicApplicationPage() {
           full_name: values.full_name,
           email: values.email.trim().toLowerCase(),
           phone: values.phone,
-          whatsapp: values.whatsapp,
+          whatsapp: values.whatsapp?.trim() ? values.whatsapp : values.phone,
           birth_date: values.birth_date,
           age: age,
           address: values.address,
