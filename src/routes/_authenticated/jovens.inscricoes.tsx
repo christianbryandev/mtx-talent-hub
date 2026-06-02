@@ -168,6 +168,10 @@ function InscricoesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  if (permissionsLoading || !isAdmin) {
+    return <div className="h-24 animate-pulse rounded-md bg-primary/5" />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
