@@ -637,7 +637,7 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar {draft.content_type === "video" ? "Vídeo" : draft.content_type === "quiz" ? "Quiz" : "Texto"}</DialogTitle>
         </DialogHeader>
