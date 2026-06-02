@@ -840,6 +840,7 @@ export type Database = {
           description: string | null
           duration_minutes: number | null
           id: string
+          links: Json
           order_index: number
           phase_id: string
           thumbnail_url: string | null
@@ -853,6 +854,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          links?: Json
           order_index?: number
           phase_id: string
           thumbnail_url?: string | null
@@ -866,6 +868,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          links?: Json
           order_index?: number
           phase_id?: string
           thumbnail_url?: string | null
