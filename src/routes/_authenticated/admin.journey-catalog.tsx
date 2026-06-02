@@ -541,15 +541,51 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
   );
 }
 
+function isValidUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClose: () => void; phaseId: string }) {
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<Module>(module);
+  const [draft, setDraft] = useState<Module>({ ...module, links: module.links ?? [] });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(module);
+  const dirty = JSON.stringify(draft) !== JSON.stringify({ ...module, links: module.links ?? [] });
+
+  const links = draft.links ?? [];
+
+  const updateLinks = (next: ModuleLink[]) => setDraft((prev) => ({ ...prev, links: next }));
+
+  const addLink = () => updateLinks([...links, { label: "", url: "" }]);
+
+  const removeLink = (index: number) =>
+    updateLinks(links.filter((_, i) => i !== index));
+
+  const patchLink = (index: number, patch: Partial<ModuleLink>) =>
+    updateLinks(links.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+
+  const moveLink = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= links.length) return;
+    const next = [...links];
+    [next[index], next[target]] = [next[target], next[index]];
+    updateLinks(next);
+  };
+
+  const invalidLinks = links.some(
+    (l) => !l.label.trim() || !l.url.trim() || !isValidUrl(l.url.trim()),
+  );
 
   const save = useMutation({
     mutationFn: async () => {
+      if (invalidLinks) {
+        throw new Error("Verifique os links: título e URL válida (http/https) são obrigatórios.");
+      }
       const { error } = await supabase
         .from("journey_modules")
         .update({
@@ -557,7 +593,8 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
           description: draft.description,
           content_body: draft.content_body,
           duration_minutes: draft.duration_minutes,
-        })
+          links: links.map((l) => ({ label: l.label.trim(), url: l.url.trim() })),
+        } as never)
         .eq("id", module.id);
       if (error) throw error;
     },
