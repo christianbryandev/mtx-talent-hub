@@ -71,10 +71,6 @@ function InscricoesPage() {
     }
   }, [isAdmin, navigate, permissionsLoading]);
 
-  if (permissionsLoading || !isAdmin) {
-    return <div className="h-24 animate-pulse rounded-md bg-primary/5" />;
-  }
-
   const { data: apps = [], isLoading } = useQuery({
     queryKey: ["young_applications"],
     queryFn: async () => {
