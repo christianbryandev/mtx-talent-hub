@@ -51,6 +51,7 @@ import { Route as AuthenticatedCrmIdRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedClientesIdRouteImport } from './routes/_authenticated/clientes.$id'
 import { Route as AuthenticatedAdminQuizzesRouteImport } from './routes/_authenticated/admin.quizzes'
 import { Route as AuthenticatedAdminJourneyMonitorRouteImport } from './routes/_authenticated/admin.journey-monitor'
+import { Route as AuthenticatedAdminJourneyMediaRouteImport } from './routes/_authenticated/admin.journey-media'
 import { Route as AuthenticatedAdminJourneyCatalogRouteImport } from './routes/_authenticated/admin.journey-catalog'
 import { Route as AuthenticatedAdminJourneyAnalyticsRouteImport } from './routes/_authenticated/admin.journey-analytics'
 import { Route as AuthenticatedJovensIdJornadaRouteImport } from './routes/_authenticated/jovens.$id.jornada'
@@ -278,6 +279,12 @@ const AuthenticatedAdminJourneyMonitorRoute =
     path: '/admin/journey-monitor',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminJourneyMediaRoute =
+  AuthenticatedAdminJourneyMediaRouteImport.update({
+    id: '/admin/journey-media',
+    path: '/admin/journey-media',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminJourneyCatalogRoute =
   AuthenticatedAdminJourneyCatalogRouteImport.update({
     id: '/admin/journey-catalog',
@@ -332,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
+  '/admin/journey-media': typeof AuthenticatedAdminJourneyMediaRoute
   '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -374,6 +382,7 @@ export interface FileRoutesByTo {
   '/convite/$token': typeof ConviteTokenRoute
   '/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
+  '/admin/journey-media': typeof AuthenticatedAdminJourneyMediaRoute
   '/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -423,6 +432,7 @@ export interface FileRoutesById {
   '/convite/$token': typeof ConviteTokenRoute
   '/_authenticated/admin/journey-analytics': typeof AuthenticatedAdminJourneyAnalyticsRoute
   '/_authenticated/admin/journey-catalog': typeof AuthenticatedAdminJourneyCatalogRoute
+  '/_authenticated/admin/journey-media': typeof AuthenticatedAdminJourneyMediaRoute
   '/_authenticated/admin/journey-monitor': typeof AuthenticatedAdminJourneyMonitorRoute
   '/_authenticated/admin/quizzes': typeof AuthenticatedAdminQuizzesRoute
   '/_authenticated/clientes/$id': typeof AuthenticatedClientesIdRoute
@@ -472,6 +482,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/admin/journey-analytics'
     | '/admin/journey-catalog'
+    | '/admin/journey-media'
     | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/admin/journey-analytics'
     | '/admin/journey-catalog'
+    | '/admin/journey-media'
     | '/admin/journey-monitor'
     | '/admin/quizzes'
     | '/clientes/$id'
@@ -562,6 +574,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/_authenticated/admin/journey-analytics'
     | '/_authenticated/admin/journey-catalog'
+    | '/_authenticated/admin/journey-media'
     | '/_authenticated/admin/journey-monitor'
     | '/_authenticated/admin/quizzes'
     | '/_authenticated/clientes/$id'
@@ -890,6 +903,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminJourneyMonitorRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/journey-media': {
+      id: '/_authenticated/admin/journey-media'
+      path: '/admin/journey-media'
+      fullPath: '/admin/journey-media'
+      preLoaderRoute: typeof AuthenticatedAdminJourneyMediaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/journey-catalog': {
       id: '/_authenticated/admin/journey-catalog'
       path: '/admin/journey-catalog'
@@ -1043,6 +1063,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedAdminJourneyAnalyticsRoute: typeof AuthenticatedAdminJourneyAnalyticsRoute
   AuthenticatedAdminJourneyCatalogRoute: typeof AuthenticatedAdminJourneyCatalogRoute
+  AuthenticatedAdminJourneyMediaRoute: typeof AuthenticatedAdminJourneyMediaRoute
   AuthenticatedAdminJourneyMonitorRoute: typeof AuthenticatedAdminJourneyMonitorRoute
   AuthenticatedAdminQuizzesRoute: typeof AuthenticatedAdminQuizzesRoute
 }
@@ -1068,6 +1089,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminJourneyAnalyticsRoute:
     AuthenticatedAdminJourneyAnalyticsRoute,
   AuthenticatedAdminJourneyCatalogRoute: AuthenticatedAdminJourneyCatalogRoute,
+  AuthenticatedAdminJourneyMediaRoute: AuthenticatedAdminJourneyMediaRoute,
   AuthenticatedAdminJourneyMonitorRoute: AuthenticatedAdminJourneyMonitorRoute,
   AuthenticatedAdminQuizzesRoute: AuthenticatedAdminQuizzesRoute,
 }

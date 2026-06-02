@@ -21,6 +21,7 @@ import {
   Bell,
   Mail,
   ClipboardList,
+  Film,
 } from "lucide-react";
 
 import { useJourney } from "@/hooks/useJourney";
@@ -258,6 +259,18 @@ export function AppSidebar() {
                     <Link to="/admin/journey-catalog" className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       <span>Catálogo Jornada</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/admin/journey-media")}
+                    tooltip="Vídeos das Fases"
+                  >
+                    <Link to="/admin/journey-media" className="flex items-center gap-2">
+                      <Film className="h-4 w-4" />
+                      <span>Mídia da Jornada</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
