@@ -41,7 +41,10 @@ const applicationSchema = z.object({
   full_name: z.string().min(3, "Nome completo é obrigatório"),
   email: z.string().email("E-mail inválido"),
   phone: z.string().min(10, "Telefone inválido"),
-  whatsapp: z.string().min(10, "WhatsApp inválido"),
+  whatsapp: z.string().optional().refine(
+    (val) => !val || val.trim() === "" || val.replace(/\D/g, "").length >= 10,
+    "WhatsApp inválido"
+  ),
   birth_date: z.string().min(1, "Data de nascimento é obrigatória"),
   
   // Step 2: Address
@@ -201,7 +204,7 @@ function PublicApplicationPage() {
           full_name: values.full_name,
           email: values.email.trim().toLowerCase(),
           phone: values.phone,
-          whatsapp: values.whatsapp,
+          whatsapp: values.whatsapp?.trim() ? values.whatsapp : values.phone,
           birth_date: values.birth_date,
           age: age,
           address: values.address,
