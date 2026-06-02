@@ -721,10 +721,97 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
               </div>
             )}
           </div>
+
+          {/* Links associados */}
+          <div className="space-y-3 rounded-lg border border-border/60 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-semibold">Links associados</Label>
+                <Badge variant="outline" className="text-[10px]">{links.length}</Badge>
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={addLink}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                Adicionar link
+              </Button>
+            </div>
+
+            {links.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-3 border border-dashed border-border/60 rounded-md">
+                Nenhum link adicionado. Clique em "Adicionar link" para incluir materiais de apoio.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {links.map((link, index) => {
+                  const urlInvalid = !!link.url.trim() && !isValidUrl(link.url.trim());
+                  return (
+                    <div
+                      key={index}
+                      className="grid gap-2 sm:grid-cols-[1fr_1.5fr_auto] items-start rounded-md bg-muted/20 border border-border/60 p-3"
+                    >
+                      <div className="space-y-1">
+                        <Input
+                          value={link.label}
+                          onChange={(e) => patchLink(index, { label: e.target.value })}
+                          placeholder="Título (ex: YouTube)"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Input
+                          type="url"
+                          value={link.url}
+                          onChange={(e) => patchLink(index, { url: e.target.value })}
+                          placeholder="https://exemplo.com"
+                          className={urlInvalid ? "border-destructive" : ""}
+                        />
+                        {urlInvalid && (
+                          <p className="text-[11px] text-destructive">URL inválida (use http:// ou https://).</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={index === 0}
+                          onClick={() => moveLink(index, -1)}
+                          aria-label="Mover para cima"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={index === links.length - 1}
+                          onClick={() => moveLink(index, 1)}
+                          aria-label="Mover para baixo"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => removeLink(index)}
+                          aria-label="Remover link"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending || uploading}>
+          <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending || uploading || invalidLinks}>
             {save.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações
           </Button>
