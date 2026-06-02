@@ -158,13 +158,16 @@ export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGr
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full p-6">
         {/* Status Badge Top Right */}
-        <div className="absolute top-6 right-6">
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          {isLocked && (
+            <Lock className="h-3.5 w-3.5 text-[#666666]" strokeWidth={2.5} />
+          )}
           <div 
             className={cn(
               "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
               badgeStyles
             )}
-            style={isCompleted ? {
+            style={isCompleted && !lockedByRole ? {
               border: '2px solid transparent',
               backgroundImage: `linear-gradient(#0a0a0a, #0a0a0a), ${MTX_LOGO_GRADIENT}`,
               backgroundOrigin: 'border-box',
