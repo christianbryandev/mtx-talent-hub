@@ -21,6 +21,7 @@ import {
   Bell,
   Mail,
   ClipboardList,
+  Film,
 } from "lucide-react";
 
 import { useJourney } from "@/hooks/useJourney";
