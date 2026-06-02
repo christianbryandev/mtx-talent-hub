@@ -18,6 +18,9 @@ import {
   Loader2,
   Upload,
   CheckCircle2,
+  Link2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
@@ -53,6 +56,11 @@ interface Phase {
   modules_count?: number;
 }
 
+interface ModuleLink {
+  label: string;
+  url: string;
+}
+
 interface Module {
   id: string;
   phase_id: string;
@@ -62,6 +70,7 @@ interface Module {
   content_body: string | null;
   order_index: number;
   duration_minutes?: number | null;
+  links?: ModuleLink[] | null;
 }
 
 function AdminJourneyCatalogPage() {
