@@ -7,21 +7,26 @@ import { cn } from "@/lib/utils";
 interface PhaseGridCardProps {
   phase: JourneyPhase;
   onClick: (phase: JourneyPhase) => void;
+  /** When true, completed phases are locked (visually disabled and not clickable). */
+  lockCompleted?: boolean;
 }
 
 const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FC9325, #F0562A, #DD2A7B, #C7288B, #8131AF, #515BD4)";
 
-export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
+export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
   const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
   
   const phasePctRaw = modulesCount > 0 ? Math.round((modulesDone / modulesCount) * 100) : 0;
   
-  const isLocked = phase.status === "bloqueada";
+  const isBlocked = phase.status === "bloqueada";
   const isCompleted = phase.status?.toLowerCase().includes("conclu") || 
                      phase.raw_status?.toLowerCase().includes("conclu") || 
                      (phase as any).status === "concluido" || 
                      phasePctRaw === 100;
+  // Fases concluídas ficam bloqueadas para perfis sem permissão de admin.
+  const lockedByRole = lockCompleted && isCompleted;
+  const isLocked = isBlocked || lockedByRole;
   const isInProgress = !isLocked && !isCompleted;
 
   // Se estiver concluída, forçamos 100% para evitar inconsistências com dados legados
@@ -51,7 +56,14 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
   let percentageInlineStyle: React.CSSProperties = {};
   let progressInlineStyle: React.CSSProperties = {};
 
-  if (isInProgress) {
+  if (lockedByRole) {
+    // Concluída, porém bloqueada para o perfil atual: cinza + cadeado.
+    badgeStyles = "text-[#666666] border-[#666666] bg-[#666666]/[0.08]";
+    textPrimary = "text-[#555555]";
+    percentageColor = "text-[#666666]";
+    progressBarBg = "bg-[#2a2a2a]";
+    badgeLabel = "CONCLUÍDO";
+  } else if (isInProgress) {
     badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
     percentageColor = "text-[#e040fb]";
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
@@ -146,13 +158,16 @@ export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full p-6">
         {/* Status Badge Top Right */}
-        <div className="absolute top-6 right-6">
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          {isLocked && (
+            <Lock className="h-3.5 w-3.5 text-[#666666]" strokeWidth={2.5} />
+          )}
           <div 
             className={cn(
               "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
               badgeStyles
             )}
-            style={isCompleted ? {
+            style={isCompleted && !lockedByRole ? {
               border: '2px solid transparent',
               backgroundImage: `linear-gradient(#0a0a0a, #0a0a0a), ${MTX_LOGO_GRADIENT}`,
               backgroundOrigin: 'border-box',
