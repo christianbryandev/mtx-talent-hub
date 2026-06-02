@@ -7,21 +7,26 @@ import { cn } from "@/lib/utils";
 interface PhaseGridCardProps {
   phase: JourneyPhase;
   onClick: (phase: JourneyPhase) => void;
+  /** When true, completed phases are locked (visually disabled and not clickable). */
+  lockCompleted?: boolean;
 }
 
 const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FC9325, #F0562A, #DD2A7B, #C7288B, #8131AF, #515BD4)";
 
-export function PhaseGridCard({ phase, onClick }: PhaseGridCardProps) {
+export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGridCardProps) {
   const modulesCount = phase.modules?.length || phase.cards_total || 0;
   const modulesDone = phase.modules?.filter(m => m.completed).length || phase.cards_done || 0;
   
   const phasePctRaw = modulesCount > 0 ? Math.round((modulesDone / modulesCount) * 100) : 0;
   
-  const isLocked = phase.status === "bloqueada";
+  const isBlocked = phase.status === "bloqueada";
   const isCompleted = phase.status?.toLowerCase().includes("conclu") || 
                      phase.raw_status?.toLowerCase().includes("conclu") || 
                      (phase as any).status === "concluido" || 
                      phasePctRaw === 100;
+  // Fases concluídas ficam bloqueadas para perfis sem permissão de admin.
+  const lockedByRole = lockCompleted && isCompleted;
+  const isLocked = isBlocked || lockedByRole;
   const isInProgress = !isLocked && !isCompleted;
 
   // Se estiver concluída, forçamos 100% para evitar inconsistências com dados legados
