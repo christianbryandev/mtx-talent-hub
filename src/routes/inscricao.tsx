@@ -738,11 +738,11 @@ function PublicApplicationPage() {
                               </FormControl>
                               <div className="space-y-1 leading-none">
                                 <FormLabel className="text-sm font-bold cursor-pointer">Sim, possuo autorização dos meus responsáveis.</FormLabel>
+                                 <FormMessage />
                               </div>
                             </FormItem>
                           )}
                         />
-                        <FormMessage />
                       </div>
                     )}
                   </div>
