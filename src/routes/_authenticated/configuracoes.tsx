@@ -77,7 +77,7 @@ function SettingsPage() {
         </div>
         <Card>
           <CardContent className="p-8 text-center space-y-2">
-            <h2 classAName="text-xl font-semibold">Acesso negado</h2>
+            <h2 className="text-xl font-semibold">Acesso negado</h2>
             <p className="text-sm text-muted-foreground">
               Apenas administradores podem acessar as configurações de e-mail.
             </p>
