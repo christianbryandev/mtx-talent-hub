@@ -14,11 +14,7 @@ interface ContentItemCardProps {
   isCompleted: boolean;
   isLocked: boolean;
   questionsCount?: number;
-  thumbnailUrl?: string | null;
-  isAdmin?: boolean;
   onClick: () => void;
-  onUploadThumbnail?: (file: File) => void;
-  onDuplicate?: () => void;
 }
 
 const MTX_LOGO_GRADIENT = "linear-gradient(to right, #FC9325, #F0562A, #DD2A7B, #C7288B, #8131AF, #515BD4)";
@@ -35,10 +31,7 @@ export function ContentItemCard({
   isLocked,
   questionsCount,
   thumbnailUrl,
-  isAdmin,
-  onClick,
-  onUploadThumbnail,
-  onDuplicate
+  onClick
 }: ContentItemCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const itemNumber = orderIndex.toString().padStart(2, "0");
@@ -172,32 +165,6 @@ export function ContentItemCard({
             </div>
           )}
 
-          {/* Admin Tools Overlay */}
-          {isAdmin && isHovered && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-4 z-10" onClick={(e) => e.stopPropagation()}>
-              <label className="cursor-pointer p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20">
-                <Camera className="h-6 w-6 text-white" />
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file && onUploadThumbnail) onUploadThumbnail(file);
-                  }}
-                />
-              </label>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onDuplicate) onDuplicate();
-                }}
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                <Copy className="h-6 w-6 text-white" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Bottom Progress/Status Area */}
@@ -282,18 +249,6 @@ export function ContentItemCard({
 
       {/* Right Area: Status */}
       <div className="shrink-0 ml-2 relative flex items-center gap-2">
-        {isAdmin && (
-           <button 
-             onClick={(e) => {
-               e.stopPropagation();
-               if (onDuplicate) onDuplicate();
-             }}
-             className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 mr-2"
-           >
-             <Copy className="h-4 w-4 text-white" />
-           </button>
-        )}
-
         {isLocked ? (
           <Lock className="h-5 w-5 text-[#444444]" />
         ) : isCompleted ? (

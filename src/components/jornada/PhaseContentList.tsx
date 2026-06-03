@@ -24,41 +24,6 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
   // Modules are the main content units now
   const modules = phase.modules || [];
 
-  const handleUploadThumbnail = async (moduleId: string, file: File) => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${moduleId}-${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('module-thumbnails')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('module-thumbnails')
-        .getPublicUrl(filePath);
-
-      await journeyService.updateModuleThumbnail(moduleId, publicUrl);
-      
-      toast.success("Thumbnail atualizada com sucesso!");
-      qc.invalidateQueries({ queryKey: ["user-journey", user?.id] });
-    } catch (error: any) {
-      toast.error("Erro ao fazer upload da imagem: " + error.message);
-    }
-  };
-
-  const handleDuplicate = async (moduleId: string) => {
-    try {
-      await journeyService.duplicateModule(moduleId);
-      toast.success("Módulo duplicado com sucesso!");
-      qc.invalidateQueries({ queryKey: ["user-journey", user?.id] });
-    } catch (error: any) {
-      toast.error("Erro ao duplicar módulo: " + error.message);
-    }
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       {/* Header */}
@@ -102,9 +67,6 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
               duration={module.duration_minutes ? `${module.duration_minutes}min` : undefined}
               questionsCount={module.content_type === "quiz" ? (module.questions_count || 5) : undefined}
               thumbnailUrl={module.thumbnail_url}
-              isAdmin={isAdmin}
-              onUploadThumbnail={(file) => handleUploadThumbnail(module.id, file)}
-              onDuplicate={() => handleDuplicate(module.id)}
             />
           ))
         )}
