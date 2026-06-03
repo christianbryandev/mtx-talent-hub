@@ -53,6 +53,7 @@ import {
   resendInvite,
   revokeInvite,
 } from "@/lib/invites.functions";
+import { changeUserRole } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Usuários — MTX Hub" }] }),
