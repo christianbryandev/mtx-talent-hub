@@ -8,41 +8,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function verifyWebhookSecret(req: Request): Promise<boolean> {
-  if (!SUPABASE_WEBHOOK_SECRET) {
-    console.warn("SUPABASE_WEBHOOK_SECRET não configurado. Verificação de webhook desativada.");
-    return true;
+/**
+ * Timing-safe comparison of two strings.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
-
-  const signature = req.headers.get("x-supabase-signature") || req.headers.get("x-webhook-signature");
-  if (!signature) {
-    console.error("Webhook signature ausente");
-    return false;
-  }
-
-  const body = await req.clone().text();
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(SUPABASE_WEBHOOK_SECRET),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"]
-  );
-
-  const sigBytes = hexToUint8Array(signature);
-  const dataBytes = encoder.encode(body);
-
-  const valid = await crypto.subtle.verify("HMAC", key, sigBytes, dataBytes);
-  return valid;
+  return result === 0;
 }
 
-function hexToUint8Array(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+/**
+ * Verify the request originates from Supabase by checking the
+ * Authorization: Bearer <SUPABASE_WEBHOOK_SECRET> header.
+ */
+function verifyWebhookAuth(req: Request): boolean {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return false;
   }
-  return bytes;
+  const provided = authHeader.replace("Bearer ", "");
+  if (!SUPABASE_WEBHOOK_SECRET) {
+    console.error("SUPABASE_WEBHOOK_SECRET não configurado.");
+    return false;
+  }
+  return timingSafeEqual(provided, SUPABASE_WEBHOOK_SECRET);
 }
 
 serve(async (req) => {
@@ -50,18 +42,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    // Verify webhook signature before processing
-    const isValid = await verifyWebhookSecret(req);
-    if (!isValid) {
-      return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  // Always verify webhook auth before processing
+  if (!verifyWebhookAuth(req)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
+  try {
     const { user, email_data } = await req.json();
-    const { token, token_hash, redirect_to, type } = email_data;
+    const { token_hash, redirect_to, type } = email_data;
     const email = user.email;
     const nome = user.user_metadata?.full_name || email.split("@")[0];
 
@@ -75,8 +66,6 @@ serve(async (req) => {
     let subject = "";
 
     const appUrl = "https://mtxmarketing.com";
-
-    // Build button URL - Supabase provides site_url/redirect_to
     const siteUrl = Deno.env.get("SITE_URL") || appUrl;
 
     // Validate redirect_to to prevent open redirect
