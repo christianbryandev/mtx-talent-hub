@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SettingsPage() {
+  const { isAdmin, isSuperAdmin, loading: permLoading } = usePermissions();
   const [testEmail, setTestEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [configStatus, setConfigStatus] = useState<"not_configured" | "configured" | "unknown">("configured");
@@ -58,6 +59,33 @@ function SettingsPage() {
     }
     sendTestEmail.mutate(testEmail);
   };
+
+  if (permLoading) {
+    return (
+      <div className="container mx-auto py-8 max-w-4xl">
+        <div className="h-64 w-full bg-muted/50 rounded-lg animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!isAdmin && !isSuperAdmin) {
+    return (
+      <div className="container mx-auto py-8 max-w-4xl space-y-6">
+        <div className="flex items-center gap-2">
+          <Settings className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
+        </div>
+        <Card>
+          <CardContent className="p-8 text-center space-y-2">
+            <h2 classAName="text-xl font-semibold">Acesso negado</h2>
+            <p className="text-sm text-muted-foreground">
+              Apenas administradores podem acessar as configurações de e-mail.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 max-w-4xl space-y-8">
