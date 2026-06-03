@@ -24,9 +24,8 @@ export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGr
                      phase.raw_status?.toLowerCase().includes("conclu") || 
                      (phase as any).status === "concluido" || 
                      phasePctRaw === 100;
-  // Fases concluídas ficam bloqueadas para perfis sem permissão de admin.
-  const lockedByRole = lockCompleted && isCompleted;
-  const isLocked = isBlocked || lockedByRole;
+  // Fases concluídas não devem ser bloqueadas, permitindo revisão.
+  const isLocked = isBlocked;
   const isInProgress = !isLocked && !isCompleted;
 
   // Se estiver concluída, forçamos 100% para evitar inconsistências com dados legados
@@ -56,14 +55,7 @@ export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGr
   let percentageInlineStyle: React.CSSProperties = {};
   let progressInlineStyle: React.CSSProperties = {};
 
-  if (lockedByRole) {
-    // Concluída, porém bloqueada para o perfil atual: cinza + cadeado.
-    badgeStyles = "text-[#666666] border-[#666666] bg-[#666666]/[0.08]";
-    textPrimary = "text-[#555555]";
-    percentageColor = "text-[#666666]";
-    progressBarBg = "bg-[#2a2a2a]";
-    badgeLabel = "CONCLUÍDO";
-  } else if (isInProgress) {
+  if (isInProgress) {
     badgeStyles = "text-[#e040fb] border-[#e040fb] bg-[#e040fb]/[0.08]";
     percentageColor = "text-[#e040fb]";
     progressBarBg = "bg-gradient-to-r from-[#e040fb] to-[#ff6d00]";
@@ -167,7 +159,7 @@ export function PhaseGridCard({ phase, onClick, lockCompleted = false }: PhaseGr
               "px-2.5 py-0.5 rounded-[20px] border text-[9px] font-bold tracking-widest transition-all duration-500",
               badgeStyles
             )}
-            style={isCompleted && !lockedByRole ? {
+            style={isCompleted ? {
               border: '2px solid transparent',
               backgroundImage: `linear-gradient(#0a0a0a, #0a0a0a), ${MTX_LOGO_GRADIENT}`,
               backgroundOrigin: 'border-box',
