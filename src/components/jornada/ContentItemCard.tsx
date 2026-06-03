@@ -85,7 +85,7 @@ export function ContentItemCard({
         onClick={() => !isLocked && onClick()}
       >
         {/* Large Thumbnail Area */}
-        <div className="relative aspect-video w-full overflow-hidden">
+        <div className="relative h-48 md:h-[320px] w-full overflow-hidden">
           {thumbnailUrl ? (
             <img 
               src={thumbnailUrl} 
