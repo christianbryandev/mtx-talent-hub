@@ -83,6 +83,7 @@ function UsersPage() {
   const createInviteFn = useServerFn(createInvite);
   const resendInviteFn = useServerFn(resendInvite);
   const revokeInviteFn = useServerFn(revokeInvite);
+  const changeRoleFn = useServerFn(changeUserRole);
 
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
