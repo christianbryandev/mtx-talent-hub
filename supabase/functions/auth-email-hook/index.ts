@@ -2,20 +2,57 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getEmailHtml } from "../_shared/templates.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_WEBHOOK_SECRET = Deno.env.get("SUPABASE_WEBHOOK_SECRET");
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+/**
+ * Timing-safe comparison of two strings.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+/**
+ * Verify the request originates from Supabase by checking the
+ * Authorization: Bearer <SUPABASE_WEBHOOK_SECRET> header.
+ */
+function verifyWebhookAuth(req: Request): boolean {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return false;
+  }
+  const provided = authHeader.replace("Bearer ", "");
+  if (!SUPABASE_WEBHOOK_SECRET) {
+    console.error("SUPABASE_WEBHOOK_SECRET não configurado.");
+    return false;
+  }
+  return timingSafeEqual(provided, SUPABASE_WEBHOOK_SECRET);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Always verify webhook auth before processing
+  if (!verifyWebhookAuth(req)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { user, email_data } = await req.json();
-    const { token, token_hash, redirect_to, type } = email_data;
+    const { token_hash, redirect_to, type } = email_data;
     const email = user.email;
     const nome = user.user_metadata?.full_name || email.split("@")[0];
 
@@ -29,25 +66,15 @@ serve(async (req) => {
     let subject = "";
 
     const appUrl = "https://mtxmarketing.com";
-
-    // Build button URL - Supabase provides site_url/redirect_to
-    // For some types, we need to append the token or use the hash
     const siteUrl = Deno.env.get("SITE_URL") || appUrl;
-    
-    // Default button URL based on Supabase Auth standard
-    // Usually Supabase handles the confirmation link generation if not using a hook, 
-    // but in a hook we get the token/hash to build it.
-    // However, Supabase often provides the full link in some contexts.
-    // Let's assume we build it following the standard pattern or using the provided one.
-    
-    // In many cases, redirect_to is where the user should end up, but the confirmation link
-    // is often `${siteUrl}/auth/v1/verify?token=${token_hash}&type=${type}&redirect_to=${redirect_to}`
-    // But since we are in a hook, we might just want to use what Supabase intended.
-    
-    // For simplicity and matching the user request for "Criar Senha e Acessar", 
-    // we'll adapt based on type.
-    
-    const confirmationUrl = `${siteUrl}/auth/v1/verify?token=${token_hash}&type=${type === 'invite' ? 'signup' : type}&redirect_to=${redirect_to || appUrl}`;
+
+    // Validate redirect_to to prevent open redirect
+    const allowedDomains = ["mtxmarketing.com", "app.mtxhub.com.br", "mtxhub.com.br"];
+    const safeRedirect = redirect_to && allowedDomains.some((d) => redirect_to.includes(d))
+      ? redirect_to
+      : appUrl;
+
+    const confirmationUrl = `${siteUrl}/auth/v1/verify?token=${token_hash}&type=${type === 'invite' ? 'signup' : type}&redirect_to=${encodeURIComponent(safeRedirect)}`;
 
     switch (type) {
       case "signup":
