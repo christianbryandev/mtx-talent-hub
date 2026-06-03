@@ -149,22 +149,7 @@ function UsersPage() {
 
   const changeRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: AppRole }) => {
-      const { error: delErr } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
-      if (delErr) throw delErr;
-      const { error: insErr } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role: newRole });
-      if (insErr) throw insErr;
-      await supabase.from("activity_logs").insert({
-        user_id: currentUser?.id ?? null,
-        action: "role_changed",
-        entity_type: "user",
-        entity_id: userId,
-        description: `Permissão alterada para ${ROLE_LABELS[newRole]}`,
-      });
+      await changeRoleFn({ data: { userId, newRole } });
     },
     onSuccess: () => {
       toast.success("Permissão atualizada");
