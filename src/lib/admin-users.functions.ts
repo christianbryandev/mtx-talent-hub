@@ -160,3 +160,48 @@ export const setUserActive = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/**
+ * Change a user's role. Only super_admin may call this.
+ */
+export const changeUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        newRole: z.enum(APP_ROLES),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId: callerId } = context;
+
+    if (data.userId === callerId) {
+      throw new Error("Você não pode alterar sua própria permissão.");
+    }
+
+    await assertSuperAdmin(supabase, callerId);
+
+    const { error: delErr } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.userId);
+    if (delErr) throw delErr;
+
+    const { error: insErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: data.userId, role: data.newRole });
+    if (insErr) throw insErr;
+
+    await supabaseAdmin.from("activity_logs").insert({
+      user_id: callerId,
+      action: "role_changed",
+      entity_type: "user",
+      entity_id: data.userId,
+      description: `Permissão alterada para ${data.newRole}`,
+    });
+
+    return { ok: true };
+  });
+
