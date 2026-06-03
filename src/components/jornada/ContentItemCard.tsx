@@ -177,7 +177,10 @@ export function ContentItemCard({
                 <div className="h-4 w-[1px] bg-white/10" />
                 <Play className="h-3 w-3 text-[#DD2A7B]" fill="#DD2A7B" />
              </div>
-             <span className="text-[11px] font-medium text-white/50 tracking-wide">ASSISTIR VÍDEO</span>
+             <div className="flex flex-col overflow-hidden">
+               <span className="text-[9px] font-medium text-white/50 tracking-wide">AULA</span>
+               <span className="text-[13px] font-bold text-white truncate">{title}</span>
+             </div>
           </div>
 
           <div className="shrink-0">

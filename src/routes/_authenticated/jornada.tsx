@@ -68,6 +68,22 @@ function JourneyPage() {
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
+  const [moduleLinks, setModuleLinks] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (selectedModule) {
+      supabase.from('journey_modules').select('links').eq('id', selectedModule.id).single()
+        .then(({ data }) => {
+          if (data && data.links) {
+            setModuleLinks(data.links as any[]);
+          } else {
+            setModuleLinks([]);
+          }
+        });
+    } else {
+      setModuleLinks([]);
+    }
+  }, [selectedModule]);
 
   useEffect(() => {
     if (!selectedPhaseId && !activeQuizPhaseId) return;
@@ -278,14 +294,14 @@ function JourneyPage() {
                 </div>
               )}
               
-              {selectedModule.links && selectedModule.links.length > 0 && (
+              {moduleLinks && moduleLinks.length > 0 && (
                 <div className="p-4 bg-background border-t border-border/10">
                   <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                     <ExternalLink className="h-4 w-4 text-primary" />
                     Materiais de Apoio
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedModule.links.map((link, idx) => (
+                    {moduleLinks.map((link, idx) => (
                       <a
                         key={idx}
                         href={normalizeExternalUrl(link.url)}
