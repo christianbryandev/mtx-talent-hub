@@ -105,7 +105,7 @@ function CrmKanbanPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, email");
+        .select("id, full_name, email, avatar_url");
       return data ?? [];
     },
   });
@@ -333,6 +333,7 @@ function CrmKanbanPage() {
                     <OpportunityCard
                       key={o.id}
                       opp={o}
+                      responsibleProfile={profiles.find(p => p.id === o.commercial_responsible)}
                       onClick={() =>
                         navigate({ to: "/crm/$id", params: { id: o.id } })
                       }
@@ -446,11 +447,13 @@ function KanbanColumn({
 
 function OpportunityCard({
   opp,
+  responsibleProfile,
   onClick,
   dragging,
   actions,
 }: {
   opp: Opportunity;
+  responsibleProfile?: { id: string; full_name: string | null; avatar_url: string | null };
   onClick?: () => void;
   dragging?: boolean;
   actions?: React.ReactNode;
@@ -505,6 +508,22 @@ function OpportunityCard({
           {isLate ? "⚠ Atrasado: " : "Follow-up: "}
           {new Date(opp.next_followup_date).toLocaleDateString("pt-BR")}
         </p>
+      )}
+      {responsibleProfile && (
+        <div className="mt-3 border-t pt-2 flex items-center gap-1.5">
+          <div className="h-4 w-4 overflow-hidden rounded-full bg-muted shrink-0">
+            {responsibleProfile.avatar_url ? (
+               <img src={responsibleProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+               <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-[8px] font-bold">
+                 {responsibleProfile.full_name?.charAt(0)?.toUpperCase() || "C"}
+               </div>
+            )}
+          </div>
+          <span className="text-[10px] text-muted-foreground truncate">
+            {responsibleProfile.full_name || "Sem nome"}
+          </span>
+        </div>
       )}
     </div>
   );

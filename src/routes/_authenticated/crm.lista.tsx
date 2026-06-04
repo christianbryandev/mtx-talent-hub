@@ -65,6 +65,16 @@ function CrmListPage() {
     },
   });
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-min"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url");
+      return data ?? [];
+    },
+  });
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return opportunities.filter((o) => {
@@ -147,6 +157,7 @@ function CrmListPage() {
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead className="text-right">Prob.</TableHead>
                 <TableHead>Follow-up</TableHead>
+                <TableHead>Responsável</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -172,6 +183,27 @@ function CrmListPage() {
                     {o.next_followup_date
                       ? new Date(o.next_followup_date).toLocaleDateString("pt-BR")
                       : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const resp = profiles.find((p) => p.id === o.commercial_responsible);
+                      return resp ? (
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-5 w-5 overflow-hidden rounded-full bg-muted shrink-0">
+                            {resp.avatar_url ? (
+                               <img src={resp.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                               <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-[10px] font-bold">
+                                 {resp.full_name?.charAt(0)?.toUpperCase() || "C"}
+                               </div>
+                            )}
+                          </div>
+                          <span className="text-xs truncate">{resp.full_name || "Sem nome"}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Badge
