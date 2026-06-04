@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -16,6 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 import { FUNNEL_STAGE_LABELS, type FunnelStage } from "@/types/crm";
 
 const brl = (v: number) =>
@@ -23,43 +26,42 @@ const brl = (v: number) =>
 
 export function ComercialDashboard() {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
+  const [selectedCommercialId, setSelectedCommercialId] = useState<string | null>(null);
+  
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = startOfMonth(new Date()).toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["comercial-dashboard", user?.id],
-    enabled: !!user,
+    queryKey: ["comercial-dashboard", user?.id, isAdmin, selectedCommercialId],
+    enabled: !!user && isAdmin !== undefined,
     queryFn: async () => {
-      const [oppRes, interactionsRes, clientsRes] = await Promise.all([
-        supabase
-          .from("opportunities")
-          .select("id, company_name, status, estimated_value, funnel_stage, next_followup_date, updated_at, commercial_responsible"),
-        supabase
-          .from("opportunity_interactions")
-          .select("id, type, description, created_at, opportunity_id")
-          .eq("recorded_by", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(8),
-        supabase
-          .from("clients")
-          .select("id, company_name, created_at, status, monthly_value")
-          .gte("created_at", monthStart),
-      ]);
+      // Determine which user's data to show
+      let targetUserId = user!.id;
+      if (isAdmin) {
+        targetUserId = selectedCommercialId ?? "all"; // "all" means fetch everyone's
+      }
+
+      let oppsQuery = supabase.from("opportunities").select("id, company_name, status, estimated_value, funnel_stage, next_followup_date, updated_at, commercial_responsible");
+      if (targetUserId !== "all") {
+        oppsQuery = oppsQuery.eq("commercial_responsible", targetUserId);
+      }
+
+      let interactionsQuery = supabase.from("opportunity_interactions").select("id, type, description, created_at, opportunity_id").order("created_at", { ascending: false }).limit(8);
+      if (targetUserId !== "all") {
+        interactionsQuery = interactionsQuery.eq("recorded_by", targetUserId);
+      }
+
+      let clientsQuery = supabase.from("clients").select("id, company_name, created_at, status, monthly_value").gte("created_at", monthStart);
+      // We don't filter clients by commercial_responsible in the commercial dashboard? Wait, earlier we fetched all new clients of the month.
+      // Yes, clientsRes previously didn't have .eq("commercial_responsible", ...). It was just all clients of the month.
+      
+      const [oppRes, interactionsRes, clientsRes] = await Promise.all([oppsQuery, interactionsQuery, clientsQuery]);
 
       const opps = oppRes.data ?? [];
-      
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user!.id);
-      
-      const roles = roleData?.map(r => r.role) || [];
-      const isAdminOrSuperAdmin = roles.includes('admin') || roles.includes('super_admin');
 
-      const mine = isAdminOrSuperAdmin ? opps : opps.filter((o) => o.commercial_responsible === user!.id);
-
-      const openMine = mine.filter((o) => o.status === "aberta");
-      const wonThisMonth = mine.filter(
+      const openMine = opps.filter((o) => o.status === "aberta");
+      const wonThisMonth = opps.filter(
         (o) => o.status === "ganha" && o.updated_at >= monthStart,
       );
       const overdueMine = openMine.filter(
@@ -102,11 +104,26 @@ export function ComercialDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Painel Comercial</h1>
-        <p className="text-sm text-muted-foreground">
-          Suas oportunidades, follow-ups e fechamentos.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Painel Comercial</h1>
+          <p className="text-sm text-muted-foreground">
+            Suas oportunidades, follow-ups e fechamentos.
+          </p>
+        </div>
+
+        {isAdmin && (
+          <div className="w-full sm:w-72 shrink-0">
+            <ProfileSearchSelect
+              value={selectedCommercialId}
+              onChange={setSelectedCommercialId}
+              placeholder="Todos os Comerciais"
+              allowClear={true}
+              clearText="Todos os Comerciais"
+              roleFilter="comercial"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -189,7 +206,7 @@ export function ComercialDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Minhas últimas interações</CardTitle>
+            <CardTitle className="text-base">Últimas interações</CardTitle>
           </CardHeader>
           <CardContent>
             {data.recentInteractions.length === 0 ? (

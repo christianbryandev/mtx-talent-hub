@@ -8,6 +8,7 @@ interface BaseProps {
   disabled?: boolean;
   placeholder?: string;
   allowClear?: boolean;
+  clearText?: string;
 }
 
 export function ClientSearchSelect(props: BaseProps) {

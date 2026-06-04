@@ -35,6 +35,7 @@ interface Props {
   searchPlaceholder?: string;
   emptyText?: string;
   allowClear?: boolean;
+  clearText?: string;
   className?: string;
   renderOption?: (opt: SearchSelectOption) => ReactNode;
   primaryHighlight?: boolean;
@@ -54,6 +55,7 @@ export function SearchSelect({
   searchPlaceholder = "Buscar...",
   emptyText = "Nenhum item encontrado.",
   allowClear = true,
+  clearText = "— Nenhum —",
   className,
   renderOption,
   primaryHighlight = false,
@@ -104,7 +106,7 @@ export function SearchSelect({
                     />
                   )}
                   <span className={cn("text-sm", !primaryHighlight && "text-muted-foreground")}>
-                    — Nenhum —
+                    {clearText}
                   </span>
                   {!value && primaryHighlight && (
                     <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
