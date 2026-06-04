@@ -11,6 +11,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogHeader,
+  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_STAGES, LEAD_ORIGIN_OPTIONS, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 
 const schema = z.object({
   company_name: z.string().min(2, "Empresa obrigatória").max(200),
@@ -64,6 +68,8 @@ interface Props {
 
 export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCreated }: Props) {
   const qc = useQueryClient();
+  const { isComercial, isAdmin } = usePermissions();
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [serviceIds, setServiceIds] = useState<string[]>([]);
 
@@ -73,6 +79,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       company_name: "",
       funnel_stage: defaultStage ?? "prospeccao",
       priority: "media",
+      commercial_responsible: isComercial && !isAdmin && user ? user.id : "",
     },
   });
 
@@ -295,6 +302,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             <div className="md:col-span-2">
               <Label>Responsável comercial</Label>
               <ProfileSearchSelect
+                roleFilter="comercial"
                 value={form.watch("commercial_responsible") || null}
                 onChange={(v) => form.setValue("commercial_responsible", v ?? "")}
               />

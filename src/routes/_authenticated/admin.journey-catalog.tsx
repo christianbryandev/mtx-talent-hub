@@ -72,6 +72,9 @@ interface Module {
   order_index: number;
   duration_minutes?: number | null;
   links?: ModuleLink[] | null;
+  visibility_type?: "all" | "selected" | "admin_only";
+  assigned_users?: string[];
+  supplementary_text?: string | null;
 }
 
 function AdminJourneyCatalogPage() {
@@ -571,10 +574,20 @@ function isValidUrl(value: string): boolean {
 
 function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClose: () => void; phaseId: string }) {
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<Module>({ ...module, links: module.links ?? [] });
+  const [draft, setDraft] = useState<Module>({ 
+    ...module, 
+    links: module.links ?? [],
+    visibility_type: module.visibility_type ?? "all",
+    assigned_users: module.assigned_users ?? []
+  });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const dirty = JSON.stringify(draft) !== JSON.stringify({ ...module, links: module.links ?? [] });
+  const dirty = JSON.stringify(draft) !== JSON.stringify({ 
+    ...module, 
+    links: module.links ?? [],
+    visibility_type: module.visibility_type ?? "all",
+    assigned_users: module.assigned_users ?? []
+  });
 
   const links = draft.links ?? [];
 
@@ -613,6 +626,9 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
           content_body: draft.content_body,
           duration_minutes: draft.duration_minutes,
           links: links.map((l) => ({ label: l.label.trim(), url: l.url.trim() })),
+          visibility_type: draft.visibility_type,
+          assigned_users: draft.assigned_users,
+          supplementary_text: draft.supplementary_text,
         } as never)
         .eq("id", module.id);
       if (error) throw error;
@@ -746,6 +762,79 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
                 />
               </div>
             )}
+            
+            {module.content_type === "video" && (
+              <div className="space-y-1.5 sm:col-span-2 mt-4">
+                <Label>Texto Suplementar (Instruções, Logins, etc)</Label>
+                <RichTextEditor 
+                  value={draft.supplementary_text ?? ""} 
+                  onChange={(val) => setDraft({ ...draft, supplementary_text: val })} 
+                />
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-4 rounded-lg border border-border/60 p-4 mt-4">
+             <div className="flex items-center gap-2 mb-2">
+                <Label className="text-sm font-semibold">Configurações de Acesso / Visibilidade</Label>
+             </div>
+             <div className="grid gap-4 sm:grid-cols-2">
+               <div className="space-y-1.5">
+                  <Label>Quem pode ver este módulo?</Label>
+                  <Select 
+                    value={draft.visibility_type} 
+                    onValueChange={(v: any) => setDraft({ ...draft, visibility_type: v, assigned_users: v === "selected" ? draft.assigned_users : [] })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Jovens</SelectItem>
+                      <SelectItem value="selected">Jovens Selecionados</SelectItem>
+                      <SelectItem value="admin_only">Apenas Administradores</SelectItem>
+                    </SelectContent>
+                  </Select>
+               </div>
+               
+               {draft.visibility_type === "selected" && (
+                  <div className="space-y-1.5">
+                    <Label>Adicionar Jovem</Label>
+                    <div className="flex gap-2">
+                       <div className="flex-1">
+                          <YoungSearchSelect 
+                             value={null}
+                             onChange={(id) => {
+                               if (id && !draft.assigned_users?.includes(id)) {
+                                 setDraft({ ...draft, assigned_users: [...(draft.assigned_users || []), id] });
+                               }
+                             }}
+                          />
+                       </div>
+                    </div>
+                  </div>
+               )}
+             </div>
+             
+             {draft.visibility_type === "selected" && (draft.assigned_users?.length ?? 0) > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2 p-3 bg-muted/20 border border-border/60 rounded-md">
+                   {draft.assigned_users?.map((id) => (
+                      <Badge key={id} variant="secondary" className="flex items-center gap-1 py-1 px-2 text-xs">
+                         ID: {id.slice(0, 6)}...
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           className="h-4 w-4 p-0 ml-1 rounded-full text-muted-foreground hover:text-destructive"
+                           onClick={() => setDraft({
+                             ...draft, 
+                             assigned_users: draft.assigned_users?.filter(uid => uid !== id)
+                           })}
+                         >
+                           <X className="h-3 w-3" />
+                         </Button>
+                      </Badge>
+                   ))}
+                </div>
+             )}
           </div>
 
           {/* Links associados */}

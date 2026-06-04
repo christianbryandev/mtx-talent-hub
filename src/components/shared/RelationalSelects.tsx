@@ -66,15 +66,26 @@ export function ServiceSearchSelect(props: BaseProps) {
   );
 }
 
-export function ProfileSearchSelect(props: BaseProps) {
+export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) {
   const { data = [], isLoading } = useQuery({
-    queryKey: ["search-profiles"],
+    queryKey: ["search-profiles", props.roleFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("profiles")
         .select("id, full_name, email")
-        .eq("is_active", true)
-        .order("full_name");
+        .eq("is_active", true);
+
+      if (props.roleFilter) {
+        const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter);
+        const userIds = roles?.map((r: any) => r.user_id) || [];
+        if (userIds.length > 0) {
+          query = query.in("id", userIds);
+        } else {
+          return [];
+        }
+      }
+
+      const { data, error } = await query.order("full_name");
       if (error) throw error;
       return data ?? [];
     },

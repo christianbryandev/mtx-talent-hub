@@ -67,6 +67,9 @@ export interface JourneyModule {
   unlocked: boolean;
   completed: boolean;
   thumbnail_url?: string | null;
+  visibility_type?: "all" | "selected" | "admin_only";
+  assigned_users?: string[];
+  supplementary_text?: string | null;
   items: JourneyChecklistItem[];
 }
 

@@ -14,7 +14,12 @@ import { PasswordInput } from "@/components/ui/password-input";
 
 const schema = z
   .object({
-    password: z.string().min(6, "Mínimo de 6 caracteres"),
+    password: z.string()
+      .min(8, "A senha deve ter no mínimo 8 caracteres")
+      .regex(/[a-z]/, "Deve conter pelo menos uma letra minúscula")
+      .regex(/[A-Z]/, "Deve conter pelo menos uma letra maiúscula")
+      .regex(/[0-9]/, "Deve conter pelo menos um número")
+      .regex(/[^a-zA-Z0-9]/, "Deve conter pelo menos um caractere especial (ex: @, !, #)"),
     confirm: z.string(),
   })
   .refine((d) => d.password === d.confirm, {
@@ -61,6 +66,15 @@ function CreatePasswordPage() {
   return (
     <AuthLayout title="Criar sua senha" subtitle="Defina uma senha para acessar o MTX Hub">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md mb-4 border border-border/50">
+           <p className="font-semibold text-foreground mb-1">Sua senha deve conter:</p>
+           <ul className="list-disc pl-5 space-y-0.5">
+             <li>No mínimo 8 caracteres</li>
+             <li>Pelo menos uma letra maiúscula e uma minúscula</li>
+             <li>Pelo menos um número</li>
+             <li>Pelo menos um caractere especial (ex: @, !, #, $)</li>
+           </ul>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="password">Nova senha</Label>
           <PasswordInput 

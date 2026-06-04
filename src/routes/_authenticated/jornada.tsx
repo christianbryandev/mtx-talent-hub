@@ -263,22 +263,33 @@ function JourneyPage() {
               </DialogHeader>
               
               {selectedModule.content_type === "video" ? (
-                <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
-                  {selectedModule.content_body ? (
-                    <video 
-                      src={selectedModule.content_body} 
-                      controls 
-                      autoPlay 
-                      className="w-full h-full"
-                      onEnded={() => {
-                        completeModule(selectedModule.id);
-                        toast.success("Aula concluída! Próximo item liberado.");
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <XCircle className="h-10 w-10 opacity-20" />
-                      <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                <div className="flex flex-col">
+                  <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                    {selectedModule.content_body ? (
+                      <video 
+                        src={selectedModule.content_body} 
+                        controls 
+                        autoPlay 
+                        className="w-full h-full"
+                        onEnded={() => {
+                          completeModule(selectedModule.id);
+                          toast.success("Aula concluída! Próximo item liberado.");
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <XCircle className="h-10 w-10 opacity-20" />
+                        <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                      </div>
+                    )}
+                  </div>
+                  {selectedModule.supplementary_text && (
+                    <div className="p-4 md:p-6 bg-background border-t border-border/10">
+                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                         <BookOpen className="h-4 w-4 text-primary" />
+                         Informações Adicionais (Login, Links extras)
+                      </h4>
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: selectedModule.supplementary_text }} />
                     </div>
                   )}
                 </div>

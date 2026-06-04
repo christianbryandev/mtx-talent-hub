@@ -21,8 +21,16 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
   const qc = useQueryClient();
   const phaseNumber = phase.order_index.toString().padStart(2, "0");
 
-  // Modules are the main content units now
-  const modules = phase.modules || [];
+  // Modules are the main content units now. We filter them based on visibility access.
+  const allModules = phase.modules || [];
+  const modules = allModules.filter(m => {
+    if (isAdmin) return true;
+    if (m.visibility_type === "admin_only") return false;
+    if (m.visibility_type === "selected") {
+       return m.assigned_users?.includes(user?.id ?? "");
+    }
+    return true; // "all" ou undefined
+  });
 
   // Descobre qual é o módulo mais avançado que o jovem já acessou ou concluiu
   const highestUnlockedIndex = Math.max(
