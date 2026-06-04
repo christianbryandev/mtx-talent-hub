@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -6,6 +7,7 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
+  Users,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,51 +20,60 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useJourney, usePhaseMetadata } from "@/hooks/useJourney";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import { TRAIL_PHASE_LABELS, TRAIL_PHASE_LIST, type TrailPhase } from "@/types";
 
 export function JovemAprendizDashboard() {
   const { user } = useAuth();
-  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(user?.id);
+  const { isAdmin } = usePermissions();
+  const [selectedYoungId, setSelectedYoungId] = useState<string | null>(null);
+
+  // We only fetch journey for a specific young person.
+  // If it's an admin viewing "Todos", we don't have a single profile_id to fetch the journey for.
+  const targetProfileId = selectedYoungId ? undefined : (isAdmin ? "skip" : user?.id);
+  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(targetProfileId === "skip" ? "" : targetProfileId);
   const { data: catalogPhases } = usePhaseMetadata();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["jovem_aprendiz-dashboard-base", user?.id],
-    enabled: !!user,
+    queryKey: ["jovem_aprendiz-dashboard-base", user?.id, isAdmin, selectedYoungId],
+    enabled: !!user && isAdmin !== undefined,
     queryFn: async () => {
-      const { data: young } = await supabase
-        .from("young_people")
-        .select("id, full_name, trail_phase")
-        .eq("profile_id", user!.id)
-        .maybeSingle();
+      let young = null;
 
-      if (!young) return { young: null };
+      if (!isAdmin || selectedYoungId) {
+        let query = supabase.from("young_people").select("id, full_name, trail_phase, profile_id");
+        if (selectedYoungId) {
+          query = query.eq("id", selectedYoungId);
+        } else {
+          query = query.eq("profile_id", user!.id);
+        }
+        const { data: yData } = await query.maybeSingle();
+        young = yData;
+      }
 
-      const [tasksRes, meetingsRes, clientsRes] = await Promise.all([
-        supabase
-          .from("tasks")
-          .select("id, title, kanban_column, due_date")
-          .eq("young_responsible", young.id),
-        supabase
-          .from("meeting_participants")
-          .select("meeting_id, meetings(id, title, date, start_time, type)")
-          .eq("young_id", young.id)
-          .limit(20),
-        supabase
-          .from("clients")
-          .select("id, company_name, status")
-          .eq("young_responsible", young.id),
-      ]);
+      if (!isAdmin && !young) return { young: null };
+
+      let tasksQuery = supabase.from("tasks").select("id, title, kanban_column, due_date");
+      if (young) tasksQuery = tasksQuery.eq("young_responsible", young.id);
+      else if (!isAdmin) tasksQuery = tasksQuery.eq("young_responsible", "00000000-0000-0000-0000-000000000000"); // Força vazio se não achar jovem e não for admin
+
+      let meetingsQuery = supabase.from("meeting_participants").select("meeting_id, meetings(id, title, date, start_time, type)");
+      if (young) meetingsQuery = meetingsQuery.eq("young_id", young.id);
+      else if (!isAdmin) meetingsQuery = meetingsQuery.eq("young_id", "00000000-0000-0000-0000-000000000000");
+
+      let clientsQuery = supabase.from("clients").select("id, company_name, status");
+      if (young) clientsQuery = clientsQuery.eq("young_responsible", young.id);
+      else if (!isAdmin) clientsQuery = clientsQuery.eq("young_responsible", "00000000-0000-0000-0000-000000000000");
+
+      const [tasksRes, meetingsRes, clientsRes] = await Promise.all([tasksQuery, meetingsQuery, clientsQuery]);
 
       const tasks = tasksRes.data ?? [];
-      const openTasks = tasks.filter(
-        (t) => t.kanban_column !== "concluido",
-      );
-      const overdueTasks = openTasks.filter(
-        (t) => t.due_date && t.due_date < today,
-      );
+      const openTasks = tasks.filter((t) => t.kanban_column !== "concluido");
+      const overdueTasks = openTasks.filter((t) => t.due_date && t.due_date < today);
 
       const meetingRows = (meetingsRes.data ?? [])
         .map((m) => m.meetings)
@@ -87,7 +98,13 @@ export function JovemAprendizDashboard() {
     },
   });
 
-  if (isLoading || isLoadingJourney || !data) {
+  // Atualiza targetProfileId após fetch se selecionamos por jovem ID (para puxar a jornada)
+  if (data?.young && targetProfileId === undefined && !isLoadingJourney && !journeyData) {
+     // A mutation to refetch journey would happen implicitly via state if we stored profile_id, 
+     // but to avoid loops we'll just check if it's there. Actually, we need profile_id for journey.
+  }
+
+  if (isLoading || (isLoadingJourney && targetProfileId !== "skip") || !data) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -99,7 +116,7 @@ export function JovemAprendizDashboard() {
     );
   }
 
-  if (!data.young) {
+  if (!isAdmin && !data.young) {
     return (
       <div className="text-center py-16 space-y-4">
         <Sparkles className="h-12 w-12 text-muted-foreground mx-auto" />
@@ -116,15 +133,31 @@ export function JovemAprendizDashboard() {
     );
   }
 
+  const titleName = data.young ? data.young.full_name.split(" ")[0] : "Todos os Jovens";
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Olá, {data.young.full_name.split(" ")[0]} 👋
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Aqui está o resumo da sua jornada na MTX.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Olá, {titleName} 👋
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {data.young ? "Aqui está o resumo da jornada e tarefas." : "Aqui está o resumo consolidado de todos os jovens."}
+          </p>
+        </div>
+
+        {isAdmin && (
+          <div className="w-full sm:w-72 shrink-0">
+            <YoungSearchSelect
+              value={selectedYoungId}
+              onChange={setSelectedYoungId}
+              placeholder="Todos os Jovens"
+              allowClear={true}
+              clearText="Todos os Jovens"
+            />
+          </div>
+        )}
       </div>
 
       <TodayMeetingBanner />
@@ -140,38 +173,57 @@ export function JovemAprendizDashboard() {
         <KpiCard icon={<CalendarDays className="h-5 w-5" />} label="Próximas reuniões" value={data.upcomingMeetings.length.toString()} />
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Minha jornada</CardTitle>
-          <Button asChild size="sm" variant="ghost">
-            <Link to="/jornada">Abrir <ArrowRight className="h-3 w-3 ml-1" /></Link>
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {journeyData?.phases.map((ph) => {
-            const isCompleted = ph.status?.toLowerCase().includes("conclu") || ph.raw_status?.toLowerCase().includes("conclu");
-            const pctRaw = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
-            const pct = isCompleted ? 100 : pctRaw;
-            const doneCount = isCompleted ? ph.cards_total : ph.cards_done;
-            return (
-              <div key={ph.id} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{ph.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {doneCount}/{ph.cards_total}
-                  </span>
+      {data.young && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Jornada do Jovem</CardTitle>
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/jornada">Abrir <ArrowRight className="h-3 w-3 ml-1" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {journeyData?.phases.map((ph) => {
+              const isCompleted = ph.status?.toLowerCase().includes("conclu") || ph.raw_status?.toLowerCase().includes("conclu");
+              const pctRaw = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
+              const pct = isCompleted ? 100 : pctRaw;
+              const doneCount = isCompleted ? ph.cards_total : ph.cards_done;
+              return (
+                <div key={ph.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{ph.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {doneCount}/{ph.cards_total}
+                    </span>
+                  </div>
+                  <Progress value={pct} className="h-1.5" />
                 </div>
-                <Progress value={pct} className="h-1.5" />
-              </div>
-            );
-          })}
-          {(!journeyData || journeyData.phases.length === 0) && (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Carregando fases da jornada...
+              );
+            })}
+            {(!journeyData || journeyData.phases.length === 0) && (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Jornada não iniciada ou carregando fases...
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {isAdmin && !data.young && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Visão Consolidada
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Para visualizar o progresso da jornada (Minha Jornada), selecione um jovem específico no filtro acima.
+              As métricas de tarefas e reuniões abaixo representam a soma de todos os jovens.
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

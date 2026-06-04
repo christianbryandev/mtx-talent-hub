@@ -26,6 +26,8 @@ interface Props {
   disabled?: boolean;
   placeholder?: string;
   excludeId?: string;
+  allowClear?: boolean;
+  clearText?: string;
 }
 
 interface YoungOption {
@@ -47,6 +49,8 @@ export function YoungSearchSelect({
   disabled,
   placeholder = "Selecionar jovem",
   excludeId,
+  allowClear = false,
+  clearText = "— Nenhum —",
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -124,6 +128,25 @@ export function YoungSearchSelect({
           <CommandList>
             <CommandEmpty>Nenhum jovem encontrado.</CommandEmpty>
             <CommandGroup>
+              {allowClear && (
+                <CommandItem
+                  value="__none__"
+                  onSelect={() => {
+                    onChange(null);
+                    setOpen(false);
+                  }}
+                  className={cn("pr-8", !value && "bg-accent text-accent-foreground")}
+                >
+                  <span className="text-sm">
+                    {clearText}
+                  </span>
+                  {!value && (
+                    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+                      <Check className="h-4 w-4 shrink-0" />
+                    </span>
+                  )}
+                </CommandItem>
+              )}
               {list.map((y) => {
                 const isSel = y.id === value;
                 return (
