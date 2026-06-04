@@ -421,7 +421,8 @@
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
-.liquid-glass-active {
+.liquid-glass-nav[data-state="active"],
+.liquid-glass-nav[data-active="true"] {
   position: relative;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(200%);
@@ -438,7 +439,8 @@
   z-index: 10;
 }
 
-.liquid-glass-active::before {
+.liquid-glass-nav[data-state="active"]::before,
+.liquid-glass-nav[data-active="true"]::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -452,7 +454,8 @@
   border-radius: inherit;
 }
 
-.liquid-glass-active::after {
+.liquid-glass-nav[data-state="active"]::after,
+.liquid-glass-nav[data-active="true"]::after {
   content: "";
   position: absolute;
   top: 0;
