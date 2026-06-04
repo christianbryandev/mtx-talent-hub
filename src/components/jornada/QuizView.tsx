@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { CheckCircle2, XCircle, ArrowRight, RotateCw, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, RotateCw, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
@@ -111,6 +111,13 @@ export function QuizView({ phaseId, onClose }: QuizViewProps) {
 
   return (
     <div className="space-y-8 py-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Botão de Voltar */}
+      <div className="flex items-center -mb-2">
+        <Button variant="ghost" size="sm" onClick={() => onClose(false)} className="-ml-3 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para trilha
+        </Button>
+      </div>
+
       {/* Top Progress */}
       <div className="space-y-3">
         <div className="flex justify-between items-end text-xs font-bold text-muted-foreground uppercase tracking-widest">
