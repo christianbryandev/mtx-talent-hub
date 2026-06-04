@@ -23,7 +23,7 @@ export const getEmailHtml = ({
   <style>
     body { 
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      background-color: #0a0a0a; 
+      background-color: #ffffff; 
       color: #cccccc; 
       margin: 0; 
       padding: 0; 
@@ -32,7 +32,7 @@ export const getEmailHtml = ({
     .wrapper {
       width: 100%;
       table-layout: fixed;
-      background-color: #0a0a0a;
+      background-color: #ffffff;
       padding-bottom: 40px;
     }
     .container { 
