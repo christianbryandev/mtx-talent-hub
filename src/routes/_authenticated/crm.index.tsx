@@ -196,7 +196,9 @@ function CrmKanbanPage() {
       const { error } = await supabase
         .from("opportunities")
         .update({ funnel_stage: stage } as never)
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
       if (error) throw error;
       await supabase.from("activity_logs").insert({
         action: "opportunity_stage_changed",
@@ -219,6 +221,7 @@ function CrmKanbanPage() {
       toast.error(e.message);
     },
     onSuccess: () => toast.success("Etapa atualizada"),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["opportunities"] }),
   });
 
   const handleDragStart = (e: DragStartEvent) => setDraggingId(String(e.active.id));
