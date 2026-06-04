@@ -24,6 +24,16 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
   // Modules are the main content units now
   const modules = phase.modules || [];
 
+  // Descobre qual é o módulo mais avançado que o jovem já acessou ou concluiu
+  const highestUnlockedIndex = Math.max(
+    ...modules.filter(m => m.unlocked || m.completed).map(m => m.order_index),
+    0
+  );
+
+  const isPhaseCompleted = 
+    phase.status?.toLowerCase().includes("conclu") || 
+    phase.raw_status?.toLowerCase().includes("conclu");
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       {/* Header */}
@@ -62,7 +72,7 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
               title={module.title}
               type={module.content_type as any}
               isCompleted={module.completed}
-              isLocked={!isAdmin && !module.unlocked && !module.completed}
+              isLocked={!isAdmin && !module.completed && !module.unlocked && !isPhaseCompleted && module.order_index > highestUnlockedIndex}
               onClick={() => onSelectItem(module)}
               duration={module.duration_minutes ? `${module.duration_minutes}min` : undefined}
               questionsCount={module.content_type === "quiz" ? (module.questions_count || 5) : undefined}

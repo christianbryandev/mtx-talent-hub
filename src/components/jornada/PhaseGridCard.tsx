@@ -19,11 +19,14 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
   
   const phasePctRaw = modulesCount > 0 ? Math.round((modulesDone / modulesCount) * 100) : 0;
   
-  const isBlocked = phase.status === "bloqueada";
   const isCompleted = phase.status?.toLowerCase().includes("conclu") || 
                      phase.raw_status?.toLowerCase().includes("conclu") || 
                      (phase as any).status === "concluido" || 
                      phasePctRaw === 100;
+  
+  // Impede que fases que o jovem já passou fiquem bloqueadas por engano da API
+  const isBlocked = phase.status === "bloqueada" && !isCompleted && phasePctRaw === 0;
+  
   // Admins ignoram o bloqueio para testarem todas as fases.
   const isLocked = !isAdmin && isBlocked;
   const isInProgress = !isLocked && !isCompleted;
