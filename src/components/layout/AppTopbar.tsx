@@ -2,6 +2,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { ModeToggle } from "@/components/shared/ModeToggle";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -35,6 +36,7 @@ export function AppTopbar() {
 
       <div className="ml-auto flex items-center gap-3">
         <GlobalSearch />
+        <ModeToggle />
         <NotificationBell />
         <UserMenu />
       </div>

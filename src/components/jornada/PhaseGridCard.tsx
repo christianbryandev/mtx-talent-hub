@@ -46,9 +46,9 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
   
   const PhaseIcon = getPhaseIcon(phase.order_index);
   
-  // Cinematic Dark Style Colors
+  // Cinematic Theme Colors
   let badgeStyles = "";
-  let textPrimary = "text-[#ffffff]";
+  let textPrimary = "text-foreground";
   let percentageColor = "";
   let progressBarBg = "";
   let badgeLabel = "";
@@ -74,10 +74,10 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
     badgeLabel = "CONCLUÍDO";
   } else {
     // Blocked
-    badgeStyles = "text-[#666666] border-[#666666] bg-[#666666]/[0.08]";
-    textPrimary = "text-[#555555]";
-    percentageColor = "text-[#666666]";
-    progressBarBg = "bg-[#2a2a2a]";
+    badgeStyles = "text-muted-foreground border-border bg-muted/20";
+    textPrimary = "text-muted-foreground";
+    percentageColor = "text-muted-foreground";
+    progressBarBg = "bg-muted";
     badgeLabel = "BLOQUEADA";
   }
 
@@ -87,19 +87,18 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
       className={cn(
         "relative overflow-hidden cursor-pointer transition-all flex flex-col h-72 rounded-[12px] shadow-2xl",
         isLocked 
-          ? "bg-[rgba(100,100,100,0.08)] border border-[#666666] cursor-not-allowed" 
-          : "bg-[#0a0a0a] border-none hover:brightness-125 active:scale-[0.98] group"
+          ? "bg-muted/10 border border-border cursor-not-allowed" 
+          : "bg-card border-none hover:brightness-105 dark:hover:brightness-125 active:scale-[0.98] group"
       )}
     >
       {/* Cinematic Background Gradient (Base) */}
       {!isLocked && (
         <div 
-          className="absolute inset-0" 
+          className="absolute inset-0 opacity-40 dark:opacity-100" 
           style={{ 
             background: isCompleted 
               ? "linear-gradient(135deg, rgba(245, 133, 41, 0.15), rgba(81, 91, 212, 0.05))" 
-              : "linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%)" 
-
+              : "linear-gradient(135deg, var(--card) 0%, rgba(200, 50, 150, 0.05) 100%)" 
           }} 
         />
       )}
@@ -139,7 +138,7 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
         </div>
 
         {/* Phase Background Icon */}
-        <div className="absolute right-[-20px] top-[50%] translate-y-[-50%] opacity-[0.07] text-white pointer-events-none">
+        <div className="absolute right-[-20px] top-[50%] translate-y-[-50%] opacity-[0.03] dark:opacity-[0.07] text-foreground pointer-events-none">
           <PhaseIcon size={160} strokeWidth={1} />
         </div>
 
@@ -152,7 +151,7 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
         {/* Status Badge Top Right */}
         <div className="absolute top-6 right-6 flex items-center gap-2">
           {isLocked && (
-            <Lock className="h-3.5 w-3.5 text-[#666666]" strokeWidth={2.5} />
+            <Lock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
           )}
           <div 
             className={cn(
@@ -172,7 +171,7 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
 
         {/* Top Section: Number and Title */}
         <div className="flex flex-col items-start mt-2">
-          <span className="text-[10px] font-bold text-[#aaaaaa] uppercase tracking-[3px] mb-1">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[3px] mb-1">
             FASE
           </span>
           <span className={cn(
@@ -193,7 +192,7 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
         {/* Bottom Section: Progress Info */}
         <div className="mt-auto flex items-end justify-between pb-4">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] font-medium text-[#aaaaaa] uppercase tracking-wider">
+            <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
               {modulesCount} módulos
             </span>
           </div>

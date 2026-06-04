@@ -61,25 +61,25 @@
 :root {
   --radius: 0.75rem;
 
-  /* Base surfaces — deep premium black */
-  --background: oklch(0.13 0.005 280);          /* ~#050505 */
-  --foreground: oklch(1 0 0);                   /* #FFFFFF */
+  /* Base surfaces — Light premium */
+  --background: oklch(0.98 0 0);                /* ~#FAFAFA */
+  --foreground: oklch(0.13 0.005 280);          /* ~#050505 */
 
-  --card: oklch(0.16 0.015 280);                /* ~#0B0B12 */
-  --card-foreground: oklch(1 0 0);
+  --card: oklch(1 0 0);                         /* #FFFFFF */
+  --card-foreground: oklch(0.13 0.005 280);
 
-  --popover: oklch(0.18 0.018 280);             /* ~#11111A */
-  --popover-foreground: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.13 0.005 280);
 
   /* Primary — vibrant purple/magenta (anchor of MTX gradient) */
   --primary: oklch(0.62 0.27 320);              /* ~#C026D3 magenta */
   --primary-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.22 0.02 280);
-  --secondary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0 0);                 /* ~#F4F4F5 */
+  --secondary-foreground: oklch(0.13 0.005 280);
 
-  --muted: oklch(0.2 0.015 280);
-  --muted-foreground: oklch(0.72 0.015 280);    /* ~#A1A1AA */
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.55 0 0);          /* ~#71717A */
 
   --accent: oklch(0.65 0.27 350);               /* pink accent ~#EC4899 */
   --accent-foreground: oklch(1 0 0);
@@ -88,16 +88,16 @@
   --destructive-foreground: oklch(1 0 0);
 
   --success: oklch(0.72 0.18 150);
-  --success-foreground: oklch(0.16 0 0);
+  --success-foreground: oklch(1 0 0);
 
   --warning: oklch(0.72 0.2 45);                /* orange ~#F97316 */
-  --warning-foreground: oklch(0.16 0 0);
+  --warning-foreground: oklch(1 0 0);
 
   --info: oklch(0.58 0.25 290);                 /* purple ~#7B2FF7 */
   --info-foreground: oklch(1 0 0);
 
-  --border: oklch(1 0 0 / 0.06);                /* rgba(255,255,255,0.06) */
-  --input: oklch(1 0 0 / 0.08);
+  --border: oklch(0 0 0 / 0.1);                 /* rgba(0,0,0,0.1) */
+  --input: oklch(0 0 0 / 0.1);
   --ring: oklch(0.62 0.27 320);
 
   /* Charts — MTX gradient palette */
@@ -107,14 +107,14 @@
   --chart-4: oklch(0.72 0.2 45);                /* orange */
   --chart-5: oklch(0.78 0.18 60);               /* light orange */
 
-  /* Sidebar — deeper black with glass feel */
-  --sidebar: oklch(0.11 0.005 280);
-  --sidebar-foreground: oklch(1 0 0);
+  /* Sidebar — Light mode */
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.13 0.005 280);
   --sidebar-primary: oklch(0.62 0.27 320);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.2 0.02 280);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(1 0 0 / 0.06);
+  --sidebar-accent: oklch(0.96 0 0);
+  --sidebar-accent-foreground: oklch(0.13 0.005 280);
+  --sidebar-border: oklch(0 0 0 / 0.1);
   --sidebar-ring: oklch(0.62 0.27 320);
 
   /* MTX brand gradients & glows */
@@ -185,6 +185,10 @@
   }
 
   html {
+    color-scheme: light;
+  }
+  
+  html.dark {
     color-scheme: dark;
   }
 

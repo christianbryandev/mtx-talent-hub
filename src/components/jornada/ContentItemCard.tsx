@@ -81,8 +81,8 @@ export function ContentItemCard({
     <Card
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`relative flex flex-col overflow-hidden transition-all duration-300 border-[1px] border-[rgba(255,255,255,0.07)] bg-[#111118] rounded-[16px] group ${
-        isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 hover:border-white/20"
+      className={`relative flex flex-col overflow-hidden transition-all duration-300 border-[1px] border-border bg-card rounded-[16px] group ${
+        isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30"
       }`}
       onClick={() => !isLocked && onClick()}
     >
@@ -96,7 +96,7 @@ export function ContentItemCard({
           />
         ) : (
           /* Geometric Background */
-          <div className="w-full h-full bg-[#0a0a0f] relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
+          <div className="w-full h-full bg-muted relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
             <div 
               className="absolute inset-0 opacity-20"
               style={{ background: `radial-gradient(circle at center, ${getTypeColor()} 0%, transparent 70%)` }}
@@ -161,19 +161,19 @@ export function ContentItemCard({
       </div>
 
       {/* Bottom Content Area */}
-      <div className="p-4 flex-1 flex flex-col justify-between bg-gradient-to-b from-transparent to-black/20">
+      <div className="p-4 flex-1 flex flex-col justify-between">
         <div className="flex items-start justify-between gap-3 mb-1">
            <div className="flex flex-col overflow-hidden">
              <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
-               <span className="text-[10px] font-bold text-white tracking-widest">AULA {itemNumber}</span>
+               <span className="text-[10px] font-bold text-foreground tracking-widest">AULA {itemNumber}</span>
                <TypeIconSmall />
              </div>
-             <span className="text-[15px] font-bold text-white line-clamp-2 leading-snug" title={title}>{title}</span>
+             <span className="text-[15px] font-bold text-foreground line-clamp-2 leading-snug" title={title}>{title}</span>
            </div>
 
            <div className="shrink-0 mt-1">
              {isLocked ? (
-               <Lock className="h-4 w-4 text-[#555]" />
+               <Lock className="h-4 w-4 text-muted-foreground" />
              ) : isCompleted ? (
                <div 
                  className="h-5 w-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(221,42,123,0.3)]"
@@ -182,7 +182,7 @@ export function ContentItemCard({
                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
                </div>
              ) : (
-               <Circle className="h-5 w-5 text-[#555]" />
+               <Circle className="h-5 w-5 text-muted-foreground" />
              )}
            </div>
         </div>
