@@ -157,7 +157,7 @@ export function MultiYoungSearchSelect({
                           key={y.id}
                           value={`${y.full_name} ${y.email ?? ""} ${y.status ?? ""}`}
                           onSelect={() => toggle(y.id)}
-                          className={cn("pr-8", isSel && "bg-accent text-accent-foreground")}
+                          className={cn("pr-8", isSel && "bg-[#ff007f] text-white font-medium")}
                         >
                           <Avatar className="h-6 w-6 mr-2">
                             <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
