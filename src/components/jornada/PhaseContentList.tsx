@@ -38,9 +38,12 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
     0
   );
 
+  const phasePctRaw = modules.length > 0 ? Math.round((modules.filter(m => m.completed).length / modules.length) * 100) : 0;
   const isPhaseCompleted = 
     phase.status?.toLowerCase().includes("conclu") || 
-    phase.raw_status?.toLowerCase().includes("conclu");
+    phase.raw_status?.toLowerCase().includes("conclu") ||
+    (phase as any).status === "concluido" ||
+    phasePctRaw === 100;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">

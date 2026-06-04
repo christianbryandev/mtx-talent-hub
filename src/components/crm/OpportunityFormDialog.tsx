@@ -253,7 +253,17 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div className="md:col-span-2">
               <Label>Serviços ofertados</Label>
-              <ServiceMultiSelect value={serviceIds} onChange={setServiceIds} />
+              <ServiceMultiSelect 
+                value={serviceIds} 
+                onChange={(ids, sum) => {
+                  setServiceIds(ids);
+                  if (sum !== undefined && sum > 0) {
+                     form.setValue("estimated_value", sum.toString());
+                  } else if (ids.length === 0) {
+                     form.setValue("estimated_value", "");
+                  }
+                }} 
+              />
             </div>
             <div>
               <Label>Serviço (texto livre / legado)</Label>

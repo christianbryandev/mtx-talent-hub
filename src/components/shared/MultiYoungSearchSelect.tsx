@@ -37,7 +37,9 @@ interface YoungOption {
   email: string | null;
 }
 
-/** Multi-select de jovens com busca filtrável, avatar e email. */
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
 export function MultiYoungSearchSelect({
   value,
   onChange,
@@ -45,10 +47,10 @@ export function MultiYoungSearchSelect({
   placeholder = "Selecionar jovens",
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [visibility, setVisibility] = useState<string>("selected");
 
   const { data: youngs = [] } = useQuery<YoungOption[]>({
     queryKey: ["young-people-multi-select"],
-    // Sempre revalida ao montar/abrir para refletir novos jovens cadastrados.
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
@@ -86,7 +88,6 @@ export function MultiYoungSearchSelect({
     },
   });
 
-
   const selected = youngs.filter((y) => value.includes(y.id));
 
   const toggle = (id: string) => {
@@ -94,97 +95,126 @@ export function MultiYoungSearchSelect({
     else onChange([...value, id]);
   };
 
-  return (
-    <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            disabled={disabled}
-            className="w-full justify-between font-normal"
-          >
-            <span className="truncate">
-              {selected.length === 0
-                ? placeholder
-                : `${selected.length} jovem${selected.length > 1 ? "s" : ""} selecionado${selected.length > 1 ? "s" : ""}`}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-[--radix-popover-trigger-width] p-0"
-          align="start"
-        >
-          <Command>
-            <CommandInput placeholder="Buscar jovem..." />
-            <CommandList>
-              <CommandEmpty>Nenhum jovem encontrado.</CommandEmpty>
-              <CommandGroup>
-                {youngs.map((y) => {
-                  const isSel = value.includes(y.id);
-                  return (
-                    <CommandItem
-                      key={y.id}
-                      value={`${y.full_name} ${y.email ?? ""} ${y.status ?? ""}`}
-                      onSelect={() => toggle(y.id)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4 shrink-0",
-                          isSel ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                      <Avatar className="h-6 w-6 mr-2">
-                        <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
-                        <AvatarFallback className="text-[10px]">
-                          {y.full_name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm truncate">{y.full_name}</span>
-                        {y.email && (
-                          <span className="text-[10px] text-muted-foreground truncate">
-                            {y.email}
-                          </span>
-                        )}
-                        {(y.status || y.trail_phase) && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {[y.status, y.trail_phase].filter(Boolean).join(" · ")}
-                          </span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+  const handleVisibilityChange = (val: string) => {
+    setVisibility(val);
+    if (val === "all") {
+      onChange(youngs.map(y => y.id));
+    } else if (val === "admin_only") {
+      onChange([]);
+    } else {
+      onChange([]);
+    }
+  };
 
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selected.map((y) => (
-            <Badge key={y.id} variant="secondary" className="gap-1 pl-0.5">
-              <Avatar className="h-4 w-4">
-                <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
-                <AvatarFallback className="text-[8px]">
-                  {y.full_name.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              {y.full_name}
-              <button
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">Quem pode acessar?</Label>
+        <Select value={visibility} onValueChange={handleVisibilityChange} disabled={disabled}>
+          <SelectTrigger className="w-full bg-muted/30">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Jovens</SelectItem>
+            <SelectItem value="selected">Jovens Selecionados</SelectItem>
+            <SelectItem value="admin_only">Apenas Administradores</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {visibility === "selected" && (
+        <div className="space-y-2">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
                 type="button"
-                onClick={() => toggle(y.id)}
-                className="hover:text-destructive"
-                aria-label={`Remover ${y.full_name}`}
+                variant="outline"
+                role="combobox"
+                disabled={disabled}
+                className="w-full justify-between font-normal"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                <span className="truncate">
+                  {selected.length === 0
+                    ? placeholder
+                    : `${selected.length} jovem${selected.length > 1 ? "s" : ""} selecionado${selected.length > 1 ? "s" : ""}`}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[--radix-popover-trigger-width] p-0"
+              align="start"
+            >
+              <Command>
+                <CommandInput placeholder="Buscar jovem..." />
+                <CommandList>
+                  <CommandEmpty>Nenhum jovem encontrado.</CommandEmpty>
+                  <CommandGroup>
+                    {youngs.map((y) => {
+                      const isSel = value.includes(y.id);
+                      return (
+                        <CommandItem
+                          key={y.id}
+                          value={`${y.full_name} ${y.email ?? ""} ${y.status ?? ""}`}
+                          onSelect={() => toggle(y.id)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              isSel ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <Avatar className="h-6 w-6 mr-2">
+                            <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
+                            <AvatarFallback className="text-[10px]">
+                              {y.full_name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm truncate">{y.full_name}</span>
+                            {y.email && (
+                              <span className="text-[10px] text-muted-foreground truncate">
+                                {y.email}
+                              </span>
+                            )}
+                            {(y.status || y.trail_phase) && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {[y.status, y.trail_phase].filter(Boolean).join(" · ")}
+                              </span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {selected.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {selected.map((y) => (
+                <Badge key={y.id} variant="secondary" className="gap-1 pl-0.5">
+                  <Avatar className="h-4 w-4">
+                    <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
+                    <AvatarFallback className="text-[8px]">
+                      {y.full_name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {y.full_name}
+                  <button
+                    type="button"
+                    onClick={() => toggle(y.id)}
+                    className="hover:text-destructive"
+                    aria-label={`Remover ${y.full_name}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

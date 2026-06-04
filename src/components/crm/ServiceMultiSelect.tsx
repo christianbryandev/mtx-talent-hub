@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   value: string[];
-  onChange: (ids: string[]) => void;
+  onChange: (ids: string[], totalSum?: number) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -40,7 +40,7 @@ export function ServiceMultiSelect({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name, category")
+        .select("id, name, category, base_price")
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
@@ -51,8 +51,14 @@ export function ServiceMultiSelect({
   const selected = services.filter((s) => value.includes(s.id));
 
   const toggle = (id: string) => {
-    if (value.includes(id)) onChange(value.filter((v) => v !== id));
-    else onChange([...value, id]);
+    let newIds = [];
+    if (value.includes(id)) newIds = value.filter((v) => v !== id);
+    else newIds = [...value, id];
+    
+    const newSelected = services.filter((s) => newIds.includes(s.id));
+    const totalSum = newSelected.reduce((sum, s) => sum + Number((s as any).base_price ?? 0), 0);
+    
+    onChange(newIds, totalSum);
   };
 
   return (

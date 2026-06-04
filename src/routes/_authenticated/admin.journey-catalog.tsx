@@ -75,6 +75,7 @@ interface Module {
   visibility_type?: "all" | "selected" | "admin_only";
   assigned_users?: string[];
   supplementary_text?: string | null;
+  thumbnail_url?: string | null;
 }
 
 function AdminJourneyCatalogPage() {
@@ -578,15 +579,19 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     ...module, 
     links: module.links ?? [],
     visibility_type: module.visibility_type ?? "all",
-    assigned_users: module.assigned_users ?? []
+    assigned_users: module.assigned_users ?? [],
+    thumbnail_url: module.thumbnail_url ?? null
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify({ 
     ...module, 
     links: module.links ?? [],
     visibility_type: module.visibility_type ?? "all",
-    assigned_users: module.assigned_users ?? []
+    assigned_users: module.assigned_users ?? [],
+    thumbnail_url: module.thumbnail_url ?? null
   });
 
   const links = draft.links ?? [];
@@ -629,6 +634,7 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
           visibility_type: draft.visibility_type,
           assigned_users: draft.assigned_users,
           supplementary_text: draft.supplementary_text,
+          thumbnail_url: draft.thumbnail_url,
         } as never)
         .eq("id", module.id);
       if (error) throw error;
@@ -676,6 +682,43 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
       toast.error("Erro ao enviar vídeo: " + error.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleThumbUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O arquivo excede o limite de 5MB.");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Formato inválido. Selecione apenas imagens.");
+      return;
+    }
+
+    try {
+      setUploadingThumb(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("journey-videos")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("journey-videos")
+        .getPublicUrl(fileName);
+
+      setDraft(prev => ({ ...prev, thumbnail_url: publicUrl }));
+      toast.success("Thumbnail enviada");
+    } catch (error: any) {
+      toast.error("Erro ao enviar thumbnail: " + error.message);
+    } finally {
+      setUploadingThumb(false);
     }
   };
 
@@ -760,6 +803,44 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
                   onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
                   rows={4}
                 />
+              </div>
+            )}
+            
+            {module.content_type === "video" && (
+              <div className="space-y-1.5 sm:col-span-2 mt-4">
+                <Label>Capa Personalizada (Thumbnail)</Label>
+                <div className="mt-1 flex flex-col items-center justify-center p-4 border-2 border-dashed border-border/60 rounded-lg hover:border-primary/40 transition-colors">
+                  {draft.thumbnail_url ? (
+                     <div className="flex flex-col items-center gap-2">
+                       <img src={draft.thumbnail_url} alt="Capa" className="h-32 object-cover rounded border" />
+                       <Button variant="ghost" size="sm" onClick={() => thumbInputRef.current?.click()}>
+                         Trocar capa
+                       </Button>
+                     </div>
+                  ) : (
+                     <div className="flex flex-col items-center gap-2 text-center">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          {uploadingThumb ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+                        </div>
+                        <Button 
+                          type="button"
+                          variant="secondary" 
+                          size="sm" 
+                          disabled={uploadingThumb}
+                          onClick={() => thumbInputRef.current?.click()}
+                        >
+                          Fazer upload da capa
+                        </Button>
+                     </div>
+                  )}
+                  <input 
+                    type="file" 
+                    ref={thumbInputRef} 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleThumbUpload}
+                  />
+                </div>
               </div>
             )}
             
