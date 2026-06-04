@@ -79,6 +79,10 @@ function JourneyPage() {
           } else {
             setModuleLinks([]);
           }
+        })
+        .catch((err) => {
+          console.error("Erro ao buscar links:", err);
+          setModuleLinks([]);
         });
     } else {
       setModuleLinks([]);

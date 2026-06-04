@@ -63,6 +63,7 @@ function InscricoesPage() {
   const [editingApp, setEditingApp] = useState<YoungApplication | null>(null);
   const [complement, setComplement] = useState<{ youngId: string; app: YoungApplication } | null>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const createInviteFn = useServerFn(createInvite);
 
   useEffect(() => {
@@ -84,6 +85,53 @@ function InscricoesPage() {
   });
 
   const filtered = apps.filter((a) => statusFilter === "all" || a.status === statusFilter);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filtered.length && filtered.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map(a => a.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const bulkApprove = useMutation({
+    mutationFn: async () => {
+      const selectedApps = apps.filter(a => selectedIds.includes(a.id) && a.status !== "aprovado");
+      for (const app of selectedApps) {
+        const { error } = await supabase.functions.invoke("send-approval-email", {
+          body: { candidato_id: app.id, email: app.email, nome: app.full_name },
+        });
+        if (!error) {
+          await supabase.from("young_applications").update({ status: "aprovado" }).eq("id", app.id);
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} candidatos processados.`);
+      setSelectedIds([]);
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+      qc.invalidateQueries({ queryKey: ["pending-applications-count"] });
+    },
+    onError: (e: Error) => toast.error("Erro na aprovação em massa: " + e.message),
+  });
+
+  const bulkDelete = useMutation({
+    mutationFn: async () => {
+      for (const id of selectedIds) {
+        await supabase.from("young_applications").delete().eq("id", id);
+      }
+    },
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} inscrições excluídas.`);
+      setSelectedIds([]);
+      qc.invalidateQueries({ queryKey: ["young_applications"] });
+    },
+    onError: (e: Error) => toast.error("Erro na exclusão em massa: " + e.message),
+  });
 
   const updateStatus = useMutation({
     mutationFn: async ({ appId, status }: { appId: string; status: ApplicationStatus }) => {
@@ -110,6 +158,9 @@ function InscricoesPage() {
       
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      
+      const { error: updateError } = await supabase.from("young_applications").update({ status: "aprovado" }).eq("id", app.id);
+      if (updateError) throw updateError;
       
       return { app };
     },
@@ -185,6 +236,30 @@ function InscricoesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <div className="flex gap-2 mr-2 animate-in fade-in slide-in-from-right-4">
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => confirm(`Aprovar ${selectedIds.length} candidatos?`) && bulkApprove.mutate()}
+                disabled={bulkApprove.isPending}
+              >
+                {bulkApprove.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                Aprovar ({selectedIds.length})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={() => confirm(`Excluir ${selectedIds.length} candidatos?`) && bulkDelete.mutate()}
+                disabled={bulkDelete.isPending}
+              >
+                {bulkDelete.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Excluir ({selectedIds.length})
+              </Button>
+            </div>
+          )}
+
           <Button 
             variant="outline" 
             size="sm" 
@@ -239,6 +314,12 @@ function InscricoesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                  onCheckedChange={toggleSelectAll}
+                />
+              </TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Cidade</TableHead>
@@ -250,16 +331,22 @@ function InscricoesPage() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={8}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                   Nenhuma inscrição encontrada
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((a) => (
                 <TableRow key={a.id} className="cursor-pointer" onClick={() => setDetail(a)}>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox 
+                      checked={selectedIds.includes(a.id)}
+                      onCheckedChange={() => toggleSelect(a.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{a.full_name}</TableCell>
                   <TableCell>{a.age ?? "—"}</TableCell>
                   <TableCell>{a.city ?? "—"}</TableCell>

@@ -163,7 +163,7 @@ function CrmKanbanPage() {
   const avgClosingDays = wonOppsMonth.length
     ? wonOppsMonth.reduce((s, o) => {
         const start = new Date(o.created_at).getTime();
-        const end = new Date(o.updated_at).getTime();
+        const end = o.updated_at ? new Date(o.updated_at).getTime() : start;
         return s + Math.max(0, (end - start) / (1000 * 60 * 60 * 24));
       }, 0) / wonOppsMonth.length
     : 0;

@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RichTextEditor } from "@/components/shared/RichTextEditor";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-catalog")({
   head: () => ({ meta: [{ title: "Admin · Catálogo Jornada — MTX Hub" }] }),
@@ -152,8 +153,17 @@ function PhasesTab({
           .eq("id", newPhases[i].id);
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-phases"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onMutate: async (newPhases) => {
+      await qc.cancelQueries({ queryKey: ["catalog-phases"] });
+      const previousPhases = qc.getQueryData(["catalog-phases"]);
+      qc.setQueryData(["catalog-phases"], newPhases);
+      return { previousPhases };
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["catalog-phases"] }),
+    onError: (e: Error, _, context: any) => {
+      if (context?.previousPhases) qc.setQueryData(["catalog-phases"], context.previousPhases);
+      toast.error(e.message);
+    },
   });
 
   const createPhase = useMutation({
@@ -413,8 +423,17 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
           .eq("id", newModules[i].id);
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] }),
-    onError: (e: Error) => toast.error(e.message),
+    onMutate: async (newModules) => {
+      await qc.cancelQueries({ queryKey: ["catalog-modules", phaseId] });
+      const previousModules = qc.getQueryData(["catalog-modules", phaseId]);
+      qc.setQueryData(["catalog-modules", phaseId], newModules);
+      return { previousModules };
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["catalog-modules", phaseId] }),
+    onError: (e: Error, _, context: any) => {
+      if (context?.previousModules) qc.setQueryData(["catalog-modules", phaseId], context.previousModules);
+      toast.error(e.message);
+    },
   });
 
   const onDragEnd = (result: DropResult) => {
@@ -610,6 +629,15 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 1024 * 1024 * 1024) {
+      toast.error("O arquivo excede o limite máximo de 1GB.");
+      return;
+    }
+    if (!file.type.startsWith("video/")) {
+      toast.error("Formato inválido. Selecione apenas arquivos de vídeo.");
+      return;
+    }
+
     try {
       setUploading(true);
       const fileExt = file.name.split(".").pop();
@@ -703,11 +731,9 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
             ) : draft.content_type === "texto" ? (
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Conteúdo do Texto</Label>
-                <Textarea 
+                <RichTextEditor 
                   value={draft.content_body ?? ""} 
-                  onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
-                  rows={10}
-                  placeholder="Escreva aqui o conteúdo que o jovem irá ler..."
+                  onChange={(val) => setDraft({ ...draft, content_body: val })} 
                 />
               </div>
             ) : (

@@ -21,6 +21,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { format, parseISO, subMonths, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -76,6 +79,7 @@ function AdminDashboardContent() {
         upcomingMeetingsRes,
         upcomingTasksRes,
         logsRes,
+        appsRes,
       ] = await Promise.all([
         supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase"),
         supabase.from("clients").select("id, status, monthly_value, created_at"),
@@ -86,6 +90,7 @@ function AdminDashboardContent() {
         supabase.from("meetings").select("*").eq("status", "agendada").gte("date", today).order("date").limit(5),
         supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
+        supabase.from("young_applications").select("status"),
       ]);
 
       const youngs = youngsRes.data ?? [];
@@ -134,6 +139,14 @@ function AdminDashboardContent() {
       }
       const trailData = Array.from(trailMap.entries()).map(([fase, total]) => ({ fase, total }));
 
+      // Apps status distribution
+      const appStatusMap = new Map<string, number>();
+      for (const a of appsRes.data ?? []) {
+        const label = a.status === "pendente" ? "Pendente" : a.status === "em_analise" ? "Analisando" : a.status === "aprovado" ? "Aprovado" : "Reprovado";
+        appStatusMap.set(label, (appStatusMap.get(label) ?? 0) + 1);
+      }
+      const appStatusData = Array.from(appStatusMap.entries()).map(([name, value]) => ({ name, value }));
+
       return {
         activeYoungs,
         activeClients,
@@ -148,6 +161,7 @@ function AdminDashboardContent() {
         overdueTasks: overdueTasksRes.data?.length ?? 0,
         clientsByMonth,
         trailData,
+        appStatusData,
         upcomingMeetings: (upcomingMeetingsRes.data ?? []) as Meeting[],
         upcomingTasks: upcomingTasksRes.data ?? [],
         activityLogs: logsRes.data ?? [],
@@ -202,7 +216,40 @@ function AdminDashboardContent() {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="border-border/60 bg-card/70">
+          <CardHeader>
+            <CardTitle className="text-base">Inscrições por status</CardTitle>
+          </CardHeader>
+          <CardContent className="h-64">
+            {isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : !stats || stats.appStatusData.length === 0 ? (
+              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Sem dados ainda</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.appStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {stats.appStatusData.map((entry, index) => {
+                      const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'];
+                      return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                    })}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="text-base">Jovens por fase da trilha</CardTitle>
