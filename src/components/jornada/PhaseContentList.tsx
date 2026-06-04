@@ -49,7 +49,7 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
       </div>
 
       {/* List of contents */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {modules.length === 0 ? (
           <div className="py-12 text-center border border-dashed border-border/60 rounded-lg">
             <p className="text-muted-foreground text-sm">Nenhum conteúdo disponível nesta fase.</p>
