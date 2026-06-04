@@ -375,6 +375,10 @@ function CrmKanbanPage() {
                           onDelete={
                             isAdmin
                               ? async () => {
+                                  const previousOpps = qc.getQueryData<Opportunity[]>(["opportunities"]);
+                                  qc.setQueryData<Opportunity[]>(["opportunities"], (old) => 
+                                    (old ?? []).filter((oldOpp) => oldOpp.id !== o.id)
+                                  );
                                   try {
                                     await deleteOpportunityCascade(o.id);
                                     await logActivity({
@@ -386,6 +390,7 @@ function CrmKanbanPage() {
                                     toast.success("Oportunidade excluída");
                                     qc.invalidateQueries({ queryKey: ["opportunities"] });
                                   } catch (e) {
+                                    qc.setQueryData(["opportunities"], previousOpps);
                                     toast.error((e as Error).message);
                                   }
                                 }
@@ -477,7 +482,11 @@ function OpportunityCard({
       }`}
     >
       {actions && (
-        <div className="absolute top-1 right-1" onPointerDown={(e) => e.stopPropagation()}>
+        <div 
+          className="absolute top-1 right-1" 
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           {actions}
         </div>
       )}
