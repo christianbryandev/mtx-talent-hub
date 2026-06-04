@@ -37,6 +37,7 @@ interface Props {
   allowClear?: boolean;
   className?: string;
   renderOption?: (opt: SearchSelectOption) => ReactNode;
+  primaryHighlight?: boolean;
 }
 
 /**
@@ -55,6 +56,7 @@ export function SearchSelect({
   allowClear = true,
   className,
   renderOption,
+  primaryHighlight = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.id === value);
@@ -91,12 +93,20 @@ export function SearchSelect({
                     onChange(null);
                     setOpen(false);
                   }}
-                  className={cn("pr-8", !value && "bg-accent text-accent-foreground")}
+                  className={cn(primaryHighlight && "pr-8", !value && primaryHighlight && "bg-accent text-accent-foreground")}
                 >
-                  <span className="text-sm">
+                  {!primaryHighlight && (
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value ? "opacity-0" : "opacity-100",
+                      )}
+                    />
+                  )}
+                  <span className={cn("text-sm", !primaryHighlight && "text-muted-foreground")}>
                     — Nenhum —
                   </span>
-                  {!value && (
+                  {!value && primaryHighlight && (
                     <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
                       <Check className="h-4 w-4" />
                     </span>
@@ -113,21 +123,29 @@ export function SearchSelect({
                       onChange(isSel ? null : o.id);
                       setOpen(false);
                     }}
-                    className={cn("pr-8", isSel && "bg-accent text-accent-foreground")}
+                    className={cn(primaryHighlight && "pr-8", isSel && primaryHighlight && "bg-accent text-accent-foreground")}
                   >
+                    {!primaryHighlight && (
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isSel ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                    )}
                     {renderOption ? (
                       renderOption(o)
                     ) : (
                       <div className="flex flex-col">
                         <span className="text-sm">{o.label}</span>
                         {o.hint && (
-                          <span className="text-[10px] text-muted-foreground opacity-80">
+                          <span className={cn("text-[10px] text-muted-foreground", primaryHighlight && "opacity-80")}>
                             {o.hint}
                           </span>
                         )}
                       </div>
                     )}
-                    {isSel && (
+                    {isSel && primaryHighlight && (
                       <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
                         <Check className="h-4 w-4" />
                       </span>

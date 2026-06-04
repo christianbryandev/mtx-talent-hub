@@ -97,6 +97,7 @@ export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) 
       placeholder={props.placeholder ?? "Selecionar usuário"}
       searchPlaceholder="Buscar usuário..."
       emptyText="Nenhum usuário encontrado."
+      primaryHighlight={true}
       options={data.map((p) => ({
         id: p.id,
         label: p.full_name || p.email || "Sem nome",
