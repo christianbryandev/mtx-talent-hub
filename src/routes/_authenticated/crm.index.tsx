@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -109,6 +109,23 @@ function CrmKanbanPage() {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("crm-opportunities-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "opportunities" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["opportunities"] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   const niches = useMemo(
     () => Array.from(new Set(opportunities.map((o) => o.niche).filter(Boolean))) as string[],

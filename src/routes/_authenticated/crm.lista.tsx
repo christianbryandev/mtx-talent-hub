@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -74,6 +74,23 @@ function CrmListPage() {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("crm-opportunities-changes-list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "opportunities" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["opportunities"] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
