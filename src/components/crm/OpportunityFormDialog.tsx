@@ -43,7 +43,6 @@ const schema = z.object({
   niche: z.string().max(100).optional().or(z.literal("")),
   main_pain: z.string().max(2000).optional().or(z.literal("")),
   suggested_solution: z.string().max(2000).optional().or(z.literal("")),
-  estimated_value: z.string().optional().or(z.literal("")),
   closing_probability: z.string().optional().or(z.literal("")),
   funnel_stage: z.string(),
   priority: z.string(),
@@ -71,6 +70,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [serviceIds, setServiceIds] = useState<string[]>([]);
+  const [calculatedSum, setCalculatedSum] = useState(0);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -98,9 +98,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         niche: values.niche || null,
         main_pain: values.main_pain || null,
         suggested_solution: values.suggested_solution || null,
-        estimated_value: values.estimated_value 
-          ? Number(values.estimated_value.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) 
-          : null,
+        estimated_value: calculatedSum > 0 ? calculatedSum : null,
         closing_probability: values.closing_probability ? Number(values.closing_probability) : null,
         funnel_stage: values.funnel_stage,
         priority: values.priority,
@@ -146,6 +144,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       qc.invalidateQueries({ queryKey: ["opportunities"] });
       form.reset();
       setServiceIds([]);
+      setCalculatedSum(0);
       onOpenChange(false);
       onCreated?.(id);
     },
@@ -257,35 +256,17 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
                 value={serviceIds} 
                 onChange={(ids, sum) => {
                   setServiceIds(ids);
-                  const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sum || 0);
-                  form.setValue("estimated_value", formatted, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                  setCalculatedSum(sum || 0);
                 }} 
               />
             </div>
             <div>
-              <Label>Valor estimado (R$)</Label>
-              <Controller
-                control={form.control}
-                name="estimated_value"
-                render={({ field }) => (
-                  <Input 
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      if (!val) {
-                         field.onChange("R$ 0,00");
-                         return;
-                      }
-                      const num = Number(val.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
-                      if (!isNaN(num)) {
-                        field.onChange(new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num));
-                      }
-                    }}
-                  />
-                )}
+              <Label>Valor estimado (R$) - Automático</Label>
+              <Input 
+                type="text"
+                disabled
+                className="bg-muted text-muted-foreground font-semibold"
+                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedSum)}
               />
             </div>
             <div>
