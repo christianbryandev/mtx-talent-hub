@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Trash2, Save, GripVertical, History, Edit3, MessageSquare } from "lucide-react";
+import { Loader2, Plus, Trash2, Save, GripVertical, History, Edit3, MessageSquare, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -414,6 +414,39 @@ function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; inde
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const duplicateQuestion = useMutation({
+    mutationFn: async () => {
+      const { data: newQuestion, error: qErr } = await supabase
+        .from("quiz_questions")
+        .insert({
+          quiz_id: quizId,
+          question: draft.question + " (Cópia)",
+          type: draft.type,
+          order_index: q.order_index + 1
+        })
+        .select()
+        .single();
+      
+      if (qErr) throw qErr;
+
+      if (q.options && q.options.length > 0) {
+        const newOptions = q.options.map(opt => ({
+          question_id: (newQuestion as any).id,
+          text: opt.text,
+          is_correct: opt.is_correct,
+          order_index: opt.order_index
+        }));
+        const { error: optErr } = await supabase.from("quiz_options").insert(newOptions);
+        if (optErr) throw optErr;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Pergunta duplicada");
+      qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <Card className="border-border/60 overflow-hidden">
       <div className="bg-muted/30 px-4 py-2 flex items-center gap-3 border-b border-border/40">
@@ -422,6 +455,9 @@ function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; inde
         </div>
         <span className="text-xs font-black text-muted-foreground uppercase">Pergunta {index + 1}</span>
         <div className="flex-1" />
+        <Button variant="ghost" size="sm" className="h-8 text-muted-foreground" onClick={() => duplicateQuestion.mutate()} disabled={duplicateQuestion.isPending}>
+          <Copy className="h-4 w-4 mr-1" /> Duplicar
+        </Button>
         <Button variant="ghost" size="sm" className="h-8 text-destructive" onClick={() => remove.mutate()}>
           <Trash2 className="h-4 w-4" />
         </Button>
