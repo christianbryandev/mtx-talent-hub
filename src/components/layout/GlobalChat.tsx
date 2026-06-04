@@ -350,10 +350,71 @@ export function GlobalChat() {
     setLoading(false);
   };
 
+  const [position, setPosition] = useState({ x: 24, y: 24 }); // right and bottom offsets
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const dragStartOffset = useRef({ x: 0, y: 0 });
+  const hasDragged = useRef(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("chat_position");
+    if (saved) {
+      try {
+        setPosition(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    hasDragged.current = false;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    dragStartOffset.current = { ...position };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const dx = dragStartPos.current.x - e.clientX; // moving left increases right offset
+    const dy = dragStartPos.current.y - e.clientY; // moving up increases bottom offset
+    
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      hasDragged.current = true;
+    }
+    
+    // Limits: prevent dragging off-screen
+    const maxX = window.innerWidth - 80;
+    const maxY = window.innerHeight - 80;
+    
+    let newX = dragStartOffset.current.x + dx;
+    let newY = dragStartOffset.current.y + dy;
+    
+    // Clamp values
+    if (newX < 0) newX = 0;
+    if (newY < 0) newY = 0;
+    if (newX > maxX) newX = maxX;
+    if (newY > maxY) newY = maxY;
+
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    localStorage.setItem("chat_position", JSON.stringify(position));
+  };
+
   if (!canAccess) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <div 
+      className="fixed z-[100] flex flex-col items-end"
+      style={{
+        bottom: `${position.y}px`,
+        right: `${position.x}px`,
+        touchAction: "none"
+      }}
+    >
       {isOpen && (
         <div className="mb-4 flex h-[500px] w-[380px] flex-col overflow-hidden rounded-lg border bg-background shadow-2xl animate-in slide-in-from-bottom-4">
           {/* Header */}
@@ -427,7 +488,7 @@ export function GlobalChat() {
           )}
 
           {/* Messages */}
-          <ScrollArea ref={scrollRef} className="flex-1 p-4">
+          <ScrollArea ref={scrollRef} className="flex-1 p-4 cursor-default" onPointerDown={(e) => e.stopPropagation()}>
             <div className="flex flex-col gap-4">
               {hasMore && (
                 <Button variant="ghost" size="sm" className="mx-auto text-xs" onClick={loadMore} disabled={loading}>
@@ -559,7 +620,7 @@ export function GlobalChat() {
           </ScrollArea>
 
           {/* Footer */}
-          <div className="border-t bg-muted/30 p-3">
+          <div className="border-t bg-muted/30 p-3 cursor-default" onPointerDown={(e) => e.stopPropagation()}>
             {typingUsers.length > 0 && (
               <p className="mb-1 text-[10px] italic text-muted-foreground">
                 {typingUsers.join(", ")} {typingUsers.length === 1 ? "está digitando..." : "estão digitando..."}
@@ -592,8 +653,18 @@ export function GlobalChat() {
       {/* Floating Button */}
       <Button 
         size="icon" 
-        className="h-14 w-14 rounded-full shadow-lg"
-        onClick={() => setIsOpen(!isOpen)}
+        className={`h-14 w-14 rounded-full shadow-lg transition-transform ${isDragging ? "scale-95 opacity-80 cursor-grabbing" : "cursor-grab hover:scale-105"}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={(e) => {
+          if (hasDragged.current) {
+            e.preventDefault();
+            return;
+          }
+          setIsOpen(!isOpen);
+        }}
       >
         <div className="relative">
           <MessageCircle className="h-7 w-7" />
