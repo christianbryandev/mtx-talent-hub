@@ -265,6 +265,7 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quiz.id] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const addQuestion = useMutation({
@@ -277,12 +278,14 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
         .single();
       if (error) throw error;
       
-      await supabase.from("quiz_options").insert([
+      const { error: optErr } = await supabase.from("quiz_options").insert([
         { question_id: (data as any).id, text: "Opção correta", is_correct: true, order_index: 0 },
         { question_id: (data as any).id, text: "Opção incorreta", is_correct: false, order_index: 1 },
       ]);
+      if (optErr) throw optErr;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quiz.id] }),
+    onError: (e: Error) => toast.error(`Erro ao adicionar pergunta: ${e.message}`),
   });
 
   const onDragEnd = (result: DropResult) => {
@@ -384,6 +387,7 @@ function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; inde
       toast.success("Pergunta salva");
       qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
@@ -393,6 +397,7 @@ function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; inde
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const addOption = useMutation({
@@ -406,6 +411,7 @@ function QuestionItem({ q, index, dragHandleProps, quizId }: { q: Question; inde
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -474,16 +480,26 @@ function OptionItem({ option, questionId, quizId }: { option: Option; questionId
   const [text, setText] = useState(option.text);
 
   const save = async (patch: Partial<Option>) => {
-    if (patch.is_correct === true) {
-      await supabase.from("quiz_options").update({ is_correct: false }).eq("question_id", questionId);
+    try {
+      if (patch.is_correct === true) {
+        await supabase.from("quiz_options").update({ is_correct: false }).eq("question_id", questionId);
+      }
+      const { error } = await supabase.from("quiz_options").update(patch).eq("id", option.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+    } catch (e: any) {
+      toast.error(e.message);
     }
-    await supabase.from("quiz_options").update(patch).eq("id", option.id);
-    qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
   };
 
   const remove = async () => {
-    await supabase.from("quiz_options").delete().eq("id", option.id);
-    qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+    try {
+      const { error } = await supabase.from("quiz_options").delete().eq("id", option.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   return (
