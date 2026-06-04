@@ -100,7 +100,9 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         main_pain: values.main_pain || null,
         suggested_solution: values.suggested_solution || null,
         offered_service: values.offered_service || null,
-        estimated_value: values.estimated_value ? Number(values.estimated_value) : null,
+        estimated_value: values.estimated_value 
+          ? Number(values.estimated_value.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) 
+          : null,
         closing_probability: values.closing_probability ? Number(values.closing_probability) : null,
         funnel_stage: values.funnel_stage,
         priority: values.priority,
@@ -258,7 +260,8 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
                 onChange={(ids, sum) => {
                   setServiceIds(ids);
                   if (sum !== undefined) {
-                     form.setValue("estimated_value", sum > 0 ? sum.toString() : "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                     const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sum);
+                     form.setValue("estimated_value", formatted, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                   }
                 }} 
               />
@@ -269,7 +272,23 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div>
               <Label>Valor estimado (R$)</Label>
-              <Input type="number" step="0.01" {...form.register("estimated_value")} value={form.watch("estimated_value") ?? ""} />
+              <Input 
+                type="text"
+                placeholder="R$ 0,00"
+                {...form.register("estimated_value")} 
+                value={form.watch("estimated_value") || ""}
+                onChange={(e) => {
+                  form.setValue("estimated_value", e.target.value, { shouldDirty: true });
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  if (!val) return;
+                  const num = Number(val.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+                  if (!isNaN(num)) {
+                    form.setValue("estimated_value", new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num));
+                  }
+                }}
+              />
             </div>
             <div>
               <Label>Probabilidade (%)</Label>
