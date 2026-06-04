@@ -75,23 +75,44 @@ interface Attempt {
 
 function AdminQuizzesPage() {
   const { isAdmin, loading: permLoading } = usePermissions();
-  const [selectedPhase, setSelectedPhase] = useState<string>("");
+  const [selectedQuizId, setSelectedQuizId] = useState<string>("");
+  const qc = useQueryClient();
 
-  const phases = useQuery<Phase[]>({
-    queryKey: ["admin-phases"],
+  const quizzesQuery = useQuery<Quiz[]>({
+    queryKey: ["admin-quizzes-list"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("journey_phase_catalog")
-        .select("id,title,order_index")
-        .order("order_index");
+        .from("quiz_templates")
+        .select("id, title, passing_score, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as Phase[];
+      return (data || []) as Quiz[];
     },
   });
 
   useEffect(() => {
-    if (!selectedPhase && phases.data?.length) setSelectedPhase(phases.data[0].id);
-  }, [phases.data, selectedPhase]);
+    if (!selectedQuizId && quizzesQuery.data?.length) {
+      setSelectedQuizId(quizzesQuery.data[0].id);
+    }
+  }, [quizzesQuery.data, selectedQuizId]);
+
+  const createQuiz = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.from("quiz_templates").insert({
+        title: "Novo Quiz",
+        passing_score: 80,
+      }).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success("Quiz criado!");
+      qc.invalidateQueries({ queryKey: ["admin-quizzes-list"] });
+      setSelectedQuizId((data as any).id);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   if (permLoading) return <Skeleton className="h-96 w-full" />;
   if (!isAdmin) return <Navigate to="/jornada" />;
@@ -103,20 +124,23 @@ function AdminQuizzesPage() {
           <h1 className="text-3xl font-black text-foreground tracking-tight">CRIADOR DE QUIZ</h1>
           <p className="text-sm text-muted-foreground">Configure as avaliações e monitore o desempenho dos alunos.</p>
         </div>
+        <Button onClick={() => createQuiz.mutate()} disabled={createQuiz.isPending}>
+          <Plus className="h-4 w-4 mr-2" /> Criar Novo Quiz
+        </Button>
       </header>
 
       <Card className="border-border/60">
         <CardContent className="pt-6">
           <div className="space-y-1.5 max-w-md">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fase da Jornada</Label>
-            <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Selecione o Quiz</Label>
+            <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
               <SelectTrigger className="bg-muted/30 border-border/60">
-                <SelectValue placeholder="Selecione uma fase" />
+                <SelectValue placeholder="Selecione um quiz" />
               </SelectTrigger>
               <SelectContent>
-                {phases.data?.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    FASE {p.order_index.toString().padStart(2, "0")} · {p.title}
+                {quizzesQuery.data?.map((q) => (
+                  <SelectItem key={q.id} value={q.id}>
+                    {q.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -125,62 +149,29 @@ function AdminQuizzesPage() {
         </CardContent>
       </Card>
 
-      {selectedPhase && <QuizManager phaseId={selectedPhase} />}
+      {selectedQuizId && <QuizManager quizId={selectedQuizId} />}
     </div>
   );
 }
 
-function QuizManager({ phaseId }: { phaseId: string }) {
+function QuizManager({ quizId }: { quizId: string }) {
   const qc = useQueryClient();
 
   const quizQuery = useQuery<Quiz | null>({
-    queryKey: ["admin-quiz", phaseId],
+    queryKey: ["admin-quiz-detail", quizId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quiz_templates")
         .select("*")
-        .eq("phase_id", phaseId)
-        .eq("is_active", true)
+        .eq("id", quizId)
         .maybeSingle();
       if (error) throw error;
       return data as unknown as Quiz | null;
     },
   });
 
-  const createQuiz = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("quiz_templates").insert({
-        phase_id: phaseId,
-        title: "Novo Quiz",
-        passing_score: 80,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Quiz criado!");
-      qc.invalidateQueries({ queryKey: ["admin-quiz", phaseId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   if (quizQuery.isLoading) return <Skeleton className="h-64 w-full" />;
-
-  if (!quizQuery.data) {
-    return (
-      <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center gap-4 bg-muted/10">
-        <div className="p-4 rounded-full bg-muted/20">
-          <MessageSquare className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div className="text-center">
-          <h3 className="font-bold text-lg">Sem Quiz Configurado</h3>
-          <p className="text-sm text-muted-foreground">Esta fase ainda não possui uma avaliação ativa.</p>
-        </div>
-        <Button onClick={() => createQuiz.mutate()} disabled={createQuiz.isPending}>
-          <Plus className="h-4 w-4 mr-2" /> Criar Novo Quiz
-        </Button>
-      </Card>
-    );
-  }
+  if (!quizQuery.data) return null;
 
   return (
     <Tabs defaultValue="editor" className="w-full">
@@ -250,7 +241,8 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
     },
     onSuccess: () => {
       toast.success("Configurações salvas");
-      qc.invalidateQueries({ queryKey: ["admin-quiz", quiz.phase_id] });
+      qc.invalidateQueries({ queryKey: ["admin-quiz-detail", quiz.id] });
+      qc.invalidateQueries({ queryKey: ["admin-quizzes-list"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -328,6 +320,8 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
           </Button>
         </CardContent>
       </Card>
+
+      <QuizAssignment quiz={quiz} />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -634,6 +628,115 @@ function QuizHistory({ quizId }: { quizId: string }) {
             </table>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuizAssignment({ quiz }: { quiz: Quiz }) {
+  const qc = useQueryClient();
+  const [selectedPhase, setSelectedPhase] = useState<string>("");
+
+  const phasesQuery = useQuery<Phase[]>({
+    queryKey: ["admin-phases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journey_phase_catalog")
+        .select("id,title,order_index")
+        .order("order_index");
+      if (error) throw error;
+      return (data || []) as unknown as Phase[];
+    },
+  });
+
+  const moduleQuery = useQuery({
+    queryKey: ["admin-quiz-module", quiz.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journey_modules")
+        .select("id, phase_id, title, journey_phase_catalog(title)")
+        .eq("content_type", "quiz")
+        .eq("content_body", quiz.id);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const assignQuiz = useMutation({
+    mutationFn: async () => {
+      if (!selectedPhase) throw new Error("Selecione uma fase.");
+      
+      const { error } = await supabase.from("journey_modules").insert({
+        phase_id: selectedPhase,
+        title: quiz.title,
+        content_type: "quiz",
+        content_body: quiz.id,
+        order_index: 999,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Quiz atribuído com sucesso! (Vá em Catálogo para ordenar)");
+      qc.invalidateQueries({ queryKey: ["admin-quiz-module", quiz.id] });
+      setSelectedPhase("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const unassignQuiz = useMutation({
+    mutationFn: async (moduleId: string) => {
+      if (!confirm("Remover este quiz desta fase?")) return;
+      const { error } = await supabase.from("journey_modules").delete().eq("id", moduleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Quiz desatribuído.");
+      qc.invalidateQueries({ queryKey: ["admin-quiz-module", quiz.id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Card className="border-primary/20 bg-primary/5">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg">Atribuir à Fase/Módulo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {moduleQuery.data && moduleQuery.data.length > 0 ? (
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Este quiz está atualmente nas seguintes fases:</Label>
+            {moduleQuery.data.map((m) => (
+              <div key={m.id} className="flex items-center justify-between bg-card p-3 rounded-md border">
+                <span className="font-semibold text-sm">
+                  {(m.journey_phase_catalog as any)?.title || "Fase Desconhecida"}
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => unassignQuiz.mutate(m.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Este quiz ainda não foi atribuído a nenhuma fase.</p>
+        )}
+
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+            <SelectTrigger className="w-[300px] bg-card">
+              <SelectValue placeholder="Selecione uma fase para atribuir" />
+            </SelectTrigger>
+            <SelectContent>
+              {phasesQuery.data?.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => assignQuiz.mutate()} disabled={assignQuiz.isPending || !selectedPhase}>
+            Atribuir Quiz
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

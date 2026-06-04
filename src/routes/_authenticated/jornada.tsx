@@ -66,7 +66,7 @@ function JourneyPage() {
   const qc = useQueryClient();
   const { data, isLoading, isError, error, isFetching } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
-  const [activeQuizPhaseId, setActiveQuizPhaseId] = useState<string | null>(null);
+  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
   const [moduleLinks, setModuleLinks] = useState<any[]>([]);
 
@@ -90,9 +90,9 @@ function JourneyPage() {
   }, [selectedModule]);
 
   useEffect(() => {
-    if (!selectedPhaseId && !activeQuizPhaseId) return;
+    if (!selectedPhaseId && !activeQuizId) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [selectedPhaseId, activeQuizPhaseId]);
+  }, [selectedPhaseId, activeQuizId]);
 
   const completeModule = async (moduleId: string) => {
     if (!user) return;
@@ -199,12 +199,12 @@ function JourneyPage() {
           </TabsList>
         )}
 
-        <TabsContent value="trilha" className={`${!selectedPhase && !activeQuizPhaseId ? "mt-6" : ""}`}>
-          {activeQuizPhaseId ? (
+        <TabsContent value="trilha" className={`${!selectedPhase && !activeQuizId ? "mt-6" : ""}`}>
+          {activeQuizId ? (
             <QuizView 
-              phaseId={activeQuizPhaseId} 
+              quizId={activeQuizId} 
               onClose={(passed) => {
-                setActiveQuizPhaseId(null);
+                setActiveQuizId(null);
                 if (passed) {
                   // If passed, user goes back to phase list or stays in same phase
                   // Already handled by service invalidating journey
@@ -216,8 +216,8 @@ function JourneyPage() {
               phase={selectedPhase}
               onBack={() => setSelectedPhaseId(null)}
               onSelectItem={(module) => {
-                if (module.content_type === "quiz") {
-                  setActiveQuizPhaseId(selectedPhase.id);
+                if (module.content_type === "quiz" && module.content_body) {
+                  setActiveQuizId(module.content_body);
                 } else {
                   setSelectedModule(module);
                 }

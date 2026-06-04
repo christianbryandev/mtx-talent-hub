@@ -9,12 +9,12 @@ import { QuizQuestion, QuizSubmitResult } from "@/services/quizService";
 import { toast } from "sonner";
 
 interface QuizViewProps {
-  phaseId: string;
+  quizId: string;
   onClose: (passed: boolean) => void;
 }
 
-export function QuizView({ phaseId, onClose }: QuizViewProps) {
-  const { quiz, submit } = useQuiz(phaseId);
+export function QuizView({ quizId, onClose }: QuizViewProps) {
+  const { quiz, submit } = useQuiz(quizId);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<QuizSubmitResult | null>(null);

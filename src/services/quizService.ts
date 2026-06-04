@@ -53,25 +53,25 @@ function normalizeError(error: unknown, fallbackCode = "unknown_error"): Service
 }
 
 export const quizService = {
-  async getPhaseQuiz(phaseId: string): Promise<PhaseQuiz | null> {
+  async getPhaseQuiz(quizId: string): Promise<PhaseQuiz | null> {
     try {
-      const { data, error } = await supabase.rpc("get_phase_quiz" as never, {
-        _phase_id: phaseId,
+      const { data, error } = await supabase.rpc("get_quiz" as never, {
+        _quiz_id: quizId,
       } as never);
       if (error) throw new ServiceError("rpc_error", error.message);
       return (data as unknown as PhaseQuiz) ?? null;
     } catch (e) {
-      throw normalizeError(e, "get_phase_quiz_failed");
+      throw normalizeError(e, "get_quiz_failed");
     }
   },
 
   async submitPhaseQuiz(
-    phaseId: string,
+    quizId: string,
     answers: { question_id: string; option_id: string }[],
   ): Promise<QuizSubmitResult> {
     try {
-      const { data, error } = await supabase.rpc("submit_phase_quiz" as never, {
-        _phase_id: phaseId,
+      const { data, error } = await supabase.rpc("submit_quiz" as never, {
+        _quiz_id: quizId,
         _answers: answers,
       } as never);
       if (error) throw new ServiceError("rpc_error", error.message);

@@ -795,16 +795,18 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
                   onChange={(val) => setDraft({ ...draft, content_body: val })} 
                 />
               </div>
-            ) : (
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Instruções do Quiz</Label>
-                <Textarea 
-                  value={draft.content_body ?? ""} 
-                  onChange={(e) => setDraft({ ...draft, content_body: e.target.value })} 
-                  rows={4}
-                />
-              </div>
-            )}
+              ) : (
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Quiz Selecionado</Label>
+                  <div className="p-4 border rounded-md bg-muted/20">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Para editar as perguntas deste quiz, vá para a aba "Quizzes" no menu lateral.
+                    </p>
+                    {/* We could add a dropdown here if we loaded quizzesQuery, but for now just show the UUID or ID */}
+                    <Input disabled value={draft.content_body || "Sem quiz"} />
+                  </div>
+                </div>
+              )}
             
             {module.content_type === "video" && (
               <div className="space-y-1.5 sm:col-span-2 mt-4">
