@@ -257,10 +257,8 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
                 value={serviceIds} 
                 onChange={(ids, sum) => {
                   setServiceIds(ids);
-                  if (sum !== undefined && sum > 0) {
-                     form.setValue("estimated_value", sum.toString(), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-                  } else if (ids.length === 0) {
-                     form.setValue("estimated_value", "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                  if (sum !== undefined) {
+                     form.setValue("estimated_value", sum > 0 ? sum.toString() : "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                   }
                 }} 
               />
@@ -271,7 +269,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div>
               <Label>Valor estimado (R$)</Label>
-              <Input type="number" step="0.01" {...form.register("estimated_value")} />
+              <Input type="number" step="0.01" {...form.register("estimated_value")} value={form.watch("estimated_value") ?? ""} />
             </div>
             <div>
               <Label>Probabilidade (%)</Label>
