@@ -56,6 +56,7 @@ import {
   useEditRequestState,
 } from "@/components/crm/EditRequestBanner";
 import { ServiceMultiSelect } from "@/components/crm/ServiceMultiSelect";
+import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
   head: () => ({ meta: [{ title: "Oportunidade — MTX Hub" }] }),
@@ -310,6 +311,17 @@ function OpportunityDetailPage() {
                 disabled={!canEdit || servicesMutation.isPending}
               />
             </div>
+            {isAdmin && (
+              <div className="pt-2 border-t mt-2">
+                <Label className="text-xs mb-1 block">Responsável comercial</Label>
+                <ProfileSearchSelect
+                  roleFilter="comercial"
+                  value={opp.commercial_responsible}
+                  onChange={(v) => updateMutation.mutate({ commercial_responsible: v })}
+                  disabled={!canEdit}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

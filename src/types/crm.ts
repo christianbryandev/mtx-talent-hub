@@ -4,7 +4,8 @@ export type FunnelStage =
   | "qualificacao"
   | "diagnostico"
   | "proposta"
-  | "fechamento";
+  | "fechamento"
+  | "perdida";
 
 export const FUNNEL_STAGES: { id: FunnelStage; label: string }[] = [
   { id: "prospeccao", label: "Prospecção" },
@@ -13,6 +14,7 @@ export const FUNNEL_STAGES: { id: FunnelStage; label: string }[] = [
   { id: "diagnostico", label: "Diagnóstico" },
   { id: "proposta", label: "Proposta" },
   { id: "fechamento", label: "Fechamento" },
+  { id: "perdida", label: "Perdida" },
 ];
 
 export const FUNNEL_STAGE_LABELS: Record<FunnelStage, string> =
