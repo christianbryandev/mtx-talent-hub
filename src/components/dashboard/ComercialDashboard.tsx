@@ -48,9 +48,13 @@ export function ComercialDashboard() {
 
       const opps = oppRes.data ?? [];
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const jwtRoles = session?.user?.app_metadata?.roles || [];
-      const isAdminOrSuperAdmin = jwtRoles.includes('admin') || jwtRoles.includes('super_admin');
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user!.id);
+      
+      const roles = roleData?.map(r => r.role) || [];
+      const isAdminOrSuperAdmin = roles.includes('admin') || roles.includes('super_admin');
 
       const mine = isAdminOrSuperAdmin ? opps : opps.filter((o) => o.commercial_responsible === user!.id);
 
