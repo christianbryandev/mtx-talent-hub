@@ -56,7 +56,16 @@ export function ServiceMultiSelect({
     else newIds = [...value, id];
     
     const newSelected = services.filter((s) => newIds.includes(s.id));
-    const totalSum = newSelected.reduce((sum, s) => sum + Number((s as any).base_price ?? 0), 0);
+    const totalSum = newSelected.reduce((sum, s) => {
+       const bp = (s as any).base_price;
+       let num = 0;
+       if (typeof bp === 'number') {
+           num = bp;
+       } else if (typeof bp === 'string') {
+           num = Number(bp.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+       }
+       return sum + (isNaN(num) ? 0 : num);
+    }, 0);
     
     onChange(newIds, totalSum);
   };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,7 +43,6 @@ const schema = z.object({
   niche: z.string().max(100).optional().or(z.literal("")),
   main_pain: z.string().max(2000).optional().or(z.literal("")),
   suggested_solution: z.string().max(2000).optional().or(z.literal("")),
-  offered_service: z.string().max(200).optional().or(z.literal("")),
   estimated_value: z.string().optional().or(z.literal("")),
   closing_probability: z.string().optional().or(z.literal("")),
   funnel_stage: z.string(),
@@ -99,7 +98,6 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         niche: values.niche || null,
         main_pain: values.main_pain || null,
         suggested_solution: values.suggested_solution || null,
-        offered_service: values.offered_service || null,
         estimated_value: values.estimated_value 
           ? Number(values.estimated_value.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) 
           : null,
@@ -259,35 +257,35 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
                 value={serviceIds} 
                 onChange={(ids, sum) => {
                   setServiceIds(ids);
-                  if (sum !== undefined) {
-                     const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sum);
-                     form.setValue("estimated_value", formatted, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-                  }
+                  const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sum || 0);
+                  form.setValue("estimated_value", formatted, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                 }} 
               />
             </div>
             <div>
-              <Label>Serviço (texto livre / legado)</Label>
-              <Input {...form.register("offered_service")} />
-            </div>
-            <div>
               <Label>Valor estimado (R$)</Label>
-              <Input 
-                type="text"
-                placeholder="R$ 0,00"
-                {...form.register("estimated_value")} 
-                value={form.watch("estimated_value") || ""}
-                onChange={(e) => {
-                  form.setValue("estimated_value", e.target.value, { shouldDirty: true });
-                }}
-                onBlur={(e) => {
-                  const val = e.target.value;
-                  if (!val) return;
-                  const num = Number(val.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
-                  if (!isNaN(num)) {
-                    form.setValue("estimated_value", new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num));
-                  }
-                }}
+              <Controller
+                control={form.control}
+                name="estimated_value"
+                render={({ field }) => (
+                  <Input 
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={(e) => {
+                      const val = e.target.value;
+                      if (!val) {
+                         field.onChange("R$ 0,00");
+                         return;
+                      }
+                      const num = Number(val.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+                      if (!isNaN(num)) {
+                        field.onChange(new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num));
+                      }
+                    }}
+                  />
+                )}
               />
             </div>
             <div>
