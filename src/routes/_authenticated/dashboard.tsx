@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
 import { JovemAprendizDashboard } from "@/components/dashboard/JovemAprendizDashboard";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — MTX Hub" }] }),
@@ -51,13 +51,41 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function DashboardPage() {
-  const { isAdmin, isComercial, hasRole, loading } = usePermissions();
+  const { isAdmin, isComercial, isJovemAprendiz, loading } = usePermissions();
 
   if (loading) return null;
-  if (!isAdmin && isComercial) return <ComercialDashboard />;
-  if (!isAdmin && hasRole("jovem_aprendiz")) return <JovemAprendizDashboard />;
 
-  return <AdminDashboardContent />;
+  const defaultTab = isAdmin ? "admin" : isComercial ? "comercial" : "jovem";
+
+  return (
+    <div className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
+        <TabsList className="mb-6">
+          {isAdmin && <TabsTrigger value="admin">Administração</TabsTrigger>}
+          {isComercial && <TabsTrigger value="comercial">Comercial</TabsTrigger>}
+          {isJovemAprendiz && <TabsTrigger value="jovem">Jovem Aprendiz</TabsTrigger>}
+        </TabsList>
+
+        {isAdmin && (
+          <TabsContent value="admin" className="mt-0">
+            <AdminDashboardContent />
+          </TabsContent>
+        )}
+        
+        {isComercial && (
+          <TabsContent value="comercial" className="mt-0">
+            <ComercialDashboard />
+          </TabsContent>
+        )}
+        
+        {isJovemAprendiz && (
+          <TabsContent value="jovem" className="mt-0">
+            <JovemAprendizDashboard />
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
+  );
 }
 
 function AdminDashboardContent() {

@@ -33,7 +33,7 @@ export function usePermissions() {
   const isSuperAdmin = roles.includes("super_admin");
   const isAdmin = isSuperAdmin || roles.includes("admin");
   const isComercial = isAdmin || roles.includes("comercial");
-  const isJovemAprendiz = roles.includes("jovem_aprendiz");
+  const isJovemAprendiz = isComercial || roles.includes("jovem_aprendiz");
 
   return {
     roles,

@@ -74,8 +74,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
-  const { isAdmin, isSuperAdmin, role } = usePermissions();
-  const isJovemAprendiz = role === "jovem_aprendiz";
+  const { isAdmin, isSuperAdmin, isComercial, isJovemAprendiz, role, roles } = usePermissions();
   // XP only relevant for jovem_aprendiz (journey owner). Hook is safe-noop for others.
   const { data: journey } = useJourney(isJovemAprendiz ? undefined : "00000000-0000-0000-0000-000000000000");
 
@@ -93,7 +92,7 @@ export function AppSidebar() {
 
   const { data: hasYoungProfile = true } = useQuery({
     queryKey: ["has-young-profile", user?.id],
-    enabled: !!user && role === "jovem_aprendiz",
+    enabled: !!user && isJovemAprendiz,
     queryFn: async () => {
       const { data } = await supabase
         .from("young_people")
@@ -136,7 +135,13 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems
-                .filter((item) => !role || item.roles.includes(role))
+                .filter((item) => {
+                  if (isSuperAdmin && item.roles.includes("super_admin")) return true;
+                  if (isAdmin && item.roles.includes("admin")) return true;
+                  if (isComercial && item.roles.includes("comercial")) return true;
+                  if (isJovemAprendiz && item.roles.includes("jovem_aprendiz")) return true;
+                  return item.roles.some((r) => roles.includes(r));
+                })
                 .map((item) => {
                 const showBadge = item.url === "/jovens" && isAdmin && pendingAppsCount > 0;
                 return (
