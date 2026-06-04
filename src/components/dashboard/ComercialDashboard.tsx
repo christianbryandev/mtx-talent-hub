@@ -47,7 +47,12 @@ export function ComercialDashboard() {
       ]);
 
       const opps = oppRes.data ?? [];
-      const mine = opps.filter((o) => o.commercial_responsible === user!.id);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwtRoles = session?.user?.app_metadata?.roles || [];
+      const isAdminOrSuperAdmin = jwtRoles.includes('admin') || jwtRoles.includes('super_admin');
+
+      const mine = isAdminOrSuperAdmin ? opps : opps.filter((o) => o.commercial_responsible === user!.id);
 
       const openMine = mine.filter((o) => o.status === "aberta");
       const wonThisMonth = mine.filter(
