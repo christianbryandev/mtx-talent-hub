@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchSelect } from "./SearchSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BaseProps {
   value: string | null;
@@ -91,20 +92,34 @@ export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) 
       return data ?? [];
     },
   });
+
   return (
-    <SearchSelect
-      {...props}
-      loading={isLoading}
-      placeholder={props.placeholder ?? "Selecionar usuário"}
-      searchPlaceholder="Buscar usuário..."
-      emptyText="Nenhum usuário encontrado."
-      primaryHighlight={true}
-      options={data.map((p) => ({
-        id: p.id,
-        label: p.full_name || p.email || "Sem nome",
-        hint: p.full_name ? p.email : null,
-      }))}
-    />
+    <Select
+      value={props.value || "none"}
+      onValueChange={(val) => props.onChange(val === "none" ? null : val)}
+      disabled={props.disabled || isLoading}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={props.placeholder ?? "Selecionar usuário"} />
+      </SelectTrigger>
+      <SelectContent>
+        {props.allowClear && (
+          <SelectItem value="none">
+            {props.clearText ?? "— Nenhum —"}
+          </SelectItem>
+        )}
+        {data.map((p) => (
+          <SelectItem key={p.id} value={p.id}>
+            {p.full_name || p.email || "Sem nome"}
+          </SelectItem>
+        ))}
+        {data.length === 0 && !isLoading && !props.allowClear && (
+          <SelectItem value="empty" disabled>
+            Nenhum usuário encontrado.
+          </SelectItem>
+        )}
+      </SelectContent>
+    </Select>
   );
 }
 
