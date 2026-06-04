@@ -157,13 +157,8 @@ export function MultiYoungSearchSelect({
                           key={y.id}
                           value={`${y.full_name} ${y.email ?? ""} ${y.status ?? ""}`}
                           onSelect={() => toggle(y.id)}
+                          className={cn("pr-8", isSel && "bg-accent text-accent-foreground")}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4 shrink-0",
-                              isSel ? "opacity-100" : "opacity-0",
-                            )}
-                          />
                           <Avatar className="h-6 w-6 mr-2">
                             <AvatarImage src={y.avatar_url ?? undefined} alt={y.full_name} />
                             <AvatarFallback className="text-[10px]">
@@ -173,16 +168,21 @@ export function MultiYoungSearchSelect({
                           <div className="flex flex-col min-w-0">
                             <span className="text-sm truncate">{y.full_name}</span>
                             {y.email && (
-                              <span className="text-[10px] text-muted-foreground truncate">
+                              <span className="text-[10px] text-muted-foreground opacity-80 truncate">
                                 {y.email}
                               </span>
                             )}
                             {(y.status || y.trail_phase) && (
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-[10px] text-muted-foreground opacity-80">
                                 {[y.status, y.trail_phase].filter(Boolean).join(" · ")}
                               </span>
                             )}
                           </div>
+                          {isSel && (
+                            <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+                              <Check className="h-4 w-4 shrink-0" />
+                            </span>
+                          )}
                         </CommandItem>
                       );
                     })}

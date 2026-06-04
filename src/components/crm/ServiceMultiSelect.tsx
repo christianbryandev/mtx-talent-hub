@@ -100,21 +100,21 @@ export function ServiceMultiSelect({
                       key={s.id}
                       value={`${s.name} ${s.category ?? ""}`}
                       onSelect={() => toggle(s.id)}
+                      className={cn("pr-8", isSel && "bg-accent text-accent-foreground")}
                     >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSel ? "opacity-100" : "opacity-0",
-                        )}
-                      />
                       <div className="flex flex-col">
                         <span className="text-sm">{s.name}</span>
                         {s.category && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground opacity-80">
                             {s.category}
                           </span>
                         )}
                       </div>
+                      {isSel && (
+                        <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+                          <Check className="h-4 w-4" />
+                        </span>
+                      )}
                     </CommandItem>
                   );
                 })}
