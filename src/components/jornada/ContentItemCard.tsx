@@ -127,13 +127,7 @@ export function ContentItemCard({
         {/* Central Play/Icon Button */}
         {!isLocked && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div 
-              className="w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 liquid-glass-btn"
-              style={{ 
-                background: type === 'video' ? PLAY_BUTTON_GRADIENT : undefined,
-                boxShadow: type === 'video' ? '0 0 20px rgba(221,42,123,0.3)' : '0 4px 30px rgba(0, 0, 0, 0.2)'
-              }}
-            >
+            <div className="w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 liquid-glass-btn">
               <TypeIconLarge />
             </div>
           </div>
