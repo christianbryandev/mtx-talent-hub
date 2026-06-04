@@ -149,13 +149,16 @@ export function JovemAprendizDashboard() {
         </CardHeader>
         <CardContent className="space-y-3">
           {journeyData?.phases.map((ph) => {
-            const pct = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
+            const isCompleted = ph.status?.toLowerCase().includes("conclu") || ph.raw_status?.toLowerCase().includes("conclu");
+            const pctRaw = ph.cards_total === 0 ? 0 : Math.round((ph.cards_done / ph.cards_total) * 100);
+            const pct = isCompleted ? 100 : pctRaw;
+            const doneCount = isCompleted ? ph.cards_total : ph.cards_done;
             return (
               <div key={ph.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span>{ph.title}</span>
                   <span className="text-xs text-muted-foreground">
-                    {ph.cards_done}/{ph.cards_total}
+                    {doneCount}/{ph.cards_total}
                   </span>
                 </div>
                 <Progress value={pct} className="h-1.5" />
