@@ -40,7 +40,7 @@ export function ServiceMultiSelect({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name, category, base_price")
+        .select("id, name, category, base_price, default_value")
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
@@ -57,12 +57,12 @@ export function ServiceMultiSelect({
     
     const newSelected = services.filter((s) => newIds.includes(s.id));
     const totalSum = newSelected.reduce((sum, s) => {
-       const bp = (s as any).base_price;
+       const rawVal = (s as any).default_value ?? (s as any).base_price;
        let num = 0;
-       if (typeof bp === 'number') {
-           num = bp;
-       } else if (typeof bp === 'string') {
-           num = Number(bp.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+       if (typeof rawVal === 'number') {
+           num = rawVal;
+       } else if (typeof rawVal === 'string') {
+           num = Number(rawVal.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
        }
        return sum + (isNaN(num) ? 0 : num);
     }, 0);
