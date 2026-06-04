@@ -265,6 +265,10 @@ function JourneyPage() {
               {selectedModule.content_type === "video" ? (
                 <div className="flex flex-col">
                   <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                    <div className="absolute top-4 left-4 z-10 liquid-glass-watermark flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      MTX Hub
+                    </div>
                     {selectedModule.content_body ? (
                       <video 
                         src={selectedModule.content_body} 
@@ -342,7 +346,7 @@ function JourneyPage() {
                     setSelectedModule(null);
                     toast.success(selectedModule.content_type === "video" ? "Aula concluída!" : "Leitura concluída!");
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="liquid-glass-btn px-6 font-medium tracking-wide"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   {selectedModule.content_type === "video" ? "Marcar como assistida" : "Concluir leitura"}
