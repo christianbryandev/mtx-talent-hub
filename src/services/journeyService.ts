@@ -61,6 +61,7 @@ export interface JourneyModule {
   description: string | null;
   content_type: string;
   content_body: string | null;
+  quiz_id?: string | null;
   order_index: number;
   duration_minutes: number | null;
   questions_count?: number;

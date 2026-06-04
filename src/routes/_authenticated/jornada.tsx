@@ -66,7 +66,7 @@ function JourneyPage() {
   const qc = useQueryClient();
   const { data, isLoading, isError, error, isFetching } = useJourney();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
-  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<{ quizId: string, moduleId?: string } | null>(null);
   const [selectedModule, setSelectedModule] = useState<JourneyModule | null>(null);
   const [moduleLinks, setModuleLinks] = useState<any[]>([]);
 
@@ -90,9 +90,9 @@ function JourneyPage() {
   }, [selectedModule]);
 
   useEffect(() => {
-    if (!selectedPhaseId && !activeQuizId) return;
+    if (!selectedPhaseId && !activeQuiz) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [selectedPhaseId, activeQuizId]);
+  }, [selectedPhaseId, activeQuiz]);
 
   const completeModule = async (moduleId: string) => {
     if (!user) return;
@@ -187,7 +187,7 @@ function JourneyPage() {
       ) : null}
 
       <Tabs defaultValue="trilha" className="w-full">
-        {!selectedPhase && (
+        {!selectedPhase ? (
           <TabsList>
             <TabsTrigger value="trilha">Trilha</TabsTrigger>
             <TabsTrigger value="conquistas">
@@ -197,18 +197,17 @@ function JourneyPage() {
               <Trophy className="h-3.5 w-3.5 mr-1.5" /> Ranking
             </TabsTrigger>
           </TabsList>
-        )}
+        ) : null}
 
-        <TabsContent value="trilha" className={`${!selectedPhase && !activeQuizId ? "mt-6" : ""}`}>
-          {activeQuizId ? (
+        <TabsContent value="trilha" className={`${!selectedPhase && !activeQuiz ? "mt-6" : ""}`}>
+          {activeQuiz ? (
             <QuizView 
-              quizId={activeQuizId} 
+              quizId={activeQuiz.quizId} 
               onClose={(passed) => {
-                setActiveQuizId(null);
-                if (passed) {
-                  // If passed, user goes back to phase list or stays in same phase
-                  // Already handled by service invalidating journey
+                if (passed && activeQuiz.moduleId) {
+                  completeModule(activeQuiz.moduleId);
                 }
+                setActiveQuiz(null);
               }}
             />
           ) : selectedPhase ? (
@@ -217,7 +216,7 @@ function JourneyPage() {
               onBack={() => setSelectedPhaseId(null)}
               onSelectItem={(module) => {
                 if (module.content_type === "quiz" && module.content_body) {
-                  setActiveQuizId(module.content_body);
+                  setActiveQuiz({ quizId: module.content_body });
                 } else {
                   setSelectedModule(module);
                 }
@@ -261,97 +260,110 @@ function JourneyPage() {
                   {selectedModule.title}
                 </DialogTitle>
               </DialogHeader>
-              
               {selectedModule.content_type === "video" ? (
-                <div className="flex flex-col">
-                  <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
-                    <div className="absolute top-4 left-4 z-10 liquid-glass-watermark flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      MTX Hub
+                  <div className="flex flex-col">
+                    <div className="aspect-video w-full bg-muted flex items-center justify-center relative group">
+                      <div className="absolute top-4 left-4 z-10 liquid-glass-watermark flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        MTX Hub
+                      </div>
+                      {selectedModule.content_body ? (
+                        <video 
+                          src={selectedModule.content_body} 
+                          controls 
+                          autoPlay 
+                          className="w-full h-full"
+                          onEnded={() => {
+                            if (!selectedModule.quiz_id) {
+                              completeModule(selectedModule.id);
+                              toast.success("Aula concluída! Próximo item liberado.");
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <XCircle className="h-10 w-10 opacity-20" />
+                          <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                        </div>
+                      )}
                     </div>
-                    {selectedModule.content_body ? (
-                      <video 
-                        src={selectedModule.content_body} 
-                        controls 
-                        autoPlay 
-                        className="w-full h-full"
-                        onEnded={() => {
-                          completeModule(selectedModule.id);
-                          toast.success("Aula concluída! Próximo item liberado.");
-                        }}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <XCircle className="h-10 w-10 opacity-20" />
-                        <p className="text-sm">Vídeo não disponível ou URL inválida.</p>
+                    {selectedModule.supplementary_text && (
+                      <div className="p-4 md:p-6 bg-background border-t border-border/10">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                           <BookOpen className="h-4 w-4 text-primary" />
+                           Informações Adicionais (Login, Links extras)
+                        </h4>
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: selectedModule.supplementary_text }} />
                       </div>
                     )}
                   </div>
-                  {selectedModule.supplementary_text && (
-                    <div className="p-4 md:p-6 bg-background border-t border-border/10">
-                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                         <BookOpen className="h-4 w-4 text-primary" />
-                         Informações Adicionais (Login, Links extras)
-                      </h4>
-                      <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: selectedModule.supplementary_text }} />
+                ) : (
+                  <div className="p-8 overflow-y-auto max-h-[60vh] bg-background">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      {selectedModule.content_body ? (
+                        <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
+                          {selectedModule.content_body}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground italic text-center py-12">
+                          Nenhum conteúdo de texto cadastrado.
+                        </p>
+                      )}
                     </div>
+                  </div>
+                )}
+                
+                <div className="p-4 md:p-6 bg-background border-t border-border/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                    {moduleLinks.length > 0 && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="flex items-center gap-2 w-full md:w-auto">
+                            <ExternalLink className="h-4 w-4" />
+                            Materiais de Apoio ({moduleLinks.length})
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-[250px]">
+                          <DropdownMenuLabel>Links e Materiais</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {moduleLinks.map((link, idx) => (
+                            <DropdownMenuItem key={idx} asChild>
+                              <a href={link.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer flex items-center gap-2">
+                                <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="truncate">{link.label || "Link Externo"}</span>
+                              </a>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                  
+                  {selectedModule.quiz_id ? (
+                    <Button 
+                      onClick={() => {
+                        setActiveQuiz({ quizId: selectedModule.quiz_id!, moduleId: selectedModule.id });
+                        setSelectedModule(null); // Fecha o modal e abre o Quiz
+                      }}
+                      className="liquid-glass-btn px-6 font-medium tracking-wide bg-amber-500 hover:bg-amber-600"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Fazer Quiz para Concluir Aula
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => {
+                        completeModule(selectedModule.id);
+                        setSelectedModule(null);
+                        toast.success(selectedModule.content_type === "video" ? "Aula concluída!" : "Leitura concluída!");
+                      }}
+                      className="liquid-glass-btn px-6 font-medium tracking-wide"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      {selectedModule.content_type === "video" ? "Marcar como assistida" : "Concluir leitura"}
+                    </Button>
                   )}
                 </div>
-              ) : (
-                <div className="p-8 overflow-y-auto max-h-[60vh] bg-background">
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {selectedModule.content_body ? (
-                      <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
-                        {selectedModule.content_body}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground italic text-center py-12">
-                        Nenhum conteúdo de texto cadastrado.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {moduleLinks && moduleLinks.length > 0 && (
-                <div className="p-4 bg-background border-t border-border/10">
-                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4 text-primary" />
-                    Materiais de Apoio
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {moduleLinks.map((link, idx) => (
-                      <a
-                        key={idx}
-                        href={normalizeExternalUrl(link.url)}
-                        {...externalLinkProps}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-sm rounded-md transition-colors border border-border/50"
-                      >
-                        <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-                        {link.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="p-4 bg-background border-t border-border/10 flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Conteúdo da Fase</span>
-                  <span className="text-sm font-medium">{selectedPhase?.title}</span>
-                </div>
-                <Button 
-                  onClick={() => {
-                    completeModule(selectedModule.id);
-                    setSelectedModule(null);
-                    toast.success(selectedModule.content_type === "video" ? "Aula concluída!" : "Leitura concluída!");
-                  }}
-                  className="liquid-glass-btn px-6 font-medium tracking-wide"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  {selectedModule.content_type === "video" ? "Marcar como assistida" : "Concluir leitura"}
-                </Button>
-              </div>
             </div>
           )}
         </DialogContent>
