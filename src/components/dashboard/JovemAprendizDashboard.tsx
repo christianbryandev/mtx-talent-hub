@@ -31,11 +31,6 @@ export function JovemAprendizDashboard() {
   const { isAdmin } = usePermissions();
   const [selectedYoungId, setSelectedYoungId] = useState<string | null>(null);
 
-  // We only fetch journey for a specific young person.
-  // If it's an admin viewing "Todos", we don't have a single profile_id to fetch the journey for.
-  const targetProfileId = selectedYoungId ? undefined : (isAdmin ? "skip" : user?.id);
-  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(targetProfileId === "skip" ? "" : targetProfileId);
-  const { data: catalogPhases } = usePhaseMetadata();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data, isLoading } = useQuery({
@@ -98,11 +93,15 @@ export function JovemAprendizDashboard() {
     },
   });
 
-  // Atualiza targetProfileId após fetch se selecionamos por jovem ID (para puxar a jornada)
-  if (data?.young && targetProfileId === undefined && !isLoadingJourney && !journeyData) {
-     // A mutation to refetch journey would happen implicitly via state if we stored profile_id, 
-     // but to avoid loops we'll just check if it's there. Actually, we need profile_id for journey.
-  }
+  // We only fetch journey for a specific young person.
+  // Se for admin, a jornada só é buscada se tiver um jovem selecionado (youngProfileId).
+  // Se for jovem, é sempre o próprio user.id.
+  const targetProfileId = isAdmin 
+    ? (selectedYoungId ? data?.young?.profile_id || "skip" : "skip") 
+    : user?.id;
+
+  const { data: journeyData, isLoading: isLoadingJourney } = useJourney(targetProfileId === "skip" ? "" : targetProfileId);
+  const { data: catalogPhases } = usePhaseMetadata();
 
   if (isLoading || (isLoadingJourney && targetProfileId !== "skip") || !data) {
     return (
