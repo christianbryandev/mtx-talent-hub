@@ -36,7 +36,7 @@ export function ServiceMultiSelect({
   const [open, setOpen] = useState(false);
 
   const { data: services = [] } = useQuery({
-    queryKey: ["services-active-min"],
+    queryKey: ["services-active-with-price"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")

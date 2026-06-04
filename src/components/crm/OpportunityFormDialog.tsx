@@ -258,9 +258,9 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
                 onChange={(ids, sum) => {
                   setServiceIds(ids);
                   if (sum !== undefined && sum > 0) {
-                     form.setValue("estimated_value", sum.toString());
+                     form.setValue("estimated_value", sum.toString(), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                   } else if (ids.length === 0) {
-                     form.setValue("estimated_value", "");
+                     form.setValue("estimated_value", "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                   }
                 }} 
               />
