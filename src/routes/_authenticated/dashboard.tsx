@@ -279,7 +279,7 @@ function AdminDashboardContent() {
                       return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
                     })}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -297,11 +297,11 @@ function AdminDashboardContent() {
               <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Sem dados ainda</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.trailData || []} maxBarSize={60} />
+                  <BarChart data={stats?.trailData || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                     <XAxis dataKey="fase" stroke="#A1A1AA" fontSize={11} />
                     <YAxis stroke="#A1A1AA" fontSize={11} />
-                    <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                    <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                     <Bar dataKey="total" fill="url(#grad-warm)" radius={[6, 6, 0, 0]} maxBarSize={60} />
                   </BarChart>
               </ResponsiveContainer>
@@ -322,7 +322,7 @@ function AdminDashboardContent() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                   <XAxis dataKey="mes" stroke="#A1A1AA" fontSize={11} />
                   <YAxis stroke="#A1A1AA" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} />
+                  <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                   <Line type="monotone" dataKey="clientes" stroke="#EC4899" strokeWidth={2.5} dot={{ fill: "#EC4899", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
