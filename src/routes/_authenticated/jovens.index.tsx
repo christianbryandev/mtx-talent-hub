@@ -275,9 +275,10 @@ function JovensListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Jovem</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Cidade</TableHead>
+              <TableHead>Área</TableHead>
               <TableHead>Fase</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Mentor</TableHead>
@@ -289,12 +290,12 @@ function JovensListPage() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={isAdmin ? 8 : 7}><Skeleton className="h-10 w-full" /></TableCell>
+                  <TableCell colSpan={isAdmin ? 9 : 8}><Skeleton className="h-10 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 9 : 8} className="py-10 text-center text-muted-foreground">
                   Nenhum jovem encontrado
                 </TableCell>
               </TableRow>
@@ -314,6 +315,7 @@ function JovensListPage() {
                   </TableCell>
                   <TableCell>{y.age ?? "—"}</TableCell>
                   <TableCell>{y.city ?? "—"}</TableCell>
+                  <TableCell>{y.interest_area ?? "—"}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <PhaseBadge phase={y.trail_phase} />
