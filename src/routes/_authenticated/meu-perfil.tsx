@@ -584,15 +584,41 @@ function CreateMyProfile() {
         .eq("id", user.id)
         .single();
 
+      const userEmail = profile?.email ?? user.email;
+
+      // Buscar inscrição vinculada pelo email
+      const { data: app } = await supabase
+        .from("young_applications")
+        .select("*")
+        .eq("email", userEmail)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       const { data: created, error } = await supabase
         .from("young_people")
         .insert({
-          full_name: profile?.full_name ?? user.email ?? "Sem nome",
-          email: profile?.email ?? user.email ?? null,
+          full_name: profile?.full_name ?? app?.full_name ?? user.email ?? "Sem nome",
+          email: userEmail ?? null,
           status: "em_formacao",
           trail_phase: "fase_1",
           entry_date: new Date().toISOString().split("T")[0],
           profile_id: user.id,
+          // Vincular dados da inscrição (se existir)
+          age: app?.age ?? null,
+          city: app?.city ?? null,
+          state: app?.state ?? null,
+          whatsapp: app?.whatsapp ?? null,
+          phone: app?.phone ?? null,
+          education_level: app?.education_level ?? null,
+          family_income: app?.family_income ?? null,
+          interest_area: app?.interest_area ?? null,
+          has_laptop: app?.has_laptop ?? false,
+          has_phone: app?.has_phone ?? false,
+          has_internet: app?.has_internet ?? false,
+          testimony: app?.personal_story ?? null,
+          dreams: app?.dreams ?? null,
+          skills: app?.perceived_skills ?? null,
         })
         .select()
         .single();
