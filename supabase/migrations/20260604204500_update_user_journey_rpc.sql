@@ -90,8 +90,8 @@ BEGIN
               SELECT COALESCE(jsonb_agg(
                 jsonb_build_object(
                   'id', i.id,
-                  'description', i.description,
-                  'is_checked', COALESCE(ui.is_checked, false),
+                  'description', i.title,
+                  'is_checked', COALESCE(ui.completed, false),
                   'order_index', i.order_index
                 ) ORDER BY i.order_index
               ), '[]'::jsonb)
