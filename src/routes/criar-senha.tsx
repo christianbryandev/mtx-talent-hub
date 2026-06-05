@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { useAuth } from "@/hooks/useAuth";
 
 const schema = z
   .object({
@@ -35,18 +36,12 @@ export const Route = createFileRoute("/criar-senha")({
 
 function CreatePasswordPage() {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
-
-  useEffect(() => {
-    console.log("Página de criação de senha carregada");
-    // O Supabase lida automaticamente com o token na URL ao carregar a página se estiver configurado corretamente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Sessão atual no criar-senha:", session ? "Sim" : "Não");
-    });
-  }, []);
 
   const onSubmit = async ({ password }: FormValues) => {
     setLoading(true);
@@ -62,6 +57,39 @@ function CreatePasswordPage() {
     // Redireciona para o dashboard (painel)
     navigate({ to: "/dashboard" });
   };
+
+  if (authLoading) {
+    return (
+      <AuthLayout title="Criar sua senha" subtitle="Verificando seu link de acesso...">
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (!session) {
+    return (
+      <AuthLayout title="Link Expirado ou Inválido" subtitle="Não foi possível identificar sua sessão.">
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20 flex flex-col items-center text-center space-y-3">
+          <AlertCircle className="h-10 w-10" />
+          <p className="text-sm font-medium">
+            Seu link de acesso parece ter expirado, já foi utilizado ou você o abriu em um navegador incompatível (como o navegador embutido do Gmail ou Instagram).
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Por favor, solicite um novo link ao administrador e certifique-se de abri-lo diretamente no Safari ou Google Chrome.
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          className="w-full mt-6" 
+          onClick={() => navigate({ to: "/" })}
+        >
+          Voltar para o Login
+        </Button>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Criar sua senha" subtitle="Defina uma senha para acessar o MTX Hub">
@@ -80,7 +108,7 @@ function CreatePasswordPage() {
           <PasswordInput 
             id="password" 
             autoComplete="new-password" 
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             {...register("password")} 
           />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
