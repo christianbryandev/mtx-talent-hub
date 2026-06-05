@@ -1,7 +1,7 @@
 import { JourneyPhase } from "@/services/journeyService";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lock, BookOpen, Wrench, Compass, Rocket, TrendingUp } from "lucide-react";
+import { Lock, BookOpen, Wrench, Compass, Rocket, TrendingUp, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PhaseGridCardProps {
@@ -43,6 +43,7 @@ export function PhaseGridCard({ phase, onClick, isAdmin = false }: PhaseGridCard
       case 3: return Compass;
       case 4: return Rocket;
       case 5: return TrendingUp;
+      case 6: return Flag;
       default: return BookOpen;
     }
   };
