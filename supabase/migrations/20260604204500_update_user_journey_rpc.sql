@@ -85,11 +85,7 @@ BEGIN
               END
             ),
             'visibility_type', jm.visibility_type,
-            'assigned_users', (
-              SELECT COALESCE(jsonb_agg(au.young_id), '[]'::jsonb)
-              FROM public.journey_module_assignments au
-              WHERE au.module_id = jm.id
-            ),
+            'assigned_users', COALESCE(to_jsonb(jm.assigned_users), '[]'::jsonb),
             'items', (
               SELECT COALESCE(jsonb_agg(
                 jsonb_build_object(
