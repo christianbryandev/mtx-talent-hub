@@ -772,7 +772,3 @@ function QuizHistory({ quizId }: { quizId: string }) {
     </Card>
   );
 }
-
-    </Card>
-  );
-}
