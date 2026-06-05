@@ -51,11 +51,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function DashboardPage() {
-  const { isAdmin, isComercial, isJovemAprendiz, loading } = usePermissions();
+  const { isAdmin, isComercial, isJovemAprendiz, isCliente, loading } = usePermissions();
 
   if (loading) return null;
 
-  const defaultTab = isAdmin ? "admin" : isComercial ? "comercial" : "jovem";
+  const defaultTab = isAdmin ? "admin" : isComercial ? "comercial" : isJovemAprendiz ? "jovem" : isCliente ? "cliente" : "";
 
   return (
     <div className="w-full">
@@ -64,6 +64,7 @@ function DashboardPage() {
           {isAdmin && <TabsTrigger value="admin">Administração</TabsTrigger>}
           {isComercial && <TabsTrigger value="comercial">Comercial</TabsTrigger>}
           {isJovemAprendiz && <TabsTrigger value="jovem">Jovem Aprendiz</TabsTrigger>}
+          {isCliente && <TabsTrigger value="cliente">Cliente</TabsTrigger>}
         </TabsList>
 
         {isAdmin && (
@@ -81,6 +82,12 @@ function DashboardPage() {
         {isJovemAprendiz && (
           <TabsContent value="jovem" className="mt-0">
             <JovemAprendizDashboard />
+          </TabsContent>
+        )}
+
+        {isCliente && (
+          <TabsContent value="cliente" className="mt-0">
+            <ClienteDashboardContent />
           </TabsContent>
         )}
       </Tabs>
@@ -109,16 +116,16 @@ function AdminDashboardContent() {
         logsRes,
         appsRes,
       ] = await Promise.all([
-        supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase"),
-        supabase.from("clients").select("id, status, monthly_value, created_at"),
-        supabase.from("tasks").select("id, kanban_column").not("kanban_column", "in", "(concluido)"),
-        supabase.from("clients").select("created_at").gte("created_at", sixMonthsAgo),
-        supabase.from("opportunities").select("id, status, estimated_value, next_followup_date"),
-        supabase.from("tasks").select("id").lt("due_date", today).not("kanban_column", "in", "(concluido)"),
+        supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase").limit(3000),
+        supabase.from("clients").select("id, status, monthly_value, created_at").limit(3000),
+        supabase.from("tasks").select("id, kanban_column").not("kanban_column", "in", "(concluido)").limit(3000),
+        supabase.from("clients").select("created_at").gte("created_at", sixMonthsAgo).limit(3000),
+        supabase.from("opportunities").select("id, status, estimated_value, next_followup_date").limit(3000),
+        supabase.from("tasks").select("id").lt("due_date", today).not("kanban_column", "in", "(concluido)").limit(3000),
         supabase.from("meetings").select("*").eq("status", "agendada").gte("date", today).order("date").limit(5),
         supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
-        supabase.from("young_applications").select("status"),
+        supabase.from("young_applications").select("status").limit(2000),
       ]);
 
       const youngs = youngsRes.data ?? [];
@@ -413,6 +420,20 @@ function AdminDashboardContent() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+function ClienteDashboardContent() {
+  return (
+    <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-xl border border-border/60 bg-card/70 p-6 text-center">
+      <Building2 className="h-12 w-12 text-primary opacity-50" />
+      <div className="space-y-1">
+        <h3 className="text-xl font-bold">Bem-vindo à MTX Hub</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto">
+          O seu painel de parceiro corporativo está em desenvolvimento. Em breve você terá acesso a relatórios e acompanhamento da sua equipe.
+        </p>
       </div>
     </div>
   );

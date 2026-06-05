@@ -34,6 +34,7 @@ export function usePermissions() {
   const isAdmin = isSuperAdmin || roles.includes("admin");
   const isComercial = isAdmin || roles.includes("comercial");
   const isJovemAprendiz = isComercial || roles.includes("jovem_aprendiz");
+  const isCliente = roles.includes("cliente");
 
   return {
     roles,
@@ -43,6 +44,7 @@ export function usePermissions() {
     isAdmin,
     isComercial,
     isJovemAprendiz,
+    isCliente,
     loading: isLoading,
   };
 }

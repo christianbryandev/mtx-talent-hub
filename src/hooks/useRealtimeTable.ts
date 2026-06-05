@@ -64,7 +64,6 @@ export function useRealtimeTable<T extends { id: string }>(
           if (payload.eventType === "DELETE") {
             setData((prev) => prev.filter((item) => item.id !== (payload.old as T).id));
           }
-          queryClient.invalidateQueries({ queryKey: queryKey ?? [tableName] });
         },
       )
       .subscribe();

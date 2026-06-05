@@ -300,7 +300,7 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end gap-3">
+              <div className="flex flex-col justify-end pb-2">
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={form.watch("active_contract")}

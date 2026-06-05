@@ -155,7 +155,7 @@ export function AppSidebar() {
                         <item.icon className="h-4 w-4" />
                         <span className="flex-1">{item.title}</span>
                         {showBadge && !collapsed && (
-                          <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-[10px] font-bold text-white shadow-mtx-glow">
+                          <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow">
                             {pendingAppsCount}
                           </span>
                         )}
@@ -191,7 +191,7 @@ export function AppSidebar() {
                   <Button
                     asChild
                     size="sm"
-                    className="mt-2 h-7 w-full bg-gradient-mtx text-[11px] font-semibold text-white"
+                    className="mt-2 h-7 w-full bg-gradient-mtx text-xs font-semibold text-white"
                   >
                     <Link to="/meu-perfil">Criar meu perfil</Link>
                   </Button>
@@ -206,18 +206,7 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/journey-catalog")}
-                    tooltip="Catálogo Jornada (Fases e Cards)"
-                  >
-                    <Link to="/admin/journey-catalog" className="flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      <span className="font-bold">Painel Administrativo</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
@@ -365,7 +354,7 @@ export function AppSidebar() {
                 <span className="truncate text-xs font-medium">
                   {user?.email ?? "Usuário"}
                 </span>
-                <span className="truncate text-[10px] text-muted-foreground">
+                <span className="truncate text-xs text-muted-foreground">
                   {role ? ROLE_LABELS[role] : "Sem papel"}
                 </span>
               </div>

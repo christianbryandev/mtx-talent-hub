@@ -53,15 +53,15 @@ export async function fetchIndicadoresData(filters: IndicadoresFilters) {
 
   const [clients, opps, tasks, youngs, meetings, services, proposals, mParticipants, mTasks] =
     await Promise.all([
-      supabase.from("clients").select("id, status, monthly_value, created_at, commercial_responsible, young_responsible"),
-      supabase.from("opportunities").select("id, status, funnel_stage, estimated_value, proposal_value, created_at, loss_reason, commercial_responsible"),
-      supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible"),
-      supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at"),
-      supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)),
-      supabase.from("client_services").select("id, monthly_value, status"),
-      supabase.from("proposals").select("id, value, status, sent_at, created_at"),
-      supabase.from("meeting_participants").select("id, meeting_id, present"),
-      supabase.from("meeting_tasks").select("id, meeting_id, task_id"),
+      supabase.from("clients").select("id, status, monthly_value, created_at, commercial_responsible, young_responsible").limit(3000),
+      supabase.from("opportunities").select("id, status, funnel_stage, estimated_value, proposal_value, created_at, loss_reason, commercial_responsible").limit(3000),
+      supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible").limit(3000),
+      supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at").limit(3000),
+      supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)).limit(1000),
+      supabase.from("client_services").select("id, monthly_value, status").limit(2000),
+      supabase.from("proposals").select("id, value, status, sent_at, created_at").limit(2000),
+      supabase.from("meeting_participants").select("id, meeting_id, present").limit(5000),
+      supabase.from("meeting_tasks").select("id, meeting_id, task_id").limit(5000),
     ]);
 
   return {
