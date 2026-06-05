@@ -205,3 +205,31 @@ export const changeUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Generate a recovery/reset link for an existing user.
+ */
+export const generateRecoveryLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ email: z.string().email() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId: callerId } = context;
+    await assertSuperAdmin(supabase, callerId);
+
+    const redirectTo =
+      import.meta.env.VITE_LOVABLE_APP_URL ??
+      import.meta.env.VITE_SITE_URL ??
+      "https://app.mtxhub.com.br";
+
+    const { data: linkData, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email: data.email,
+      options: {
+        redirectTo: `${redirectTo}/criar-senha`,
+      },
+    });
+
+    if (error) throw error;
+
+    return { ok: true, url: linkData.properties?.action_link };
+  });
+

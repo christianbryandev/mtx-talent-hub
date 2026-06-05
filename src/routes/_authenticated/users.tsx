@@ -54,6 +54,7 @@ import {
   revokeInvite,
 } from "@/lib/invites.functions";
 import { changeUserRole } from "@/lib/admin-users.functions";
+import { generateRecoveryLink } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Usuários — MTX Hub" }] }),
@@ -84,6 +85,7 @@ function UsersPage() {
   const resendInviteFn = useServerFn(resendInvite);
   const revokeInviteFn = useServerFn(revokeInvite);
   const changeRoleFn = useServerFn(changeUserRole);
+  const recoveryLinkFn = useServerFn(generateRecoveryLink);
 
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
@@ -381,19 +383,43 @@ function UsersPage() {
                     {isSuperAdmin && (
                       <TableCell className="text-right">
                         {!isSelf && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() =>
-                              setPendingDelete({
-                                userId: u.id,
-                                fullName: u.full_name ?? u.email ?? "usuário",
-                              })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-primary hover:bg-primary/10 mr-1"
+                              title="Gerar link de redefinição de senha"
+                              onClick={async () => {
+                                try {
+                                  toast.loading("Gerando link...", { id: "link" });
+                                  const { url } = await recoveryLinkFn({ data: { email: u.email } });
+                                  toast.dismiss("link");
+                                  if (url) {
+                                    setLinkDialog({ email: u.email, url });
+                                  } else {
+                                    toast.error("Não foi possível gerar o link");
+                                  }
+                                } catch (err: any) {
+                                  toast.error(err.message || "Erro ao gerar link", { id: "link" });
+                                }
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-key"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() =>
+                                setPendingDelete({
+                                  userId: u.id,
+                                  fullName: u.full_name ?? u.email ?? "usuário",
+                                })
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                       </TableCell>
                     )}
