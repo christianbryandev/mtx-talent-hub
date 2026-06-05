@@ -96,7 +96,7 @@ BEGIN
                 ) ORDER BY i.order_index
               ), '[]'::jsonb)
               FROM public.journey_checklist_items i
-              LEFT JOIN public.user_checklist_progress ui ON ui.item_id = i.id AND ui.user_id = _user_id
+              LEFT JOIN public.user_checklist_progress ui ON ui.checklist_item_id = i.id AND ui.user_id = _user_id
               WHERE i.module_id = jm.id
             )
           ) as m
