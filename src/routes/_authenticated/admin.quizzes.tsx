@@ -389,6 +389,23 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const archiveQuiz = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("quiz_templates")
+        .update({ is_active: false })
+        .eq("id", quiz.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Quiz excluído");
+      qc.invalidateQueries({ queryKey: ["admin-quizzes-list"] });
+      // Remove it from current view by invalidating so it re-selects the first one
+      window.location.reload(); // Simple way to reset state
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const reorderQuestions = useMutation({
     mutationFn: async (newQuestions: Question[]) => {
       for (let i = 0; i < newQuestions.length; i++) {
@@ -457,9 +474,22 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
               </div>
             </div>
           </div>
-          <Button onClick={() => saveQuiz.mutate()} disabled={!dirty || saveQuiz.isPending}>
-            <Save className="h-4 w-4 mr-2" /> Salvar Configurações
-          </Button>
+          <div className="flex items-center justify-between mt-4">
+            <Button onClick={() => saveQuiz.mutate()} disabled={!dirty || saveQuiz.isPending}>
+              <Save className="h-4 w-4 mr-2" /> Salvar Configurações
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if(confirm("Tem certeza que deseja excluir este quiz? Isso irá ocultá-lo da lista.")) {
+                  archiveQuiz.mutate();
+                }
+              }} 
+              disabled={archiveQuiz.isPending}
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Excluir Quiz
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
