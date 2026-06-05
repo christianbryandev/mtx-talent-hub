@@ -455,7 +455,18 @@ function ProgressMini({ youngId, phase }: { youngId: string; phase: string | nul
       const lessonsDone = checklist.length > 0 && checklist.every((c) => c.done);
       const tasksDone = (totalTasks ?? 0) > 0 && (openCount ?? 0) === 0;
       const quizDone = (passed ?? []).length > 0;
-      return Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
+      
+      // Progresso da fase atual (0 a 100%)
+      const currentPhasePct = Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
+      
+      // Cálculo do progresso geral da jornada (considerando 5 fases)
+      const phaseNumber = phase ? parseInt(phase.replace("fase_", "")) : 1;
+      const totalPhases = 5;
+      
+      const baseProgress = ((phaseNumber - 1) / totalPhases) * 100;
+      const currentProgressScaled = currentPhasePct / totalPhases;
+      
+      return Math.round(baseProgress + currentProgressScaled);
     },
   });
   const pct = data ?? 0;
