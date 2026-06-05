@@ -127,7 +127,7 @@ BEGIN
 
   -- For XP and rewards, we can emit an event here if needed, or rely on existing logic.
   IF v_passed THEN
-    PERFORM public.process_xp_event(v_young_id, 'quiz_passed', NULL, 100);
+    PERFORM public.process_xp_event(v_young_id, 'quiz_passed', _quiz_id, 100);
   END IF;
 
   RETURN jsonb_build_object(
