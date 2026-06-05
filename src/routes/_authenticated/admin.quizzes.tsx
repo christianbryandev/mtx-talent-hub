@@ -22,7 +22,13 @@ import {
 } from "@/components/ui/select";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Badge } from "@/components/ui/badge";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { QuizMediaUpload } from "@/components/admin/QuizMediaUpload";
 
 export const Route = createFileRoute("/_authenticated/admin/quizzes")({
@@ -124,9 +130,7 @@ function AdminQuizzesPage() {
           <h1 className="text-3xl font-black text-foreground tracking-tight">CRIADOR DE QUIZ</h1>
           <p className="text-sm text-muted-foreground">Configure as avaliações e monitore o desempenho dos alunos.</p>
         </div>
-        <Button onClick={() => createQuiz.mutate()} disabled={createQuiz.isPending}>
-          <Plus className="h-4 w-4 mr-2" /> Criar Novo Quiz
-        </Button>
+        <CreateQuizDialog onQuizCreated={(id) => setSelectedQuizId(id)} />
       </header>
 
       <Card className="border-border/60">
@@ -151,6 +155,144 @@ function AdminQuizzesPage() {
 
       {selectedQuizId && <QuizManager quizId={selectedQuizId} />}
     </div>
+  );
+}
+
+function CreateQuizDialog({ onQuizCreated }: { onQuizCreated: (id: string) => void }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("Novo Quiz");
+  const [selectedPhase, setSelectedPhase] = useState<string>("");
+  const [selectedModule, setSelectedModule] = useState<string>("none");
+
+  const phasesQuery = useQuery<Phase[]>({
+    queryKey: ["admin-phases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journey_phase_catalog")
+        .select("id,title,order_index")
+        .order("order_index");
+      if (error) throw error;
+      return (data || []) as unknown as Phase[];
+    },
+  });
+
+  const modulesInPhaseQuery = useQuery({
+    queryKey: ["admin-modules-in-phase", selectedPhase],
+    enabled: !!selectedPhase,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journey_modules")
+        .select("id, title, content_type")
+        .eq("phase_id", selectedPhase)
+        .order("order_index");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const createQuiz = useMutation({
+    mutationFn: async () => {
+      if (!selectedPhase) throw new Error("Selecione uma fase.");
+      
+      // 1. Criar o Quiz
+      const { data: quizData, error: quizError } = await supabase.from("quiz_templates").insert({
+        title,
+        passing_score: 80,
+      }).select().single();
+      if (quizError) throw quizError;
+      
+      const quizId = (quizData as any).id;
+
+      // 2. Atribuir ao módulo ou criar módulo solto
+      if (selectedModule && selectedModule !== "none") {
+        const { error } = await supabase.from("journey_modules").update({ quiz_id: quizId }).eq("id", selectedModule);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("journey_modules").insert({
+          phase_id: selectedPhase,
+          title,
+          content_type: "quiz",
+          content_body: quizId,
+          order_index: 999,
+        });
+        if (error) throw error;
+      }
+      return quizId;
+    },
+    onSuccess: (quizId) => {
+      toast.success("Quiz criado e atribuído!");
+      qc.invalidateQueries({ queryKey: ["admin-quizzes-list"] });
+      onQuizCreated(quizId);
+      setOpen(false);
+      // reset state
+      setTitle("Novo Quiz");
+      setSelectedPhase("");
+      setSelectedModule("none");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" /> Criar Novo Quiz
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Criar Novo Quiz</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-1.5">
+            <Label>Título do Quiz</Label>
+            <Input 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              placeholder="Ex: Avaliação Módulo 1"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Selecione a Fase</Label>
+            <Select value={selectedPhase} onValueChange={(val) => { setSelectedPhase(val); setSelectedModule("none"); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha uma fase" />
+              </SelectTrigger>
+              <SelectContent>
+                {phasesQuery.data?.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Onde o quiz será inserido?</Label>
+            <Select value={selectedModule} onValueChange={setSelectedModule} disabled={!selectedPhase || modulesInPhaseQuery.isLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um módulo ou crie solto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Como um novo módulo separado (Padrão)</SelectItem>
+                {modulesInPhaseQuery.data?.filter(m => m.content_type !== 'quiz').map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    Embutir no vídeo/texto: {m.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={() => createQuiz.mutate()} disabled={createQuiz.isPending || !selectedPhase || !title}>
+            {createQuiz.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Criar Quiz
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -320,8 +462,6 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
           </Button>
         </CardContent>
       </Card>
-
-      <QuizAssignment quiz={quiz} />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -633,168 +773,6 @@ function QuizHistory({ quizId }: { quizId: string }) {
   );
 }
 
-function QuizAssignment({ quiz }: { quiz: Quiz }) {
-  const qc = useQueryClient();
-  const [selectedPhase, setSelectedPhase] = useState<string>("");
-  const [selectedModule, setSelectedModule] = useState<string>("none");
-
-  const phasesQuery = useQuery<Phase[]>({
-    queryKey: ["admin-phases"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journey_phase_catalog")
-        .select("id,title,order_index")
-        .order("order_index");
-      if (error) throw error;
-      return (data || []) as unknown as Phase[];
-    },
-  });
-
-  const modulesInPhaseQuery = useQuery({
-    queryKey: ["admin-modules-in-phase", selectedPhase],
-    enabled: !!selectedPhase,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journey_modules")
-        .select("id, title, content_type")
-        .eq("phase_id", selectedPhase)
-        .order("order_index");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Now we need to find both:
-  // 1. Modules that ARE this quiz (content_type='quiz', content_body=quiz.id)
-  // 2. Modules that HAVE this quiz (quiz_id = quiz.id)
-  const moduleQuery = useQuery({
-    queryKey: ["admin-quiz-module", quiz.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journey_modules")
-        .select("id, phase_id, title, content_type, journey_phase_catalog(title)")
-        .or(`content_body.eq.${quiz.id},quiz_id.eq.${quiz.id}`);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const assignQuiz = useMutation({
-    mutationFn: async () => {
-      if (!selectedPhase) throw new Error("Selecione uma fase.");
-      
-      if (selectedModule && selectedModule !== "none") {
-        // Update the module to attach the quiz
-        const { error } = await supabase.from("journey_modules").update({ quiz_id: quiz.id }).eq("id", selectedModule);
-        if (error) throw error;
-      } else {
-        // Create a standalone quiz module
-        const { error } = await supabase.from("journey_modules").insert({
-          phase_id: selectedPhase,
-          title: quiz.title,
-          content_type: "quiz",
-          content_body: quiz.id,
-          order_index: 999,
-        });
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Quiz atribuído com sucesso!");
-      qc.invalidateQueries({ queryKey: ["admin-quiz-module", quiz.id] });
-      setSelectedPhase("");
-      setSelectedModule("none");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const unassignQuiz = useMutation({
-    mutationFn: async ({ moduleId, isAttached }: { moduleId: string, isAttached: boolean }) => {
-      if (!confirm("Remover este quiz desta fase/módulo?")) return;
-      if (isAttached) {
-        // Remove from module
-        const { error } = await supabase.from("journey_modules").update({ quiz_id: null }).eq("id", moduleId);
-        if (error) throw error;
-      } else {
-        // Delete standalone quiz module
-        const { error } = await supabase.from("journey_modules").delete().eq("id", moduleId);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Quiz desatribuído.");
-      qc.invalidateQueries({ queryKey: ["admin-quiz-module", quiz.id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg">Atribuir à Fase / Módulo</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {moduleQuery.data && moduleQuery.data.length > 0 ? (
-          <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">Este quiz está atualmente nas seguintes fases/módulos:</Label>
-            {moduleQuery.data.map((m) => {
-              const isAttached = m.content_type !== "quiz";
-              return (
-                <div key={m.id} className="flex items-center justify-between bg-card p-3 rounded-md border">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-sm">
-                      Fase: {(m.journey_phase_catalog as any)?.title || "Fase Desconhecida"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {isAttached ? `Embutido no Módulo: ${m.title}` : "Como um módulo separado da trilha"}
-                    </span>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => unassignQuiz.mutate({ moduleId: m.id, isAttached })}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Este quiz ainda não foi atribuído a nenhuma fase.</p>
-        )}
-
-        <div className="flex flex-col gap-3 mt-4 pt-4 border-t">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Select value={selectedPhase} onValueChange={(val) => { setSelectedPhase(val); setSelectedModule("none"); }}>
-              <SelectTrigger className="bg-card">
-                <SelectValue placeholder="Selecione uma fase" />
-              </SelectTrigger>
-              <SelectContent>
-                {phasesQuery.data?.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedModule} onValueChange={setSelectedModule} disabled={!selectedPhase || modulesInPhaseQuery.isLoading}>
-              <SelectTrigger className="bg-card">
-                <SelectValue placeholder="Onde o quiz será inserido?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Como um novo módulo separado (Padrão)</SelectItem>
-                {modulesInPhaseQuery.data?.filter(m => m.content_type !== 'quiz').map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    Embutir em: {m.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button onClick={() => assignQuiz.mutate()} disabled={assignQuiz.isPending || !selectedPhase}>
-            Atribuir Quiz
-          </Button>
-        </div>
-      </CardContent>
     </Card>
   );
 }
