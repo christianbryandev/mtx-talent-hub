@@ -44,6 +44,33 @@ import { ComercialDashboard } from "@/components/dashboard/ComercialDashboard";
 import { JovemAprendizDashboard } from "@/components/dashboard/JovemAprendizDashboard";
 import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import "@/components/dashboard/pulse-theme.css";
+
+const SvgDefs = () => (
+  <svg width="0" height="0" style={{ position: 'absolute' }}>
+    <defs>
+      <linearGradient id="grad-brand" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F58529" />
+        <stop offset="25%" stopColor="#DD2A7B" />
+        <stop offset="50%" stopColor="#C7288B" />
+        <stop offset="75%" stopColor="#8131AF" />
+        <stop offset="100%" stopColor="#515BD4" />
+      </linearGradient>
+      <linearGradient id="grad-warm" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F58529" />
+        <stop offset="100%" stopColor="#DD2A7B" />
+      </linearGradient>
+      <linearGradient id="grad-mid" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#DD2A7B" />
+        <stop offset="100%" stopColor="#8131AF" />
+      </linearGradient>
+      <linearGradient id="grad-cool" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#8131AF" />
+        <stop offset="100%" stopColor="#515BD4" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — MTX Hub" }] }),
@@ -58,7 +85,8 @@ function DashboardPage() {
   const defaultTab = isAdmin ? "admin" : isComercial ? "comercial" : isJovemAprendiz ? "jovem" : isCliente ? "cliente" : "";
 
   return (
-    <div className="w-full">
+    <div className="pulse-dashboard-theme w-full">
+      <SvgDefs />
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="mb-6">
           {isAdmin && <TabsTrigger value="admin">Administração</TabsTrigger>}
@@ -252,7 +280,7 @@ function AdminDashboardContent() {
 
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="text-base">Inscrições por status</CardTitle>
           </CardHeader>
@@ -274,7 +302,7 @@ function AdminDashboardContent() {
                     dataKey="value"
                   >
                     {stats.appStatusData.map((entry, index) => {
-                      const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'];
+                      const COLORS = ["url(#grad-brand)", "url(#grad-cool)", "url(#grad-warm)", "url(#grad-mid)"];
                       return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
                     })}
                   </Pie>
@@ -285,7 +313,7 @@ function AdminDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="text-base">Jovens por fase da trilha</CardTitle>
           </CardHeader>
@@ -308,7 +336,7 @@ function AdminDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="text-base">Evolução de clientes (6 meses)</CardTitle>
           </CardHeader>
@@ -332,7 +360,7 @@ function AdminDashboardContent() {
 
       {/* Listas */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity className="h-4 w-4 text-primary" /> Atividade recente
@@ -359,7 +387,7 @@ function AdminDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Calendar className="h-4 w-4 text-primary" /> Próximas reuniões
@@ -394,7 +422,7 @@ function AdminDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/70">
+        <Card className="pulse-card border-border/60 bg-card/70">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Clock className="h-4 w-4 text-primary" /> Tarefas com prazo

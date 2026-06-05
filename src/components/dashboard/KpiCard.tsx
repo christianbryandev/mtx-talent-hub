@@ -20,7 +20,7 @@ const ACCENTS: Record<NonNullable<KpiCardProps["accent"]>, string> = {
 
 export function KpiCard({ label, value, hint, icon, trend, accent = "primary" }: KpiCardProps) {
   return (
-    <Card className="group relative overflow-hidden border-white/5 bg-card/70 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:shadow-mtx-glow">
+    <Card className="pulse-card group relative overflow-hidden border-white/5 bg-card/70 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/10 hover:shadow-mtx-glow">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-60"
         style={{ background: "var(--gradient-mtx)" }}
