@@ -46,32 +46,6 @@ import { TodayMeetingBanner } from "@/components/dashboard/TodayMeetingBanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import "@/components/dashboard/pulse-theme.css";
 
-const SvgDefs = () => (
-  <svg width="0" height="0" style={{ position: 'absolute' }}>
-    <defs>
-      <linearGradient id="grad-brand" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#F58529" />
-        <stop offset="25%" stopColor="#DD2A7B" />
-        <stop offset="50%" stopColor="#C7288B" />
-        <stop offset="75%" stopColor="#8131AF" />
-        <stop offset="100%" stopColor="#515BD4" />
-      </linearGradient>
-      <linearGradient id="grad-warm" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#F58529" />
-        <stop offset="100%" stopColor="#DD2A7B" />
-      </linearGradient>
-      <linearGradient id="grad-mid" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#DD2A7B" />
-        <stop offset="100%" stopColor="#8131AF" />
-      </linearGradient>
-      <linearGradient id="grad-cool" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#8131AF" />
-        <stop offset="100%" stopColor="#515BD4" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — MTX Hub" }] }),
   component: DashboardPage,
@@ -86,7 +60,6 @@ function DashboardPage() {
 
   return (
     <div className="pulse-dashboard-theme w-full">
-      <SvgDefs />
       <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="mb-6">
           {isAdmin && <TabsTrigger value="admin">Administração</TabsTrigger>}
@@ -324,7 +297,7 @@ function AdminDashboardContent() {
               <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Sem dados ainda</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.trailData || []}>
+                  <BarChart data={stats?.trailData || []} maxBarSize={60} />
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                     <XAxis dataKey="fase" stroke="#A1A1AA" fontSize={11} />
                     <YAxis stroke="#A1A1AA" fontSize={11} />

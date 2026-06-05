@@ -8,6 +8,8 @@ import { AppTopbar } from "@/components/layout/AppTopbar";
 import { GlobalChat } from "@/components/layout/GlobalChat";
 import { IncompleteProfileBanner } from "@/components/layout/IncompleteProfileBanner";
 
+import { PulseSvgDefs } from "@/components/dashboard/PulseSvgDefs";
+
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
@@ -38,6 +40,7 @@ function AuthenticatedLayout() {
 
   return (
     <SidebarProvider>
+      <PulseSvgDefs />
       <div className="mtx-ambient flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex flex-1 flex-col">

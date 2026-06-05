@@ -178,7 +178,7 @@ function IndicadoresPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-primary" / maxBarSize={60} />
             Indicadores
           </h1>
           <p className="text-sm text-muted-foreground">Painel executivo do MTX Hub — visão de 5 minutos.</p>
@@ -280,14 +280,14 @@ function IndicadoresPage() {
               </div>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={funnel}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <BarChart data={funnel} maxBarSize={60} />
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} / fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="qtd" fill="hsl(var(--primary))" name="Qtd" />
-                    <Bar dataKey="valor" fill="hsl(var(--info))" name="Valor R$" />
+                    <Bar dataKey="qtd" fill="hsl(var(--primary))" name="Qtd" / maxBarSize={60} />
+                    <Bar dataKey="valor" fill="hsl(var(--info))" name="Valor R$" / maxBarSize={60} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -305,7 +305,7 @@ function IndicadoresPage() {
             <CardContent className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={evolution}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} / fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                   <XAxis dataKey="month" />
                   <YAxis yAxisId="left" />
                   <YAxis yAxisId="right" orientation="right" />
@@ -355,7 +355,7 @@ function IndicadoresPage() {
             <KpiHero label="Concluídas (7d)" value={String(operacao.tasksDoneWeek)} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" />
             <KpiHero label="Atrasadas" value={String(operacao.tasksLate)} icon={<Clock className="h-4 w-4" />} tone="warning" />
             <KpiHero label="No prazo" value={fmtPct(operacao.onTimeRate)} icon={<Target className="h-4 w-4" />} tone="info" />
-            <KpiHero label="Projetos ativos" value={String(operacao.projetosAndamento)} icon={<BarChart3 className="h-4 w-4" />} />
+            <KpiHero label="Projetos ativos" value={String(operacao.projetosAndamento)} icon={<BarChart3 className="h-4 w-4" / maxBarSize={60} />} />
             <KpiHero label="Projetos em risco" value={String(operacao.projetosRisco)} icon={<AlertTriangle className="h-4 w-4" />} tone="warning" />
           </div>
         </TabsContent>

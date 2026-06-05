@@ -163,13 +163,13 @@ function PhaseDistributionCard() {
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.map((d) => ({
+                data={data.map((d) = maxBarSize={60} /> ({
                   phase_name: d.phase_name,
                   total_users: d.total_users,
                 }))}
                 margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
               >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" / fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                 <XAxis
                   dataKey="phase_name"
                   tick={{ fontSize: 11 }}
@@ -191,7 +191,7 @@ function PhaseDistributionCard() {
                   dataKey="total_users"
                   fill="hsl(var(--primary))"
                   radius={[6, 6, 0, 0]}
-                />
+                / maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -226,8 +226,8 @@ function ConversionCard() {
                   { label: "Concluíram", value: data.total_completed },
                 ]}
                 margin={{ top: 8, right: 16, left: 16, bottom: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+               maxBarSize={60} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" / fill="transparent" verticalFill={["transparent", "transparent"]} horizontalFill={["transparent", "transparent"]} />
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis
                   type="category"
@@ -247,7 +247,7 @@ function ConversionCard() {
                   dataKey="value"
                   fill="hsl(var(--primary))"
                   radius={[0, 6, 6, 0]}
-                />
+                / maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </div>
