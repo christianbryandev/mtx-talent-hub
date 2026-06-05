@@ -9,7 +9,6 @@ import {
   ListChecks,
   CalendarDays,
   BarChart3,
-  Shield,
   Settings as SettingsIcon,
   Route as RouteIcon,
   LogOut,
@@ -22,6 +21,7 @@ import {
   Mail,
   ClipboardList,
   Film,
+  ChevronRight,
 } from "lucide-react";
 
 import { useJourney } from "@/hooks/useJourney";
@@ -38,8 +38,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,24 +53,73 @@ import { ROLE_LABELS } from "@/types";
 
 import type { AppRole } from "@/types";
 
-type MainItem = {
+type MenuItem = {
   title: string;
   url: string;
-  icon: typeof LayoutDashboard;
-  roles: AppRole[]; // papéis que podem ver
+  icon: any;
+  roles: AppRole[];
 };
 
-const mainItems: MainItem[] = [
+type MenuGroup = {
+  title: string;
+  icon: any;
+  items: MenuItem[];
+};
+
+type SidebarElement = MenuItem | MenuGroup;
+
+const operationElements: SidebarElement[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
-  { title: "Jovens", url: "/jovens", icon: Users, roles: ["super_admin", "admin"] },
-  { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin", "comercial"] },
-  { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial"] },
-  { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin"] },
-  { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
+  {
+    title: "Relacionamento",
+    icon: Users,
+    items: [
+      { title: "Jovens", url: "/jovens", icon: Users, roles: ["super_admin", "admin"] },
+      { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin", "comercial"] },
+      { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial"] },
+    ]
+  },
+  {
+    title: "Fluxo de Trabalho",
+    icon: Briefcase,
+    items: [
+      { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin"] },
+      { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
+      { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
+    ]
+  },
   { title: "Minha Jornada", url: "/jornada", icon: RouteIcon, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
-  { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3, roles: ["super_admin", "admin", "comercial"] },
-  
+];
+
+const adminGroups: MenuGroup[] = [
+  {
+    title: "Inteligência",
+    icon: BarChart2,
+    items: [
+      { title: "Analytics Jornada", url: "/admin/journey-analytics", icon: BarChart2, roles: ["super_admin"] },
+      { title: "Monitor da Jornada", url: "/admin/journey-monitor", icon: Activity, roles: ["super_admin"] },
+    ]
+  },
+  {
+    title: "Conteúdo",
+    icon: GraduationCap,
+    items: [
+      { title: "Catálogo Jornada", url: "/admin/journey-catalog", icon: GraduationCap, roles: ["super_admin"] },
+      { title: "Mídia da Jornada", url: "/admin/journey-media", icon: Film, roles: ["super_admin"] },
+      { title: "Quizzes", url: "/admin/quizzes", icon: ClipboardList, roles: ["super_admin"] },
+    ]
+  },
+  {
+    title: "Sistema",
+    icon: SettingsIcon,
+    items: [
+      { title: "Usuários", url: "/users", icon: Users, roles: ["super_admin"] },
+      { title: "Painel de Notificações", url: "/painel-notificacoes", icon: Bell, roles: ["super_admin"] },
+      { title: "Configurações Gerais", url: "/settings", icon: SettingsIcon, roles: ["super_admin"] },
+      { title: "Configurações E-mail", url: "/configuracoes", icon: Mail, roles: ["super_admin"] },
+    ]
+  }
 ];
 
 export function AppSidebar() {
@@ -110,6 +163,90 @@ export function AppSidebar() {
     .slice(0, 2)
     .toUpperCase();
 
+  const renderElement = (el: SidebarElement) => {
+    if ("url" in el) {
+      // É um item solto (MenuItem)
+      const item = el as MenuItem;
+      const canView = (isSuperAdmin && item.roles.includes("super_admin")) ||
+                      (isAdmin && item.roles.includes("admin")) ||
+                      (isComercial && item.roles.includes("comercial")) ||
+                      (isJovemAprendiz && item.roles.includes("jovem_aprendiz")) ||
+                      item.roles.some((r) => roles.includes(r));
+                      
+      if (!canView) return null;
+
+      const showBadge = item.url === "/jovens" && isAdmin && pendingAppsCount > 0;
+      return (
+        <SidebarMenuItem key={item.url}>
+          <SidebarMenuButton
+            asChild
+            isActive={isActive(item.url)}
+            tooltip={item.title}
+          >
+            <Link to={item.url} className="flex items-center gap-2">
+              <item.icon className="h-4 w-4" />
+              <span className="flex-1">{item.title}</span>
+              {showBadge && !collapsed && (
+                <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow">
+                  {pendingAppsCount}
+                </span>
+              )}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    } else {
+      // É um grupo (MenuGroup)
+      const group = el as MenuGroup;
+      const visibleItems = group.items.filter(item => 
+        (isSuperAdmin && item.roles.includes("super_admin")) ||
+        (isAdmin && item.roles.includes("admin")) ||
+        (isComercial && item.roles.includes("comercial")) ||
+        (isJovemAprendiz && item.roles.includes("jovem_aprendiz")) ||
+        item.roles.some((r) => roles.includes(r))
+      );
+
+      if (visibleItems.length === 0) return null;
+
+      const isGroupActive = visibleItems.some(item => isActive(item.url));
+
+      return (
+        <Collapsible key={group.title} defaultOpen={isGroupActive} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip={group.title}>
+                <group.icon className="h-4 w-4" />
+                <span>{group.title}</span>
+                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {visibleItems.map(item => {
+                  const showBadge = item.url === "/jovens" && isAdmin && pendingAppsCount > 0;
+                  return (
+                    <SidebarMenuSubItem key={item.url}>
+                      <SidebarMenuSubButton asChild isActive={isActive(item.url)}>
+                        <Link to={item.url} className="flex items-center gap-2">
+                          <span>{item.title}</span>
+                          {showBadge && !collapsed && (
+                            <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow">
+                              {pendingAppsCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  );
+                })}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      );
+    }
+  };
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border">
@@ -134,36 +271,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems
-                .filter((item) => {
-                  if (isSuperAdmin && item.roles.includes("super_admin")) return true;
-                  if (isAdmin && item.roles.includes("admin")) return true;
-                  if (isComercial && item.roles.includes("comercial")) return true;
-                  if (isJovemAprendiz && item.roles.includes("jovem_aprendiz")) return true;
-                  return item.roles.some((r) => roles.includes(r));
-                })
-                .map((item) => {
-                const showBadge = item.url === "/jovens" && isAdmin && pendingAppsCount > 0;
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={item.title}
-                    >
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span className="flex-1">{item.title}</span>
-                        {showBadge && !collapsed && (
-                          <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow">
-                            {pendingAppsCount}
-                          </span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {operationElements.map(renderElement)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -201,126 +309,12 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isSuperAdmin) && (
+        {isSuperAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/users")}
-                    tooltip="Usuários e Permissões"
-                  >
-                    <Link to="/users" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>Usuários</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/journey-analytics")}
-                    tooltip="Analytics Jornada"
-                  >
-                    <Link to="/admin/journey-analytics" className="flex items-center gap-2">
-                      <BarChart2 className="h-4 w-4" />
-                      <span>Analytics Jornada</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/journey-monitor")}
-                    tooltip="Monitor da Jornada"
-                  >
-                    <Link to="/admin/journey-monitor" className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      <span>Monitor da Jornada</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/journey-catalog")}
-                    tooltip="Catálogo Jornada (Fases e Cards)"
-                  >
-                    <Link to="/admin/journey-catalog" className="flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      <span>Catálogo Jornada</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/journey-media")}
-                    tooltip="Vídeos das Fases"
-                  >
-                    <Link to="/admin/journey-media" className="flex items-center gap-2">
-                      <Film className="h-4 w-4" />
-                      <span>Mídia da Jornada</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/admin/quizzes")}
-                    tooltip="Quizzes da Jornada"
-                  >
-                    <Link to="/admin/quizzes" className="flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4" />
-                      <span>Quizzes</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/painel-notificacoes")}
-                    tooltip="Painel de Notificações"
-                  >
-                    <Link to="/painel-notificacoes" className="flex items-center gap-2">
-                      <Bell className="h-4 w-4" />
-                      <span>Painel de Notificações</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {isSuperAdmin && (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive("/settings")}
-                        tooltip="Configurações"
-                      >
-                        <Link to="/settings" className="flex items-center gap-2">
-                          <SettingsIcon className="h-4 w-4" />
-                          <span>Configurações</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive("/configuracoes")}
-                        tooltip="Configurações de E-mail"
-                      >
-                        <Link to="/configuracoes" className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <span>Configurações E-mail</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                )}
+                {adminGroups.map(renderElement)}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
