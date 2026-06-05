@@ -444,15 +444,16 @@ function ProgressMini({ youngId, phase }: { youngId: string; phase: string | nul
     queryKey: ["young-progress-mini", youngId, phase],
     enabled: !!phase,
     queryFn: async () => {
-      const [{ data: row }, { count: openCount }, { data: passed }] = await Promise.all([
+      const [{ data: row }, { count: totalTasks }, { count: openCount }, { data: passed }] = await Promise.all([
         supabase.from("journey_phases").select("checklist").eq("young_id", youngId).eq("phase", phase!).maybeSingle(),
+        supabase.from("tasks").select("id", { count: "exact", head: true }).eq("young_responsible", youngId),
         supabase.from("tasks").select("id", { count: "exact", head: true })
           .eq("young_responsible", youngId).not("status", "in", "(concluida,cancelada)"),
         supabase.from("young_quiz_attempts").select("id").eq("young_id", youngId).eq("phase", phase!).eq("passed", true).limit(1),
       ]);
       const checklist = ((row?.checklist ?? []) as Array<{ done?: boolean }>);
       const lessonsDone = checklist.length > 0 && checklist.every((c) => c.done);
-      const tasksDone = (openCount ?? 0) === 0;
+      const tasksDone = (totalTasks ?? 0) > 0 && (openCount ?? 0) === 0;
       const quizDone = (passed ?? []).length > 0;
       return Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
     },

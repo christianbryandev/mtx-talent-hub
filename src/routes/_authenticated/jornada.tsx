@@ -96,6 +96,16 @@ function JourneyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedPhaseId, activeQuiz]);
 
+  // Atualiza a última atividade do jovem ao acessar a jornada
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    supabase
+      .from("young_people")
+      .update({ last_progress_at: new Date().toISOString() })
+      .eq("profile_id", user.id)
+      .then();
+  }, [user, isAdmin]);
+
   const completeModule = async (moduleId: string) => {
     if (!user) return;
     try {
