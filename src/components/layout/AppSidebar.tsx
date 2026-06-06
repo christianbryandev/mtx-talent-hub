@@ -182,17 +182,17 @@ export function AppSidebar() {
             asChild
             isActive={isActive(item.url)}
             tooltip={item.title}
-            className={item.url === "/dashboard" && isActive(item.url) ? "dashboard-active-gradient-border" : undefined}
+            className={item.url === "/dashboard" ? "dashboard-active-gradient-border" : undefined}
           >
             <Link to={item.url} className="flex items-center gap-2 relative">
               <item.icon className="h-4 w-4 relative z-10" />
               <span className="relative z-10">{item.title}</span>
               {showBadge && !collapsed && (
-                <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow">
+                <span className="ml-auto rounded-full bg-gradient-mtx px-1.5 py-0.5 text-xs font-bold text-white shadow-mtx-glow relative z-10">
                   {pendingAppsCount}
                 </span>
               )}
-              {item.url === "/dashboard" && isActive(item.url) && (
+              {item.url === "/dashboard" && (
                 <div className="spinning-border-container" />
               )}
             </Link>
