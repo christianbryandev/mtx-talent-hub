@@ -97,6 +97,11 @@ function RegistrationPage() {
 
       if (signupError) throw signupError;
 
+      // Force update the profile name to guarantee it's not saved as an email
+      if (data.user) {
+        await supabase.from("profiles").update({ full_name: values.fullName }).eq("id", data.user.id);
+      }
+
       // 2. Mark invite as used (via SECURITY DEFINER function)
       const { error: updateError } = await supabase.rpc("mark_invite_used", {
         _token: invite.token,

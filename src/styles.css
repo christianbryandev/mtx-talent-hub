@@ -424,15 +424,20 @@
 .liquid-glass-nav[data-state="active"],
 .liquid-glass-nav[data-active="true"] {
   position: relative;
-  background: rgba(255, 255, 255, 0.08);
+  background-color: transparent;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)),
+    linear-gradient(90deg, #F58529, #DD2A7B, #515BD4);
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  border: 1px solid transparent;
   backdrop-filter: blur(20px) saturate(200%);
   -webkit-backdrop-filter: blur(20px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.3),
     inset 0 -1px 2px rgba(0, 0, 0, 0.2),
-    0 0 10px rgba(192, 38, 211, 0.2);
+    0 0 15px rgba(221, 42, 123, 0.3); /* Subtle pink/purple glow */
   color: #fff !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   transform: translateY(-1px) translateZ(0);
