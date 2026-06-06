@@ -189,7 +189,7 @@ function PhaseDistributionCard() {
                 itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                 <Bar
                   dataKey="total_users"
-                  fill="hsl(var(--primary))"
+                  fill="url(#grad-brand)"
                   radius={[6, 6, 0, 0]}
                 maxBarSize={60} />
               </BarChart>
@@ -244,7 +244,7 @@ function ConversionCard() {
                 itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                 <Bar
                   dataKey="value"
-                  fill="hsl(var(--primary))"
+                  fill="url(#grad-brand)"
                   radius={[0, 6, 6, 0]}
                 maxBarSize={60} />
               </BarChart>

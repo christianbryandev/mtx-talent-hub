@@ -286,8 +286,8 @@ function IndicadoresPage() {
                     <YAxis />
                     <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                     <Legend />
-                    <Bar dataKey="qtd" fill="hsl(var(--primary))" name="Qtd" maxBarSize={60} />
-                    <Bar dataKey="valor" fill="hsl(var(--info))" name="Valor R$" maxBarSize={60} />
+                    <Bar dataKey="qtd" fill="url(#grad-brand)" name="Qtd" maxBarSize={60} />
+                    <Bar dataKey="valor" fill="url(#grad-cool)" name="Valor R$" maxBarSize={60} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -311,9 +311,9 @@ function IndicadoresPage() {
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip contentStyle={{ background: "#11111A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "white" }} itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="clientes" stroke="hsl(var(--primary))" name="Clientes" />
-                  <Line yAxisId="left" type="monotone" dataKey="oportunidades" stroke="hsl(var(--info))" name="Oportunidades" />
-                  <Line yAxisId="right" type="monotone" dataKey="receita" stroke="hsl(var(--success))" name="Receita (R$)" />
+                  <Line yAxisId="left" type="monotone" dataKey="clientes" stroke="url(#grad-brand)" name="Clientes" />
+                  <Line yAxisId="left" type="monotone" dataKey="oportunidades" stroke="url(#grad-cool)" name="Oportunidades" />
+                  <Line yAxisId="right" type="monotone" dataKey="receita" stroke="url(#grad-warm)" name="Receita (R$)" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
