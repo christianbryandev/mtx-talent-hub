@@ -82,7 +82,10 @@ serve(async (req) => {
     let { data, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: { redirectTo },
+      options: { 
+        redirectTo,
+        data: { full_name: nome }
+      },
     });
 
     if (inviteError && /already.*registered|already exists/i.test(inviteError.message)) {
@@ -90,7 +93,10 @@ serve(async (req) => {
       const retry = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo },
+        options: { 
+          redirectTo,
+          data: { full_name: nome }
+        },
       });
       if (retry.error) throw retry.error;
       inviteData = retry.data;
