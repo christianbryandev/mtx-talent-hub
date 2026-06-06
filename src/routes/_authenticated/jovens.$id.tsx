@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, MessageSquarePlus, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { YoungProfileEditDialog } from "@/components/jovens/YoungProfileEditDialog";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +57,7 @@ function JovemDetailPage() {
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<YoungStatus | "">("");
   const [newPhase, setNewPhase] = useState<TrailPhase | "">("");
   const [note, setNote] = useState("");
@@ -271,6 +273,9 @@ function JovemDetailPage() {
         </div>
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar Dados
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setStatusModalOpen(true)}>
               <Pencil className="mr-1.5 h-3.5 w-3.5" /> Mudar status
             </Button>
@@ -654,6 +659,12 @@ function JovemDetailPage() {
         variant="destructive"
         loading={deleteMutation.isPending}
         onConfirm={() => deleteMutation.mutate()}
+      />
+
+      <YoungProfileEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        young={y}
       />
     </div>
   );
