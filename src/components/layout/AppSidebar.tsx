@@ -182,6 +182,7 @@ export function AppSidebar() {
             asChild
             isActive={isActive(item.url)}
             tooltip={item.title}
+            className={item.url === "/dashboard" ? "dashboard-active-gradient-border" : undefined}
           >
             <Link to={item.url} className="flex items-center gap-2">
               <item.icon className="h-4 w-4" />
