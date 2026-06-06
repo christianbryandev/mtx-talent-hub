@@ -20,10 +20,15 @@ export const getEmailHtml = ({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <style>
+    :root {
+      color-scheme: light;
+    }
     body { 
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      background-color: #ffffff; 
+      background-color: #f8f9fa !important; 
       color: #cccccc; 
       margin: 0; 
       padding: 0; 
@@ -32,7 +37,7 @@ export const getEmailHtml = ({
     .wrapper {
       width: 100%;
       table-layout: fixed;
-      background-color: #ffffff;
+      background-color: #f8f9fa !important;
       padding-bottom: 40px;
     }
     .container { 
