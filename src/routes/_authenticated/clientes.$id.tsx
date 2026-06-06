@@ -12,6 +12,7 @@ import {
   Plus,
   Trash2,
   Upload,
+  Mail,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteClientCascade } from "@/lib/cascade-delete";
@@ -74,6 +75,26 @@ function ClientDetailPage() {
       navigate({ to: "/clientes" });
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!client?.email) throw new Error("O cliente não possui um e-mail cadastrado. Atualize os dados da empresa primeiro.");
+
+      const res = await supabase.functions.invoke("invite-client", {
+        body: { 
+          email: client.email, 
+          nome: client.contact_name || client.trade_name || client.company_name 
+        },
+      });
+
+      if (res.error) throw new Error(res.error.message || "Erro ao comunicar com o servidor");
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      toast.success("E-mail de boas-vindas com o acesso foi enviado com sucesso!");
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao gerar acesso"),
   });
 
   const { data: client, isLoading } = useQuery({
@@ -156,12 +177,12 @@ function ClientDetailPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/clientes" })}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">
+        <div className="flex-1 min-w-[200px]">
+          <h1 className="text-2xl font-bold truncate">
             {client.trade_name || client.company_name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -176,16 +197,31 @@ function ClientDetailPage() {
             )}
           </div>
         </div>
-        {isSuperAdmin && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive border-destructive/40 hover:bg-destructive/10"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Excluir
-          </Button>
-        )}
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {canEdit && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => inviteMutation.mutate()}
+              disabled={inviteMutation.isPending || !client.email}
+              title={!client.email ? "Cadastre um e-mail nos Dados da Empresa para gerar acesso" : "Enviar e-mail de acesso"}
+            >
+              {inviteMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+              Gerar Acesso
+            </Button>
+          )}
+          {isSuperAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Excluir
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
