@@ -136,7 +136,7 @@ function TarefasKanbanPage() {
     queryKey: ["services-min"],
     queryFn: async () => {
       const { data } = await supabase.from("services_public").select("id, name").order("name");
-      return data ?? [];
+      return (data ?? []) as { id: string; name: string }[];
     },
   });
   const { data: youngs = [] } = useQuery({
