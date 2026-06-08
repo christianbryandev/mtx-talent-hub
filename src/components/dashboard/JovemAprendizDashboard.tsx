@@ -280,7 +280,7 @@ export function JovemAprendizDashboard() {
         </Card>
       </div>
 
-      {data.clients?.length > 0 && (
+      {(data.clients?.length ?? 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Clientes sob minha responsabilidade</CardTitle>
