@@ -74,7 +74,7 @@ function JourneyPage() {
 
   useEffect(() => {
     if (selectedModule) {
-      supabase.from('journey_modules').select('links').eq('id', selectedModule.id).single()
+      Promise.resolve(supabase.from('journey_modules').select('links').eq('id', selectedModule.id).single())
         .then(({ data }) => {
           if (data && data.links) {
             setModuleLinks(data.links as any[]);

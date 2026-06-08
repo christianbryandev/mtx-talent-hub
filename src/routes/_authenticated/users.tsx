@@ -392,10 +392,10 @@ function UsersPage() {
                               onClick={async () => {
                                 try {
                                   toast.loading("Gerando link...", { id: "link" });
-                                  const { url } = await recoveryLinkFn({ data: { email: u.email } });
+                                  const { url } = await recoveryLinkFn({ data: { email: u.email! } });
                                   toast.dismiss("link");
                                   if (url) {
-                                    setLinkDialog({ email: u.email, url });
+                                    setLinkDialog({ email: u.email!, url });
                                   } else {
                                     toast.error("Não foi possível gerar o link");
                                   }

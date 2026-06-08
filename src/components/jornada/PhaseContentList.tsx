@@ -87,7 +87,7 @@ export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentLi
               onClick={() => onSelectItem(module)}
               duration={module.duration_minutes ? `${module.duration_minutes}min` : undefined}
               questionsCount={module.content_type === "quiz" ? (module.questions_count || 5) : undefined}
-              thumbnailUrl={module.thumbnail_url}
+              thumbnailUrl={module.thumbnail_url ?? undefined}
             />
           ))
         )}
