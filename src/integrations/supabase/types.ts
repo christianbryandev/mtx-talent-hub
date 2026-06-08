@@ -834,6 +834,7 @@ export type Database = {
       }
       journey_modules: {
         Row: {
+          assigned_users: string[] | null
           content_body: string | null
           content_type: string | null
           created_at: string
@@ -843,11 +844,15 @@ export type Database = {
           links: Json
           order_index: number
           phase_id: string
+          quiz_id: string | null
+          supplementary_text: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string
+          visibility_type: string | null
         }
         Insert: {
+          assigned_users?: string[] | null
           content_body?: string | null
           content_type?: string | null
           created_at?: string
@@ -857,11 +862,15 @@ export type Database = {
           links?: Json
           order_index?: number
           phase_id: string
+          quiz_id?: string | null
+          supplementary_text?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
+          visibility_type?: string | null
         }
         Update: {
+          assigned_users?: string[] | null
           content_body?: string | null
           content_type?: string | null
           created_at?: string
@@ -871,9 +880,12 @@ export type Database = {
           links?: Json
           order_index?: number
           phase_id?: string
+          quiz_id?: string | null
+          supplementary_text?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          visibility_type?: string | null
         }
         Relationships: [
           {
@@ -881,6 +893,13 @@ export type Database = {
             columns: ["phase_id"]
             isOneToOne: false
             referencedRelation: "journey_phase_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_modules_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -1793,7 +1812,7 @@ export type Database = {
           id: string
           is_active: boolean
           passing_score: number
-          phase_id: string
+          phase_id: string | null
           title: string
           version: number
         }
@@ -1803,7 +1822,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           passing_score?: number
-          phase_id: string
+          phase_id?: string | null
           title: string
           version?: number
         }
@@ -1813,7 +1832,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           passing_score?: number
-          phase_id?: string
+          phase_id?: string | null
           title?: string
           version?: number
         }
@@ -3115,6 +3134,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_quiz: { Args: { _quiz_id: string }; Returns: Json }
       get_user_journey: { Args: { _user_id: string }; Returns: Json }
       get_young_people_safe: {
         Args: never
@@ -3221,6 +3241,7 @@ export type Database = {
         Args: { _answers: Json; _phase_id: string }
         Returns: Json
       }
+      submit_quiz: { Args: { _answers: Json; _quiz_id: string }; Returns: Json }
       toggle_checklist_item: {
         Args: { _completed: boolean; _item_id: string; _user_id: string }
         Returns: Json
