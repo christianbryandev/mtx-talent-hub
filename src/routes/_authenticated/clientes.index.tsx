@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Building2, CheckCircle2, DollarSign, Sparkles, Plus, Search } from "lucide-react";
+import { Building2, CheckCircle2, DollarSign, Sparkles, Plus, Search, LinkIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClientStatusBadge } from "@/components/clientes/ClientStatusBadge";
 import { ClientFormDialog } from "@/components/clientes/ClientFormDialog";
+import { CaptacaoLinkDialog } from "@/components/clientes/CaptacaoLinkDialog";
 import {
   CLIENT_STATUS_LABELS,
   CLIENT_STATUS_LIST,
@@ -63,6 +64,7 @@ function ClientesListPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [segmentFilter, setSegmentFilter] = useState<string>("all");
@@ -131,10 +133,16 @@ function ClientesListPage() {
           </p>
         </div>
         {(isAdmin || isComercial) && (
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo cliente
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setLinkOpen(true)}>
+              <LinkIcon className="h-4 w-4 mr-2 text-primary" />
+              Link de Captação
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo cliente
+            </Button>
+          </div>
         )}
       </div>
 
@@ -294,6 +302,7 @@ function ClientesListPage() {
       </div>
 
       <ClientFormDialog open={open} onOpenChange={setOpen} />
+      <CaptacaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
     </div>
   );
 }
