@@ -135,7 +135,7 @@ function TarefasKanbanPage() {
   const { data: services = [] } = useQuery({
     queryKey: ["services-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("services").select("id, name").order("name");
+      const { data } = await supabase.from("services_public").select("id, name").order("name");
       return data ?? [];
     },
   });
