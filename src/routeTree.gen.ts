@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as InscricaoRouteImport } from './routes/inscricao'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
+import { Route as CadastroClienteRouteImport } from './routes/cadastro-cliente'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
@@ -85,6 +86,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const CriarSenhaRoute = CriarSenhaRouteImport.update({
   id: '/criar-senha',
   path: '/criar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroClienteRoute = CadastroClienteRouteImport.update({
+  id: '/cadastro-cliente',
+  path: '/cadastro-cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -312,6 +318,7 @@ const AuthenticatedJornadaQuizPhaseIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro-cliente': typeof CadastroClienteRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro-cliente': typeof CadastroClienteRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/cadastro-cliente': typeof CadastroClienteRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/inscricao': typeof InscricaoRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cadastro-cliente'
     | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cadastro-cliente'
     | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/cadastro-cliente'
     | '/criar-senha'
     | '/forgot-password'
     | '/inscricao'
@@ -597,6 +609,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  CadastroClienteRoute: typeof CadastroClienteRoute
   CriarSenhaRoute: typeof CriarSenhaRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InscricaoRoute: typeof InscricaoRoute
@@ -649,6 +662,13 @@ declare module '@tanstack/react-router' {
       path: '/criar-senha'
       fullPath: '/criar-senha'
       preLoaderRoute: typeof CriarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-cliente': {
+      id: '/cadastro-cliente'
+      path: '/cadastro-cliente'
+      fullPath: '/cadastro-cliente'
+      preLoaderRoute: typeof CadastroClienteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1101,6 +1121,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  CadastroClienteRoute: CadastroClienteRoute,
   CriarSenhaRoute: CriarSenhaRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   InscricaoRoute: InscricaoRoute,
