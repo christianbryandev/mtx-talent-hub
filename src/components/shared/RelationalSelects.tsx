@@ -45,7 +45,7 @@ export function ServiceSearchSelect(props: BaseProps) {
     queryKey: ["search-services"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("services")
+        .from("services_public")
         .select("id, name, category, status")
         .order("name");
       if (error) throw error;
