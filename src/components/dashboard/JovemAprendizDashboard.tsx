@@ -162,14 +162,14 @@ export function JovemAprendizDashboard() {
       <TodayMeetingBanner />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <KpiCard icon={<CheckSquare className="h-5 w-5" />} label="Tarefas abertas" value={data.openCount.toString()} />
+        <KpiCard icon={<CheckSquare className="h-5 w-5" />} label="Tarefas abertas" value={data.openCount?.toString() ?? "0"} />
         <KpiCard
           icon={<AlertCircle className="h-5 w-5" />}
           label="Tarefas atrasadas"
-          value={data.overdueCount.toString()}
-          accent={data.overdueCount > 0 ? "warning" : "primary"}
+          value={data.overdueCount?.toString() ?? "0"}
+          accent={(data.overdueCount ?? 0) > 0 ? "warning" : "primary"}
         />
-        <KpiCard icon={<CalendarDays className="h-5 w-5" />} label="Próximas reuniões" value={data.upcomingMeetings.length.toString()} />
+        <KpiCard icon={<CalendarDays className="h-5 w-5" />} label="Próximas reuniões" value={data.upcomingMeetings?.length?.toString() ?? "0"} />
       </div>
 
       {data.young && (
@@ -233,11 +233,11 @@ export function JovemAprendizDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            {data.upcomingTasks.length === 0 ? (
+            {data.upcomingTasks?.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa pendente com prazo 🎉</p>
             ) : (
               <ul className="space-y-2">
-                {data.upcomingTasks.map((t) => (
+                {data.upcomingTasks?.map((t) => (
                   <li key={t.id} className="flex items-center justify-between text-sm">
                     <span className="truncate">{t.title}</span>
                     <Badge variant={t.due_date && t.due_date < today ? "destructive" : "secondary"}>
@@ -255,11 +255,11 @@ export function JovemAprendizDashboard() {
             <CardTitle className="text-base">Próximas reuniões</CardTitle>
           </CardHeader>
           <CardContent>
-            {data.upcomingMeetings.length === 0 ? (
+            {data.upcomingMeetings?.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma reunião agendada.</p>
             ) : (
               <ul className="space-y-2">
-                {data.upcomingMeetings.map((m) => (
+                {data.upcomingMeetings?.map((m) => (
                   <li key={m.id}>
                     <Link
                       to="/reunioes/$id"
@@ -280,14 +280,14 @@ export function JovemAprendizDashboard() {
         </Card>
       </div>
 
-      {data.clients.length > 0 && (
+      {(data.clients?.length ?? 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Clientes sob minha responsabilidade</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {data.clients.map((c) => (
+              {data.clients?.map((c) => (
                 <li key={c.id}>
                   <Link
                     to="/clientes/$id"

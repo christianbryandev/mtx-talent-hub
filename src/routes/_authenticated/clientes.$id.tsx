@@ -568,6 +568,7 @@ function ServicesTab({
       if (error) throw error;
       return data ?? [];
     },
+    enabled: canEdit,
   });
 
   const { data: services = [] } = useQuery({

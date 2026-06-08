@@ -93,7 +93,7 @@ function TarefasKanbanPage() {
         .from("tasks")
         .select(`*,
           clients(company_name),
-          services(name),
+          services:services_public(name),
           young_people:young_responsible(full_name, photo_url)
         `)
         .order("position");
@@ -135,8 +135,8 @@ function TarefasKanbanPage() {
   const { data: services = [] } = useQuery({
     queryKey: ["services-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("services").select("id, name").order("name");
-      return data ?? [];
+      const { data } = await supabase.from("services_public").select("id, name").order("name");
+      return (data ?? []) as { id: string; name: string }[];
     },
   });
   const { data: youngs = [] } = useQuery({
@@ -284,7 +284,7 @@ function TarefasKanbanPage() {
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Serviço" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos serviços</SelectItem>
-            {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
+            {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name ?? ""}</SelectItem>))}
           </SelectContent>
         </Select>
         <Select value={areaFilter} onValueChange={setAreaFilter}>

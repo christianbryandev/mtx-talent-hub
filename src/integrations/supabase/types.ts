@@ -483,6 +483,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       clients: {
@@ -834,6 +841,7 @@ export type Database = {
       }
       journey_modules: {
         Row: {
+          assigned_users: string[] | null
           content_body: string | null
           content_type: string | null
           created_at: string
@@ -843,11 +851,15 @@ export type Database = {
           links: Json
           order_index: number
           phase_id: string
+          quiz_id: string | null
+          supplementary_text: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string
+          visibility_type: string | null
         }
         Insert: {
+          assigned_users?: string[] | null
           content_body?: string | null
           content_type?: string | null
           created_at?: string
@@ -857,11 +869,15 @@ export type Database = {
           links?: Json
           order_index?: number
           phase_id: string
+          quiz_id?: string | null
+          supplementary_text?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
+          visibility_type?: string | null
         }
         Update: {
+          assigned_users?: string[] | null
           content_body?: string | null
           content_type?: string | null
           created_at?: string
@@ -871,9 +887,12 @@ export type Database = {
           links?: Json
           order_index?: number
           phase_id?: string
+          quiz_id?: string | null
+          supplementary_text?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          visibility_type?: string | null
         }
         Relationships: [
           {
@@ -881,6 +900,13 @@ export type Database = {
             columns: ["phase_id"]
             isOneToOne: false
             referencedRelation: "journey_phase_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_modules_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -1529,6 +1555,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "opportunity_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       phase_review_progress: {
@@ -1793,7 +1826,7 @@ export type Database = {
           id: string
           is_active: boolean
           passing_score: number
-          phase_id: string
+          phase_id: string | null
           title: string
           version: number
         }
@@ -1803,7 +1836,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           passing_score?: number
-          phase_id: string
+          phase_id?: string | null
           title: string
           version?: number
         }
@@ -1813,7 +1846,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           passing_score?: number
-          phase_id?: string
+          phase_id?: string | null
           title?: string
           version?: number
         }
@@ -1857,6 +1890,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_onboarding_checklist_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_task_templates: {
@@ -1898,6 +1938,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_task_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_young_people: {
@@ -1925,6 +1972,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_young_people_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
             referencedColumns: ["id"]
           },
           {
@@ -2317,6 +2371,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
             referencedColumns: ["id"]
           },
           {
@@ -3039,6 +3100,42 @@ export type Database = {
       }
     }
     Views: {
+      services_public: {
+        Row: {
+          average_deadline: number | null
+          category: string | null
+          deliverables: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          scope: string | null
+          status: string | null
+        }
+        Insert: {
+          average_deadline?: number | null
+          category?: string | null
+          deliverables?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          scope?: string | null
+          status?: string | null
+        }
+        Update: {
+          average_deadline?: number | null
+          category?: string | null
+          deliverables?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          scope?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       vw_journey_ranking: {
         Row: {
           avatar_url: string | null
@@ -3115,6 +3212,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_quiz: { Args: { _quiz_id: string }; Returns: Json }
       get_user_journey: { Args: { _user_id: string }; Returns: Json }
       get_young_people_safe: {
         Args: never
@@ -3221,6 +3319,7 @@ export type Database = {
         Args: { _answers: Json; _phase_id: string }
         Returns: Json
       }
+      submit_quiz: { Args: { _answers: Json; _quiz_id: string }; Returns: Json }
       toggle_checklist_item: {
         Args: { _completed: boolean; _item_id: string; _user_id: string }
         Returns: Json

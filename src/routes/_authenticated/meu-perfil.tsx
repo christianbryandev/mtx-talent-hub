@@ -585,6 +585,7 @@ function CreateMyProfile() {
         .single();
 
       const userEmail = profile?.email ?? user.email;
+      if (!userEmail) return;
 
       // Buscar inscrição vinculada pelo email
       const { data: app } = await supabase

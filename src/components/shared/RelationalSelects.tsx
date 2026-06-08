@@ -45,7 +45,7 @@ export function ServiceSearchSelect(props: BaseProps) {
     queryKey: ["search-services"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("services")
+        .from("services_public")
         .select("id, name, category, status")
         .order("name");
       if (error) throw error;
@@ -60,8 +60,8 @@ export function ServiceSearchSelect(props: BaseProps) {
       searchPlaceholder="Buscar serviço..."
       emptyText="Nenhum serviço encontrado."
       options={data.map((s) => ({
-        id: s.id,
-        label: s.name,
+        id: s.id ?? "",
+        label: s.name ?? "",
         hint: [s.category, s.status].filter(Boolean).join(" · ") || null,
       }))}
     />
@@ -78,7 +78,7 @@ export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) 
         .eq("is_active", true);
 
       if (props.roleFilter) {
-        const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter);
+        const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter as any);
         const userIds = roles?.map((r: any) => r.user_id) || [];
         if (userIds.length > 0) {
           query = query.in("id", userIds);
