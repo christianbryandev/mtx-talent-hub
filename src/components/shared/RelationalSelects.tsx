@@ -78,7 +78,7 @@ export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) 
         .eq("is_active", true);
 
       if (props.roleFilter) {
-        const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter);
+        const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter as any);
         const userIds = roles?.map((r: any) => r.user_id) || [];
         if (userIds.length > 0) {
           query = query.in("id", userIds);
