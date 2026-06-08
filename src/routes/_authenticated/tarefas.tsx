@@ -284,7 +284,7 @@ function TarefasKanbanPage() {
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Serviço" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos serviços</SelectItem>
-            {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
+            {services.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name ?? ""}</SelectItem>))}
           </SelectContent>
         </Select>
         <Select value={areaFilter} onValueChange={setAreaFilter}>
