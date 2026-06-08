@@ -93,7 +93,7 @@ function TarefasKanbanPage() {
         .from("tasks")
         .select(`*,
           clients(company_name),
-          services_public(name),
+          services:services_public(name),
           young_people:young_responsible(full_name, photo_url)
         `)
         .order("position");
