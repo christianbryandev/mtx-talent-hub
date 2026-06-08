@@ -483,6 +483,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       clients: {
@@ -1548,6 +1555,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "opportunity_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       phase_review_progress: {
@@ -1876,6 +1890,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_onboarding_checklist_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_task_templates: {
@@ -1917,6 +1938,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_task_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_young_people: {
@@ -1944,6 +1972,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_young_people_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
             referencedColumns: ["id"]
           },
           {
@@ -2336,6 +2371,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
             referencedColumns: ["id"]
           },
           {
@@ -3058,6 +3100,42 @@ export type Database = {
       }
     }
     Views: {
+      services_public: {
+        Row: {
+          average_deadline: number | null
+          category: string | null
+          deliverables: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          scope: string | null
+          status: string | null
+        }
+        Insert: {
+          average_deadline?: number | null
+          category?: string | null
+          deliverables?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          scope?: string | null
+          status?: string | null
+        }
+        Update: {
+          average_deadline?: number | null
+          category?: string | null
+          deliverables?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          scope?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       vw_journey_ranking: {
         Row: {
           avatar_url: string | null
