@@ -60,8 +60,8 @@ export function ServiceSearchSelect(props: BaseProps) {
       searchPlaceholder="Buscar serviço..."
       emptyText="Nenhum serviço encontrado."
       options={data.map((s) => ({
-        id: s.id,
-        label: s.name,
+        id: s.id ?? "",
+        label: s.name ?? "",
         hint: [s.category, s.status].filter(Boolean).join(" · ") || null,
       }))}
     />
