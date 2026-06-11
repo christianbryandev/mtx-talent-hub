@@ -118,6 +118,7 @@ function CrmKanbanPage() {
         { event: "*", schema: "public", table: "opportunities" },
         () => {
           qc.invalidateQueries({ queryKey: ["opportunities"] });
+          qc.invalidateQueries({ queryKey: ["indicadores"] });
         },
       )
       .subscribe();
@@ -409,6 +410,7 @@ function CrmKanbanPage() {
                                     });
                                     toast.success("Oportunidade excluída");
                                     qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                    qc.invalidateQueries({ queryKey: ["indicadores"] });
                                   } catch (e) {
                                     qc.setQueryData(["opportunities"], previousOpps);
                                     toast.error((e as Error).message);

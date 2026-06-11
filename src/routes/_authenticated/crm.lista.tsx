@@ -280,6 +280,7 @@ function CrmListPage() {
                                 });
                                 toast.success("Oportunidade excluída");
                                 qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                qc.invalidateQueries({ queryKey: ["indicadores"] });
                               } catch (e) {
                                 toast.error((e as Error).message);
                               }
