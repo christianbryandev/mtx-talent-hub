@@ -1,0 +1,6 @@
+project_id = "iancuqduuotmrxrvvcfd"
+
+[auth.hook.send_email]
+enabled = true
+uri = "https://iancuqduuotmrxrvvcfd.supabase.co/functions/v1/auth-email-hook"
+

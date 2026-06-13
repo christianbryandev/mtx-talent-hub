@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.notify_admins(text,text,text,text,uuid) FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_roles(app_role[],text,text,text,text,uuid) FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_task_assigned() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_task_status_changed() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_new_application() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_briefing_submitted() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_new_opportunity() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_opportunity_won() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.notify_meeting_participant() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.daily_notifications_job() FROM authenticated;

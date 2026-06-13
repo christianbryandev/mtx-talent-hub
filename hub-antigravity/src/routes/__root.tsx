@@ -1,0 +1,176 @@
+import { useEffect } from "react";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  useRouter,
+  useLocation,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
+
+import appCss from "../styles.css?url";
+import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-7xl font-bold text-primary">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          A página que você procura não existe ou foi movida.
+        </p>
+        <div className="mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Voltar ao início
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+  console.error("Critical error at root:", error);
+  const router = useRouter();
+  const location = useLocation();
+  const isInscricao = location.pathname === "/inscricao";
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {isInscricao ? "Ops, algo deu errado!" : "Esta página não carregou"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isInscricao 
+              ? "Não se preocupe, seu progresso foi salvo. Clique em continuar para retomar de onde parou."
+              : "Algo deu errado. Tente novamente ou volte para o início."}
+          </p>
+          {!isInscricao && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded text-left overflow-auto max-h-40">
+              <p className="text-xs font-mono text-red-400">
+                {error.message || "Erro desconhecido"}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="inline-flex items-center justify-center rounded-md px-6 py-2 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+            style={{
+              background: isInscricao 
+                ? "linear-gradient(to right, #DD2A7B, #8131AF)"
+                : "var(--primary)",
+            }}
+          >
+            {isInscricao ? "Continuar inscrição" : "Tentar novamente"}
+          </button>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            {isInscricao ? "Ir para o início" : "Início"}
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "MTX Hub" },
+      { name: "description", content: "MTX Hub — sistema central de operação da MTX Multiplicando Talentos." },
+      { name: "theme-color", content: "#050505" },
+      { property: "og:title", content: "MTX Hub" },
+      { name: "twitter:title", content: "MTX Hub" },
+      { property: "og:description", content: "MTX Hub — sistema central de operação da MTX Multiplicando Talentos." },
+      { name: "twitter:description", content: "MTX Hub — sistema central de operação da MTX Multiplicando Talentos." },
+      { property: "og:image", content: "/og-image.png" },
+      { name: "twitter:image", content: "/og-image.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap",
+      },
+    ],
+  }),
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
+
+function RootShell({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pt-BR" className="dark">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function AuthSync() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        return;
+      }
+      router.invalidate();
+      queryClient.invalidateQueries();
+    });
+    return () => subscription.unsubscribe();
+  }, [router, queryClient]);
+  return null;
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <ThemeProvider defaultTheme="dark">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AuthSync />
+          <Outlet />
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+}
