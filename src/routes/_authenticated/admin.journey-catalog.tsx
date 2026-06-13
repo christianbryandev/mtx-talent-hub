@@ -651,8 +651,8 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024 * 1024) {
-      toast.error("O arquivo excede o limite máximo de 1GB.");
+    if (file.size > 5 * 1024 * 1024 * 1024) {
+      toast.error("O arquivo excede o limite máximo de 5GB.");
       return;
     }
     if (!file.type.startsWith("video/")) {
@@ -1172,3 +1172,5 @@ function AssignmentsTab() {
     </Card>
   );
 }
+/ /  
+ 

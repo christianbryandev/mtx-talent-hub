@@ -132,7 +132,7 @@ function AdminDashboardContent() {
       const youngs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
 
-      const activeYoungs = youngs.filter((y) => y.status === "ativo").length;
+      const activeYoungs = youngs.filter((y) => !["desligado", "reprovado", "cancelada"].includes(y.status)).length;
       const activeClients = clients.filter((c) => c.status === "ativo").length;
       const recurringRevenue = clients
         .filter((c) => c.status === "ativo")
