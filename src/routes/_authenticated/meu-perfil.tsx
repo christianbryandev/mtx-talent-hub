@@ -599,7 +599,9 @@ function CreateMyProfile() {
       const { data: created, error } = await supabase
         .from("young_people")
         .insert({
-          full_name: profile?.full_name ?? app?.full_name ?? user.email ?? "Sem nome",
+          full_name: (profile?.full_name && !profile.full_name.includes("@"))
+            ? profile.full_name
+            : app?.full_name ?? "Sem nome",
           email: userEmail ?? null,
           status: "em_formacao",
           trail_phase: "fase_1",
