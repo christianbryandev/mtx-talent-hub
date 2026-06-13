@@ -109,6 +109,9 @@ function normalize(error: unknown, fallbackCode: string): ServiceError {
 export const journeyService = {
   async getUserJourney(userId: string): Promise<UserJourney> {
     try {
+      // Garante que a primeira fase está desbloqueada antes de carregar a jornada
+      await supabase.rpc("ensure_first_phase_unlocked" as any, { _user_id: userId });
+
       const { data, error } = await supabase.rpc("get_user_journey", { _user_id: userId });
       if (error) throw new ServiceError("rpc_error", error.message);
       return data as unknown as UserJourney;
