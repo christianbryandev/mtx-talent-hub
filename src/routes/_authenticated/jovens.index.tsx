@@ -439,34 +439,18 @@ function StuckBadge({ lastProgressAt, entryDate, createdAt }: { lastProgressAt: 
   return null;
 }
 
-function ProgressMini({ youngId, phase }: { youngId: string; phase: string | null }) {
+function ProgressMini({ youngId }: { youngId: string; phase?: string | null }) {
   const { data } = useQuery({
-    queryKey: ["young-progress-mini", youngId, phase],
-    enabled: !!phase,
+    queryKey: ["young-progress-mini", youngId],
     queryFn: async () => {
-      const [{ data: row }, { count: totalTasks }, { count: openCount }, { data: passed }] = await Promise.all([
-        supabase.from("journey_phases").select("checklist").eq("young_id", youngId).eq("phase", phase!).maybeSingle(),
-        supabase.from("tasks").select("id", { count: "exact", head: true }).eq("young_responsible", youngId),
-        supabase.from("tasks").select("id", { count: "exact", head: true })
-          .eq("young_responsible", youngId).not("status", "in", "(concluida,cancelada)"),
-        supabase.from("young_quiz_attempts").select("id").eq("young_id", youngId).eq("phase", phase!).eq("passed", true).limit(1),
+      const [{ count: totalModules }, { count: doneModules }] = await Promise.all([
+        supabase.from("journey_modules").select("id", { count: "exact", head: true }),
+        supabase.from("user_module_progress").select("id", { count: "exact", head: true })
+          .eq("user_id", youngId).eq("completed", true),
       ]);
-      const checklist = ((row?.checklist ?? []) as Array<{ done?: boolean }>);
-      const lessonsDone = checklist.length > 0 && checklist.every((c) => c.done);
-      const tasksDone = (totalTasks ?? 0) > 0 && (openCount ?? 0) === 0;
-      const quizDone = (passed ?? []).length > 0;
-      
-      // Progresso da fase atual (0 a 100%)
-      const currentPhasePct = Math.round(((lessonsDone ? 1 : 0) + (tasksDone ? 1 : 0) + (quizDone ? 1 : 0)) * (100 / 3));
-      
-      // Cálculo do progresso geral da jornada (considerando 5 fases)
-      const phaseNumber = phase ? parseInt(phase.replace("fase_", "")) : 1;
-      const totalPhases = 5;
-      
-      const baseProgress = ((phaseNumber - 1) / totalPhases) * 100;
-      const currentProgressScaled = currentPhasePct / totalPhases;
-      
-      return Math.round(baseProgress + currentProgressScaled);
+      const total = totalModules ?? 0;
+      const done = doneModules ?? 0;
+      return total > 0 ? Math.round((done / total) * 100) : 0;
     },
   });
   const pct = data ?? 0;
