@@ -440,15 +440,15 @@ function StuckBadge({ lastProgressAt, entryDate, createdAt }: { lastProgressAt: 
 }
 
 function ProgressMini({ youngId, profileId }: { youngId: string; profileId?: string | null; phase?: string | null }) {
-  const userId = profileId ?? youngId;
+  // profile_id é o auth.users.id — sem ele não há como buscar progresso
   const { data } = useQuery({
-    queryKey: ["young-progress-mini", userId],
-    enabled: !!userId,
+    queryKey: ["young-progress-mini", profileId],
+    enabled: !!profileId,
     queryFn: async () => {
       const [{ count: totalPhases }, { count: donePhases }] = await Promise.all([
         supabase.from("journey_phase_catalog").select("id", { count: "exact", head: true }),
         supabase.from("user_phase_status").select("id", { count: "exact", head: true })
-          .eq("user_id", userId).eq("status", "concluido"),
+          .eq("user_id", profileId!).eq("status", "concluido"),
       ]);
       const total = totalPhases ?? 0;
       const done = donePhases ?? 0;
