@@ -319,7 +319,7 @@ function JovensListPage() {
                   <TableCell>
                     <div className="space-y-1">
                       <PhaseBadge phase={y.trail_phase} />
-                      <ProgressMini youngId={y.id} phase={y.trail_phase} />
+                      <ProgressMini youngId={y.id} profileId={y.profile_id} phase={y.trail_phase} />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -439,14 +439,16 @@ function StuckBadge({ lastProgressAt, entryDate, createdAt }: { lastProgressAt: 
   return null;
 }
 
-function ProgressMini({ youngId }: { youngId: string; phase?: string | null }) {
+function ProgressMini({ youngId, profileId }: { youngId: string; profileId?: string | null; phase?: string | null }) {
+  const userId = profileId ?? youngId;
   const { data } = useQuery({
-    queryKey: ["young-progress-mini", youngId],
+    queryKey: ["young-progress-mini", userId],
+    enabled: !!userId,
     queryFn: async () => {
       const [{ count: totalModules }, { count: doneModules }] = await Promise.all([
         supabase.from("journey_modules").select("id", { count: "exact", head: true }),
         supabase.from("user_module_progress").select("id", { count: "exact", head: true })
-          .eq("user_id", youngId).eq("completed", true),
+          .eq("user_id", userId).eq("completed", true),
       ]);
       const total = totalModules ?? 0;
       const done = doneModules ?? 0;
