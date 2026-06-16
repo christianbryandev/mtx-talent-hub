@@ -9,7 +9,7 @@ export async function deleteClientCascade(clientId: string) {
   await supabase.from("client_services").delete().eq("client_id", clientId);
   await supabase.from("client_briefings").delete().eq("client_id", clientId);
   await supabase.from("proposals").delete().eq("client_id", clientId);
-  await supabase.from("tasks").update({ client_id: null }).eq("client_id", clientId);
+  await supabase.from("tasks").delete().eq("client_id", clientId);
   await supabase
     .from("opportunities")
     .update({ converted_client_id: null })
@@ -39,7 +39,7 @@ export async function deleteOpportunityCascade(opportunityId: string) {
   await supabase.from("opportunity_services").delete().eq("opportunity_id", opportunityId);
   await supabase.from("opportunity_interactions").delete().eq("opportunity_id", opportunityId);
   await supabase.from("proposals").delete().eq("opportunity_id", opportunityId);
-  await supabase.from("tasks").update({ opportunity_id: null }).eq("opportunity_id", opportunityId);
+  await supabase.from("tasks").delete().eq("opportunity_id", opportunityId);
 
   const { error } = await supabase.from("opportunities").delete().eq("id", opportunityId);
   if (error) throw error;

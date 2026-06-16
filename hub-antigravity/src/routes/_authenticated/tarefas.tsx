@@ -206,7 +206,7 @@ function TarefasKanbanPage() {
       if (ctx?.prev) qc.setQueryData(["tasks"], ctx.prev);
       toast.error(e.message);
     },
-    onSuccess: () => toast.success("Tarefa movida"),
+    onSuccess: () => { toast.success("Tarefa movida"); qc.invalidateQueries({ queryKey: ["dashboard-stats"] }); },
   });
 
   const handleDragStart = (e: DragStartEvent) => setDraggingId(String(e.active.id));
@@ -523,3 +523,4 @@ function TaskCard({ task, onClick, dragging, actions }: { task: TaskRow; onClick
     </div>
   );
 }
+

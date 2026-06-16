@@ -129,18 +129,20 @@ function AdminDashboardContent() {
         supabase.from("young_applications").select("status").limit(2000),
       ]);
 
-      const youngs = youngsRes.data ?? [];
+      const allYoungs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
 
-      const activeYoungs = youngs.filter((y) => y.status === "ativo").length;
+      const validSystemYoungs = allYoungs.filter((y) => !["desligado", "pausado"].includes(y.status));
+
+      const activeYoungs = allYoungs.filter((y) => y.status === "ativo").length;
       const activeClients = clients.filter((c) => c.status === "ativo").length;
       const recurringRevenue = clients
         .filter((c) => c.status === "ativo")
         .reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
-      const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
-      const remunerated = youngs.filter((y) => y.first_client_attended).length;
-      const avgIncome = youngs.length
-        ? youngs.reduce((s, y) => s + (Number(y.total_income_generated) || 0), 0) / youngs.length
+      const youngsWithCnpj = validSystemYoungs.filter((y) => y.has_cnpj).length;
+      const remunerated = validSystemYoungs.filter((y) => y.first_client_attended).length;
+      const avgIncome = validSystemYoungs.length
+        ? validSystemYoungs.reduce((s, y) => s + (Number(y.total_income_generated) || 0), 0) / validSystemYoungs.length
         : 0;
 
       const opportunities = opportunitiesRes.data ?? [];
@@ -169,7 +171,7 @@ function AdminDashboardContent() {
 
       // Trail phase distribution
       const trailMap = new Map<string, number>();
-      for (const y of youngs) {
+      for (const y of validSystemYoungs) {
         if (!y.trail_phase) continue;
         trailMap.set(y.trail_phase, (trailMap.get(y.trail_phase) ?? 0) + 1);
       }

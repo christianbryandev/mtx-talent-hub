@@ -94,6 +94,7 @@ function CrmKanbanPage() {
       const { data, error } = await supabase
         .from("opportunities")
         .select("*")
+        .eq("status", "aberta")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Opportunity[];
@@ -117,7 +118,7 @@ function CrmKanbanPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "opportunities" },
         () => {
-          qc.invalidateQueries({ queryKey: ["opportunities"] });
+          qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
         },
       )
       .subscribe();
@@ -193,19 +194,24 @@ function CrmKanbanPage() {
 
   const updateStageMutation = useMutation({
     mutationFn: async ({ id, stage }: { id: string; stage: FunnelStage }) => {
-      const { error } = await supabase
-        .from("opportunities")
-        .update({ funnel_stage: stage } as never)
-        .eq("id", id)
-        .select()
-        .single();
-      if (error) throw error;
+      const userPromise = supabase.auth.getUser();
+      const [updateRes, userRes] = await Promise.all([
+        supabase
+          .from("opportunities")
+          .update({ funnel_stage: stage } as never)
+          .eq("id", id)
+          .eq("status", "aberta"),
+        userPromise
+      ]);
+      
+      if (updateRes.error) throw updateRes.error;
+      
       await supabase.from("activity_logs").insert({
         action: "opportunity_stage_changed",
         entity_type: "opportunity",
         entity_id: id,
         description: `Etapa alterada para ${stage}`,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: userRes.data.user?.id,
       } as never);
     },
     onMutate: async ({ id, stage }) => {
@@ -221,7 +227,7 @@ function CrmKanbanPage() {
       toast.error(e.message);
     },
     onSuccess: () => toast.success("Etapa atualizada"),
-    onSettled: () => qc.invalidateQueries({ queryKey: ["opportunities"] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] }),
   });
 
   const handleDragStart = (e: DragStartEvent) => setDraggingId(String(e.active.id));
@@ -385,7 +391,7 @@ function CrmKanbanPage() {
                                       description: `Oportunidade "${o.company_name}" duplicada`,
                                     });
                                     toast.success("Oportunidade duplicada");
-                                    qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                    qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                                   } catch (e) {
                                     toast.error((e as Error).message);
                                   }
@@ -408,7 +414,7 @@ function CrmKanbanPage() {
                                       description: `Oportunidade "${o.company_name}" excluída`,
                                     });
                                     toast.success("Oportunidade excluída");
-                                    qc.invalidateQueries({ queryKey: ["opportunities"] });
+                                    qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                                   } catch (e) {
                                     qc.setQueryData(["opportunities"], previousOpps);
                                     toast.error((e as Error).message);
@@ -557,3 +563,4 @@ function OpportunityCard({
     </div>
   );
 }
+

@@ -162,6 +162,7 @@ function JovemDetailPage() {
       qc.invalidateQueries({ queryKey: ["young_people", id] });
       qc.invalidateQueries({ queryKey: ["young_evolution", id] });
       qc.invalidateQueries({ queryKey: ["young_people"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setStatusModalOpen(false);
       setNewStatus("");
     },
@@ -188,6 +189,8 @@ function JovemDetailPage() {
       toast.success("Fase atualizada");
       qc.invalidateQueries({ queryKey: ["young_people", id] });
       qc.invalidateQueries({ queryKey: ["young_evolution", id] });
+      qc.invalidateQueries({ queryKey: ["young_people"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setPhaseModalOpen(false);
       setNewPhase("");
     },
@@ -232,6 +235,7 @@ function JovemDetailPage() {
     onSuccess: () => {
       toast.success("Jovem excluído");
       qc.invalidateQueries({ queryKey: ["young_people"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       navigate({ to: "/jovens" });
     },
     onError: (e: Error) => toast.error(e.message),

@@ -266,7 +266,7 @@ function ClientesListPage() {
                                   description: `Cliente "${c.company_name}" duplicado`,
                                 });
                                 toast.success("Cliente duplicado");
-                                qc.invalidateQueries({ queryKey: ["clients"] });
+                                qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                               } catch (e) {
                                 toast.error((e as Error).message);
                               }
@@ -285,7 +285,7 @@ function ClientesListPage() {
                                   description: `Cliente "${c.company_name}" excluído`,
                                 });
                                 toast.success("Cliente excluído");
-                                qc.invalidateQueries({ queryKey: ["clients"] });
+                                qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                               } catch (e) {
                                 toast.error((e as Error).message);
                               }
@@ -306,3 +306,4 @@ function ClientesListPage() {
     </div>
   );
 }
+

@@ -208,6 +208,8 @@ export function PhaseEvolutionPanel({ young, canSubmit }: Props) {
       qc.invalidateQueries({ queryKey: ["quiz-attempts"] });
       qc.invalidateQueries({ queryKey: ["young_people"] });
       qc.invalidateQueries({ queryKey: ["young_people", young.id] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["young-progress-mini"] });
       if (res.kind === "advanced") {
         setCelebrate({ open: true, phase: currentPhase, next: res.next, score: res.attempt.score });
       } else if (res.kind === "quiz_only") {

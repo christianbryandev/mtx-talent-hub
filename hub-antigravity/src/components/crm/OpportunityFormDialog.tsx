@@ -141,7 +141,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
     },
     onSuccess: (id) => {
       toast.success("Oportunidade criada");
-      qc.invalidateQueries({ queryKey: ["opportunities"] });
+      qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       form.reset();
       setServiceIds([]);
       setCalculatedSum(0);
@@ -332,3 +332,4 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
     </Dialog>
   );
 }
+

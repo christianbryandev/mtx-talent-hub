@@ -97,7 +97,7 @@ function ReunioesPage() {
                   description: `Reunião "${m.title}" duplicada`,
                 });
                 toast.success("Reunião duplicada");
-                qc.invalidateQueries({ queryKey: ["meetings"] });
+                qc.invalidateQueries({ queryKey: ["meetings"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
               } catch (e) {
                 toast.error((e as Error).message);
               }
@@ -116,7 +116,7 @@ function ReunioesPage() {
                   description: `Reunião "${m.title}" excluída`,
                 });
                 toast.success("Reunião excluída");
-                qc.invalidateQueries({ queryKey: ["meetings"] });
+                qc.invalidateQueries({ queryKey: ["meetings"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
               } catch (e) {
                 toast.error((e as Error).message);
               }
@@ -487,3 +487,4 @@ function ListView({
     </Card>
   );
 }
+

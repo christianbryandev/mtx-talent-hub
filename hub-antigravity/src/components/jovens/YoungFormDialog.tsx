@@ -231,6 +231,7 @@ export function YoungFormDialog({
     onSuccess: () => {
       toast.success("Jovem cadastrado com sucesso");
       qc.invalidateQueries({ queryKey: ["young_people"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       reset();
       onOpenChange(false);
     },

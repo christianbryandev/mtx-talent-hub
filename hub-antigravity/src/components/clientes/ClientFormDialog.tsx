@@ -147,7 +147,7 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
     },
     onSuccess: (id) => {
       toast.success("Cliente criado com sucesso");
-      qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       onOpenChange(false);
       form.reset();
       setStep(1);
@@ -362,3 +362,4 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
     </Dialog>
   );
 }
+

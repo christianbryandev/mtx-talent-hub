@@ -66,8 +66,9 @@ function JovensListPage() {
       });
     },
     onSuccess: () => {
-      toast.success("Jovem excluído");
+      toast.success("Jovem excluído com sucesso");
       qc.invalidateQueries({ queryKey: ["young_people"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setToDelete(null);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -357,8 +358,9 @@ function JovensListPage() {
                               entity_id: copy.id,
                               description: `Jovem "${y.full_name}" duplicado`,
                             });
-                            toast.success("Jovem duplicado");
-                            qc.invalidateQueries({ queryKey: ["young-people"] });
+                            toast.success("Jovem duplicado com sucesso");
+                            qc.invalidateQueries({ queryKey: ["young_people"] });
+                            qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                           } catch (e) {
                             toast.error((e as Error).message);
                           }
