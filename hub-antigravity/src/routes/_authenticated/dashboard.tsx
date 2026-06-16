@@ -116,6 +116,7 @@ function AdminDashboardContent() {
         upcomingTasksRes,
         logsRes,
         appsRes,
+        phaseDistributionRes,
       ] = await Promise.all([
         supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase").limit(3000),
         supabase.from("clients").select("id, status, monthly_value, created_at").limit(3000),
@@ -132,7 +133,6 @@ function AdminDashboardContent() {
 
       const allYoungs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
-      const phaseDistributionRes = results[10];
 
       const validSystemYoungs = allYoungs.filter((y) => !["desligado", "pausado"].includes(y.status));
 
