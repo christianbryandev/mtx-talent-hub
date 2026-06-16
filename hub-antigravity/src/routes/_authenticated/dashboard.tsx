@@ -127,10 +127,12 @@ function AdminDashboardContent() {
         supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
+        supabase.rpc("get_journey_phase_distribution"),
       ]);
 
       const allYoungs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
+      const phaseDistributionRes = results[10];
 
       const validSystemYoungs = allYoungs.filter((y) => !["desligado", "pausado"].includes(y.status));
 
@@ -169,13 +171,22 @@ function AdminDashboardContent() {
         clientes: v,
       }));
 
-      // Trail phase distribution
-      const trailMap = new Map<string, number>();
-      for (const y of validSystemYoungs) {
-        if (!y.trail_phase) continue;
-        trailMap.set(y.trail_phase, (trailMap.get(y.trail_phase) ?? 0) + 1);
+      // Trail phase distribution using new RPC
+      let trailData = [];
+      if (phaseDistributionRes && phaseDistributionRes.data) {
+        trailData = (phaseDistributionRes.data as any[]).map((p: any) => ({
+          fase: p.phase_name,
+          total: p.total_users,
+        }));
+      } else {
+        // Fallback para o modo antigo caso o RPC falhe ou não exista
+        const trailMap = new Map<string, number>();
+        for (const y of validSystemYoungs) {
+          if (!y.trail_phase) continue;
+          trailMap.set(y.trail_phase, (trailMap.get(y.trail_phase) ?? 0) + 1);
+        }
+        trailData = Array.from(trailMap.entries()).map(([fase, total]) => ({ fase, total }));
       }
-      const trailData = Array.from(trailMap.entries()).map(([fase, total]) => ({ fase, total }));
 
       // Apps status distribution
       const appStatusMap = new Map<string, number>();
