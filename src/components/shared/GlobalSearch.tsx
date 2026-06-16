@@ -96,7 +96,6 @@ const NAVIGATION_ITEMS: SearchResult[] = [
   // Administração
   { id: "nav-admin-users", category: "admin", title: "Usuários e Permissões", url: "/users" },
   { id: "nav-admin-analytics", category: "admin", title: "Analytics da Jornada", url: "/admin/journey-analytics" },
-  { id: "nav-admin-monitor", category: "admin", title: "Monitor da Jornada", url: "/admin/journey-monitor" },
   { id: "nav-admin-catalog", category: "admin", title: "Catálogo da Jornada (Fases)", url: "/admin/journey-catalog" },
   { id: "nav-admin-quizzes", category: "admin", title: "Gestão de Quizzes", url: "/admin/quizzes" },
   { id: "nav-admin-notifs", category: "admin", title: "Painel de Notificações", url: "/painel-notificacoes" },

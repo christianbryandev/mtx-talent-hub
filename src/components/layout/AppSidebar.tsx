@@ -16,7 +16,6 @@ import {
   Zap,
   BarChart2,
   GraduationCap,
-  Activity,
   Bell,
   Mail,
   ClipboardList,
@@ -98,7 +97,6 @@ const adminGroups: MenuGroup[] = [
     icon: BarChart2,
     items: [
       { title: "Analytics Jornada", url: "/admin/journey-analytics", icon: BarChart2, roles: ["super_admin"] },
-      { title: "Monitor da Jornada", url: "/admin/journey-monitor", icon: Activity, roles: ["super_admin"] },
     ]
   },
   {
