@@ -445,13 +445,13 @@ function ProgressMini({ youngId, profileId }: { youngId: string; profileId?: str
     queryKey: ["young-progress-mini", profileId],
     enabled: !!profileId,
     queryFn: async () => {
-      const [{ count: totalPhases }, { count: donePhases }] = await Promise.all([
-        supabase.from("journey_phase_catalog").select("id", { count: "exact", head: true }),
-        supabase.from("user_phase_status").select("id", { count: "exact", head: true })
-          .eq("user_id", profileId!).eq("status", "concluido"),
+      const [{ count: totalModules }, { count: doneModules }] = await Promise.all([
+        supabase.from("journey_modules").select("id", { count: "exact", head: true }),
+        supabase.from("user_module_progress").select("id", { count: "exact", head: true })
+          .eq("user_id", profileId!).eq("completed", true),
       ]);
-      const total = totalPhases ?? 0;
-      const done = donePhases ?? 0;
+      const total = totalModules ?? 0;
+      const done = doneModules ?? 0;
       return total > 0 ? Math.round((done / total) * 100) : 0;
     },
   });
