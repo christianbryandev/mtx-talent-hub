@@ -176,7 +176,7 @@ function AdminDashboardContent() {
       if (phaseDistributionRes && phaseDistributionRes.data) {
         trailData = (phaseDistributionRes.data as any[]).map((p: any) => ({
           fase: p.phase_name ? p.phase_name.replace("fase_", "Fase ") : "",
-          total: p.total_users,
+          total: p.em_andamento,
         }));
       } else {
         // Fallback para o modo antigo caso o RPC falhe ou não exista

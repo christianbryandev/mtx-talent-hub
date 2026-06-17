@@ -165,7 +165,7 @@ function PhaseDistributionCard() {
               <BarChart
                 data={data.map((d) => ({
                   phase_name: d.phase_name,
-                  total_users: d.total_users,
+                  em_andamento: d.em_andamento,
                 }))}
                 margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
               >
@@ -188,7 +188,7 @@ function PhaseDistributionCard() {
                   }}
                 itemStyle={{ color: "white" }} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
                 <Bar
-                  dataKey="total_users"
+                  dataKey="em_andamento"
                   fill="url(#grad-brand)"
                   radius={[6, 6, 0, 0]}
                 maxBarSize={60} />
