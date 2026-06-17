@@ -175,7 +175,7 @@ function AdminDashboardContent() {
       let trailData = [];
       if (phaseDistributionRes && phaseDistributionRes.data) {
         trailData = (phaseDistributionRes.data as any[]).map((p: any) => ({
-          fase: p.phase_name,
+          fase: p.phase_name ? p.phase_name.replace("fase_", "Fase ") : "",
           total: p.total_users,
         }));
       } else {
@@ -185,7 +185,10 @@ function AdminDashboardContent() {
           if (!y.trail_phase) continue;
           trailMap.set(y.trail_phase, (trailMap.get(y.trail_phase) ?? 0) + 1);
         }
-        trailData = Array.from(trailMap.entries()).map(([fase, total]) => ({ fase, total }));
+        trailData = Array.from(trailMap.entries()).map(([fase, total]) => ({
+          fase: fase.replace("fase_", "Fase "),
+          total,
+        }));
       }
 
       // Apps status distribution
