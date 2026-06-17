@@ -227,7 +227,7 @@ function CrmKanbanPage() {
       toast.error(e.message);
     },
     onSuccess: () => toast.success("Etapa atualizada"),
-    onSettled: () => qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] }),
+    onSettled: () => { qc.invalidateQueries({ queryKey: ["opportunities"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] }); },
   });
 
   const handleDragStart = (e: DragStartEvent) => setDraggingId(String(e.active.id));

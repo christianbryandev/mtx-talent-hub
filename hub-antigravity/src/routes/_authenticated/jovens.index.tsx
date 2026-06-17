@@ -108,18 +108,6 @@ function JovensListPage() {
     },
   });
 
-  const { data: pendingFunilCount = 0 } = useQuery({
-    queryKey: ["pending-funil-applications-count"],
-    enabled: isAdmin,
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("applications")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-      return count ?? 0;
-    },
-  });
-
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return jovens.filter((y) => {
@@ -157,17 +145,6 @@ function JovensListPage() {
         <div className="flex flex-wrap gap-2">
           {isAdmin && (
             <div className="flex gap-2">
-              <Button variant="outline" asChild className="relative">
-                <Link to="/jovens/inscricoes-funil">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Novas Inscrições
-                  {pendingFunilCount > 0 && (
-                    <span className="ml-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-emerald-500/20">
-                      {pendingFunilCount}
-                    </span>
-                  )}
-                </Link>
-              </Button>
               <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
                 <Link to="/jovens/inscricoes">
                   <Inbox className="mr-2 h-4 w-4" />
