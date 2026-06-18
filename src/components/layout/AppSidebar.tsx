@@ -19,7 +19,6 @@ import {
   Bell,
   Mail,
   ClipboardList,
-  Film,
   ChevronRight,
 } from "lucide-react";
 
