@@ -3170,6 +3170,10 @@ export type Database = {
       }
       can_access_chat: { Args: never; Returns: boolean }
       daily_notifications_job: { Args: never; Returns: undefined }
+      ensure_first_phase_unlocked: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       get_catalog_phases: { Args: never; Returns: Json }
       get_invite_by_token: {
         Args: { _token: string }
