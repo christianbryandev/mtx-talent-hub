@@ -508,7 +508,7 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
                 {questionsQuery.data?.map((q, index) => (
                   <Draggable key={q.id} draggableId={q.id} index={index}>
                     {(provided) => (
-                      <div ref={provided.innerRef} {...provided.draggableProps}>
+                      <div ref={provided.innerRef} {...provided.draggableProps} style={provided.draggableProps.style as React.CSSProperties}>
                         <QuestionItem 
                           q={q} 
                           index={index} 
