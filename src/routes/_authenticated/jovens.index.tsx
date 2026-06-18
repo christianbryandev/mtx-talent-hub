@@ -380,6 +380,7 @@ function JovensListPage() {
       </Card>
 
       <YoungFormDialog open={openForm} onOpenChange={setOpenForm} />
+      <InscricaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
       <ConfirmDialog
         open={!!toDelete}
         onOpenChange={(o) => !o && setToDelete(null)}
