@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Inbox, Filter } from "lucide-react";
+import { Plus, Search, Inbox, Link2, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { InscricaoLinkDialog } from "@/components/jovens/InscricaoLinkDialog";
 import { StatusBadge } from "@/components/jovens/StatusBadge";
 import { PhaseBadge } from "@/components/jovens/PhaseBadge";
 import { YoungFormDialog } from "@/components/jovens/YoungFormDialog";
@@ -51,6 +52,7 @@ function JovensListPage() {
   const [areaFilter, setAreaFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [openForm, setOpenForm] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [toDelete, setToDelete] = useState<YoungPerson | null>(null);
 
   const deleteMutation = useMutation({
@@ -154,17 +156,6 @@ function JovensListPage() {
         <div className="flex flex-wrap gap-2">
           {isAdmin && (
             <div className="flex gap-2">
-              <Button variant="outline" asChild className="relative">
-                <Link to="/jovens/inscricoes-funil">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Novas Inscrições
-                  {pendingFunilCount > 0 && (
-                    <span className="ml-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-emerald-500/20">
-                      {pendingFunilCount}
-                    </span>
-                  )}
-                </Link>
-              </Button>
               <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
                 <Link to="/jovens/inscricoes">
                   <Inbox className="mr-2 h-4 w-4" />
@@ -177,6 +168,11 @@ function JovensListPage() {
                 </Link>
               </Button>
             </div>
+          )}
+          {isSuperAdmin && (
+            <Button variant="outline" onClick={() => setLinkOpen(true)} className="border-primary/20 hover:bg-primary/5">
+              <Link2 className="mr-2 h-4 w-4 text-primary" /> Link de Inscrição
+            </Button>
           )}
           {isAdmin && (
             <Button onClick={() => setOpenForm(true)} className="bg-gradient-mtx text-white font-bold shadow-mtx-glow">
@@ -384,6 +380,7 @@ function JovensListPage() {
       </Card>
 
       <YoungFormDialog open={openForm} onOpenChange={setOpenForm} />
+      <InscricaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
       <ConfirmDialog
         open={!!toDelete}
         onOpenChange={(o) => !o && setToDelete(null)}
