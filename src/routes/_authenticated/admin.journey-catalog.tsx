@@ -235,6 +235,7 @@ function PhasesTab({
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
+                      style={provided.draggableProps.style as React.CSSProperties}
                       className="group"
                     >
                       <Card 
