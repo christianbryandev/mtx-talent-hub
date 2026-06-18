@@ -174,6 +174,11 @@ function JovensListPage() {
               <Link2 className="mr-2 h-4 w-4 text-primary" /> Link de Inscrição
             </Button>
           )}
+          {isAdmin && (
+            <Button onClick={() => setOpenForm(true)} className="bg-gradient-mtx text-white font-bold shadow-mtx-glow">
+              <Plus className="mr-2 h-4 w-4" /> Novo jovem
+            </Button>
+          )}
         </div>
       </div>
 
