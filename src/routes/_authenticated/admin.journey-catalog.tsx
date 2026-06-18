@@ -38,6 +38,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import * as tus from "tus-js-client";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
 
 export const Route = createFileRoute("/_authenticated/admin/journey-catalog")({
@@ -585,6 +587,7 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
     thumbnail_url: module.thumbnail_url ?? null
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadingThumb, setUploadingThumb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbInputRef = useRef<HTMLInputElement>(null);
@@ -664,26 +667,59 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
 
     try {
       setUploading(true);
+      setUploadProgress(0);
       const fileExt = file.name.split(".").pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("journey-videos")
-        .upload(filePath, file);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
 
-      if (uploadError) throw uploadError;
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'true',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: 'journey-videos',
+            objectName: filePath,
+            contentType: file.type,
+            cacheControl: '3600',
+          },
+          chunkSize: 6 * 1024 * 1024, // 6MB chunk size
+          onError: (err) => reject(err),
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
+            setUploadProgress(percentage);
+          },
+          onSuccess: () => {
+            const { data: { publicUrl } } = supabase.storage
+              .from("journey-videos")
+              .getPublicUrl(filePath);
+            setDraft(prev => ({ ...prev, content_body: publicUrl }));
+            toast.success("Vídeo enviado com sucesso");
+            resolve();
+          },
+        });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("journey-videos")
-        .getPublicUrl(filePath);
+        upload.findPreviousUploads().then(function (previousUploads) {
+          if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        });
+      });
 
-      setDraft(prev => ({ ...prev, content_body: publicUrl }));
-      toast.success("Vídeo enviado com sucesso");
     } catch (error: any) {
       toast.error("Erro ao enviar vídeo: " + error.message);
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -762,22 +798,34 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="flex flex-col items-center gap-2 text-center w-full px-4">
                       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                         {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
                       </div>
-                      <div className="text-sm">
-                        <p className="font-medium">Clique para fazer upload</p>
-                        <p className="text-muted-foreground text-xs mt-1">Formatos suportados: MP4, MOV, WebM</p>
+                      <div className="text-sm w-full max-w-xs">
+                        <p className="font-medium">
+                          {uploading ? "Enviando vídeo..." : "Clique para fazer upload"}
+                        </p>
+                        {!uploading && (
+                          <p className="text-muted-foreground text-xs mt-1">Formatos suportados: MP4, MOV, WebM</p>
+                        )}
+                        {uploading && uploadProgress !== null && (
+                          <div className="mt-3 space-y-1.5">
+                            <Progress value={uploadProgress} className="h-2 w-full" />
+                            <p className="text-xs text-muted-foreground font-medium">{uploadProgress}%</p>
+                          </div>
+                        )}
                       </div>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        disabled={uploading}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        Selecionar arquivo
-                      </Button>
+                      {!uploading && (
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          disabled={uploading}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          Selecionar arquivo
+                        </Button>
+                      )}
                     </div>
                   )}
                   <input 
