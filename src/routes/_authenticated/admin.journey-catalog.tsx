@@ -235,6 +235,7 @@ function PhasesTab({
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
+                      style={provided.draggableProps.style as React.CSSProperties}
                       className="group"
                     >
                       <Card 
@@ -480,6 +481,7 @@ function ModulesEditor({ phaseId }: { phaseId: string }) {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
+                      style={provided.draggableProps.style as React.CSSProperties}
                       className="flex items-center gap-3 p-3 bg-muted/20 border border-border/60 rounded-lg group hover:border-primary/20 transition-all"
                     >
                       <div {...provided.dragHandleProps} className="text-muted-foreground hover:text-foreground">

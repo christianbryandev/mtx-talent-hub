@@ -19,7 +19,6 @@ import {
   Bell,
   Mail,
   ClipboardList,
-  Film,
   ChevronRight,
 } from "lucide-react";
 
@@ -104,7 +103,6 @@ const adminGroups: MenuGroup[] = [
     icon: GraduationCap,
     items: [
       { title: "Catálogo Jornada", url: "/admin/journey-catalog", icon: GraduationCap, roles: ["super_admin"] },
-      { title: "Mídia da Jornada", url: "/admin/journey-media", icon: Film, roles: ["super_admin"] },
       { title: "Quizzes", url: "/admin/quizzes", icon: ClipboardList, roles: ["super_admin"] },
     ]
   },
