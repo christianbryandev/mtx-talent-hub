@@ -51,7 +51,7 @@ function CreatePasswordPage() {
     if (error) {
       let msg = error.message;
       if (msg.includes("different from the old password")) {
-        msg = "A nova senha não pode ser igual à senha provisória gerada pelo sistema. Por favor, escolha uma senha diferente.";
+        msg = "A nova senha não pode ser igual à sua senha anterior (ou provisória). Por favor, escolha uma senha diferente.";
       } else if (msg.includes("Password should contain")) {
         msg = "A senha não atende aos requisitos mínimos de segurança.";
       }
