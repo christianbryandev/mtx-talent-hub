@@ -530,6 +530,7 @@ function OpportunityDetailPage() {
         open={showConvert}
         onOpenChange={setShowConvert}
         opp={opp}
+        oppServices={oppServices}
         onConverted={(clientId) => {
           updateMutation.mutate({ status: "ganha", converted_client_id: clientId });
           setShowConvert(false);
@@ -623,11 +624,13 @@ function ConvertDialog({
   open,
   onOpenChange,
   opp,
+  oppServices,
   onConverted,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   opp: Opportunity;
+  oppServices?: Array<{ id: string; service_id: string }>;
   onConverted: (clientId: string) => void;
 }) {
   const [company, setCompany] = useState(opp.company_name);
@@ -652,7 +655,19 @@ function ConvertDialog({
         .select("id")
         .single();
       if (error) throw error;
-      toast.success("Cliente criado");
+
+      if (oppServices && oppServices.length > 0) {
+        const { error: svcError } = await supabase.from("client_services").insert(
+          oppServices.map((s) => ({
+            client_id: data.id,
+            service_id: s.service_id,
+            status: "ativo"
+          })) as never
+        );
+        if (svcError) throw svcError;
+      }
+
+      toast.success("Cliente criado com sucesso");
       onConverted(data.id as string);
     } catch (e) {
       toast.error((e as Error).message);
