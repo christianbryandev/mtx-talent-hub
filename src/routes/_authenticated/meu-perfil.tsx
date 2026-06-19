@@ -50,6 +50,13 @@ const PHASE_MESSAGES: Record<TrailPhase, string> = {
 
 type FormState = Partial<YoungPerson>;
 
+function MeuPerfilPage() {
+  const { roles, loading } = usePermissions();
+  if (loading) return <div className="p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>;
+  if (roles?.includes("cliente")) return <ClientProfileManager />;
+  return <YoungProfileManager />;
+}
+
 function YoungProfileManager() {
   const { data: catalogPhases } = usePhaseMetadata();
   const { user } = useAuth();
