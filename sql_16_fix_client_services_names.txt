@@ -1,0 +1,15 @@
+-- Correção dos nomes e valores de serviços importados
+-- Quando os serviços foram importados na query anterior, eles vieram sem o nome e valor preenchidos (pois a query só puxou os IDs).
+-- Esse script atualiza os registros existentes em client_services buscando o nome e preço base diretamente da tabela services.
+
+DO $$
+BEGIN
+  UPDATE public.client_services cs
+  SET 
+    service_name = s.name,
+    monthly_value = COALESCE(s.default_value, s.base_price)
+  FROM public.services s
+  WHERE cs.service_id = s.id
+    AND cs.service_name IS NULL;
+END
+$$;

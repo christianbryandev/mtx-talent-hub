@@ -1,0 +1,21 @@
+-- Migração retroativa dos serviços do CRM para clientes já convertidos
+-- Isso copia todos os serviços selecionados na oportunidade e adiciona na 
+-- ficha do cliente, garantindo que não crie duplicatas.
+
+DO $$
+BEGIN
+  INSERT INTO public.client_services (client_id, service_id, status, created_at)
+  SELECT 
+    o.converted_client_id, 
+    os.service_id, 
+    'ativo', 
+    NOW()
+  FROM public.opportunities o
+  JOIN public.opportunity_services os ON o.id = os.opportunity_id
+  WHERE o.converted_client_id IS NOT NULL
+    AND NOT EXISTS (
+      SELECT 1 FROM public.client_services cs 
+      WHERE cs.client_id = o.converted_client_id AND cs.service_id = os.service_id
+    );
+END
+$$;

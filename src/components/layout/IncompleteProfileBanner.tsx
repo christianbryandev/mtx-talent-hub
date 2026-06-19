@@ -15,8 +15,11 @@ const COMPLETION_FIELDS = [
 
 export function IncompleteProfileBanner() {
   const { user } = useAuth();
-  const { isAdmin, loading } = usePermissions();
+  const { isAdmin, loading, roles } = usePermissions();
   const [dismissed, setDismissed] = useState(false);
+
+  const isCliente = roles?.includes("cliente");
+  const isJovem = roles?.includes("jovem_aprendiz");
 
   useEffect(() => {
     setDismissed(sessionStorage.getItem("mtx-incomplete-dismissed") === "1");
@@ -24,7 +27,7 @@ export function IncompleteProfileBanner() {
 
   const { data } = useQuery({
     queryKey: ["my-young-completion", user?.id],
-    enabled: !!user && !isAdmin && !loading,
+    enabled: !!user && !isAdmin && !isCliente && !loading && isJovem,
     queryFn: async () => {
       const { data } = await supabase
         .from("young_people")
@@ -40,7 +43,7 @@ export function IncompleteProfileBanner() {
     },
   });
 
-  if (isAdmin || loading || dismissed || data == null || data >= 70) return null;
+  if (isAdmin || isCliente || loading || dismissed || data == null || data >= 70) return null;
 
   return (
     <div className="flex items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5">

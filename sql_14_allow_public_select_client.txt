@@ -1,0 +1,14 @@
+-- Liberar leitura pública restrita para a tabela de clientes
+-- Isso permite que a página de Briefing (acessada pelo cliente final, sem login) 
+-- consiga puxar o nome da empresa e do contato para pré-preencher o formulário.
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'clients' AND policyname = 'Allow public select on clients'
+  ) THEN
+    CREATE POLICY "Allow public select on clients" ON public.clients FOR SELECT USING (true);
+  END IF;
+END
+$$;

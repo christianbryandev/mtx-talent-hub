@@ -1,0 +1,33 @@
+-- ==============================================================================
+-- CORREÇÕES DE SEGURANÇA E AUDITORIA
+-- ==============================================================================
+
+-- 1. Prevenir vazamento de dados bancários e documentos (LGPD) no Websocket
+-- Isso remove a tabela 'young_people' do envio automático em tempo real, 
+-- evitando que CPFs e dados bancários sejam "gritados" na rede em texto aberto.
+ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS young_people;
+
+-- 2. Resolver o alerta de 'Security Definer' nas Views
+-- Isso altera todas as Views (Tabelas Virtuais) do esquema public para usarem 
+-- a segurança do usuário que está acessando (security_invoker = true), 
+-- em vez de rodarem com privilégios de administrador (security_definer).
+DO $$ 
+DECLARE 
+  v_name text; 
+BEGIN 
+  FOR v_name IN (SELECT table_name FROM information_schema.views WHERE table_schema = 'public') 
+  LOOP 
+    EXECUTE 'ALTER VIEW public.' || quote_ident(v_name) || ' SET (security_invoker = true);'; 
+  END LOOP; 
+END $$;
+
+-- 3. Resolver o bloqueio do Quiz (Criando uma View segura para o Aprendiz)
+-- Cria uma Tabela Virtual que os aprendizes podem ler, mas que propositalmente
+-- NÃO contém a coluna "is_correct", impedindo que descubram a resposta certa pela rede.
+CREATE OR REPLACE VIEW public.vw_quiz_options_safe 
+WITH (security_invoker = true) AS
+SELECT id, question_id, text, created_at 
+FROM public.quiz_options;
+
+-- Dá permissão apenas de leitura (SELECT) nessa View Segura para usuários logados.
+GRANT SELECT ON public.vw_quiz_options_safe TO authenticated;
