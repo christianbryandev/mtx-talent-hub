@@ -41,8 +41,9 @@ function ServicosListPage() {
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
+      const table = isAdmin || isComercial ? "services" : "services_public";
       const { data, error } = await supabase
-        .from("services").select("*").order("name");
+        .from(table).select("*").order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Service[];
     },
