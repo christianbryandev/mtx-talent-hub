@@ -1,0 +1,13 @@
+-- 1. Habilitar inserção pública (anônima) na tabela opportunities
+-- Isso é necessário para que a página de captação de clientes funcione.
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'opportunities' AND policyname = 'Allow public insert to opportunities'
+  ) THEN
+    CREATE POLICY "Allow public insert to opportunities" ON public.opportunities FOR INSERT WITH CHECK (true);
+  END IF;
+END
+$$;

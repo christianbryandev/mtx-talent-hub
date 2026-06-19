@@ -1,0 +1,72 @@
+DO $$
+DECLARE
+  r RECORD;
+  v_next_phase_id uuid;
+  v_phase_xp int;
+BEGIN
+  FOR r IN
+    SELECT
+      ump.user_id,
+      jm.phase_id,
+      pc.order_index,
+      pc.has_quiz,
+      COALESCE(pc.xp_reward, 0) AS xp_reward
+    FROM public.user_module_progress ump
+    JOIN public.journey_modules jm ON jm.id = ump.module_id
+    JOIN public.journey_phase_catalog pc ON pc.id = jm.phase_id
+    WHERE ump.completed = true
+    GROUP BY ump.user_id, jm.phase_id, pc.order_index, pc.has_quiz, pc.xp_reward
+    HAVING COUNT(*) = (
+      SELECT COUNT(*) FROM public.journey_modules WHERE phase_id = jm.phase_id
+    )
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM public.user_phase_status
+      WHERE user_id = r.user_id AND phase_id = r.phase_id AND status = 'concluido'
+    ) THEN
+      CONTINUE;
+    END IF;
+
+    IF r.has_quiz IS TRUE THEN
+      IF NOT EXISTS (
+        SELECT 1 FROM public.young_quiz_attempts yqa
+        WHERE yqa.young_id = r.user_id
+          AND yqa.passed = true
+          AND yqa.phase IN (
+            SELECT jm2.quiz_id::text
+            FROM public.journey_modules jm2
+            WHERE jm2.phase_id = r.phase_id AND jm2.quiz_id IS NOT NULL
+          )
+      ) THEN
+        CONTINUE;
+      END IF;
+    END IF;
+
+    INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at, completed_at)
+    VALUES (r.user_id, r.phase_id, 'concluido', true, now(), now())
+    ON CONFLICT (user_id, phase_id) DO UPDATE
+      SET status = 'concluido',
+          completed_at = COALESCE(user_phase_status.completed_at, now());
+
+    SELECT pc2.id INTO v_next_phase_id
+    FROM public.journey_phase_catalog pc2
+    WHERE pc2.order_index > r.order_index
+    ORDER BY pc2.order_index ASC
+    LIMIT 1;
+
+    IF v_next_phase_id IS NOT NULL THEN
+      INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at)
+      VALUES (r.user_id, v_next_phase_id, 'pendente', true, now())
+      ON CONFLICT (user_id, phase_id) DO UPDATE
+        SET unlocked = true,
+            unlocked_at = COALESCE(user_phase_status.unlocked_at, now());
+    END IF;
+
+    IF r.xp_reward > 0 THEN
+      INSERT INTO public.xp_events (user_id, event_type, reference_id, xp_amount)
+      VALUES (r.user_id, 'phase_completed', r.phase_id, r.xp_reward)
+      ON CONFLICT (user_id, event_type, reference_id) DO NOTHING;
+    END IF;
+  END LOOP;
+END;
+$$;

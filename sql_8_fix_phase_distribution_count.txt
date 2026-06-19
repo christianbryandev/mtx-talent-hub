@@ -1,0 +1,53 @@
+-- Fix get_journey_phase_distribution: total_users should count only users
+-- currently IN that phase (pendente+unlocked or em_andamento), not those who
+-- already completed it and moved on.
+
+CREATE OR REPLACE FUNCTION public.get_journey_phase_distribution()
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  IF NOT (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'super_admin')) THEN
+    RAISE EXCEPTION 'forbidden';
+  END IF;
+
+  SELECT COALESCE(jsonb_agg(row_to_json(s) ORDER BY s.order_index), '[]'::jsonb)
+  INTO v_result
+  FROM (
+    SELECT
+      ph.id AS phase_id,
+      ph.title AS phase_name,
+      ph.order_index,
+      COUNT(*) FILTER (WHERE COALESCE(ups.status,'pendente') = 'pendente' AND COALESCE(ups.unlocked,false) = true)::int AS nao_iniciada,
+      COUNT(*) FILTER (WHERE ups.status = 'em_andamento')::int AS em_andamento,
+      COUNT(*) FILTER (WHERE ups.status = 'concluido')::int AS concluida,
+      COUNT(*) FILTER (WHERE COALESCE(ups.unlocked,false) = false)::int AS bloqueada,
+      -- total_users = only users whose CURRENT phase is this one
+      -- (pendente+unlocked or em_andamento, NOT concluido)
+      COUNT(DISTINCT ups.user_id) FILTER (
+        WHERE (COALESCE(ups.status,'pendente') = 'pendente' AND COALESCE(ups.unlocked,false) = true)
+           OR ups.status = 'em_andamento'
+      )::int AS total_users
+    FROM public.journey_phase_catalog ph
+    LEFT JOIN public.user_phase_status ups ON ups.phase_id = ph.id
+      AND EXISTS (
+        SELECT 1 FROM public.profiles p WHERE p.id = ups.user_id
+      )
+      AND EXISTS (
+        SELECT 1 FROM public.user_roles ur
+        WHERE ur.user_id = ups.user_id AND ur.role = 'jovem_aprendiz'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM public.user_roles ur2
+        WHERE ur2.user_id = ups.user_id AND ur2.role IN ('admin', 'super_admin')
+      )
+    GROUP BY ph.id, ph.title, ph.order_index
+  ) s;
+
+  RETURN v_result;
+END;
+$$;

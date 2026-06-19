@@ -307,7 +307,12 @@ function OpportunityDetailPage() {
               </p>
               <ServiceMultiSelect
                 value={oppServices.map((s) => s.service_id)}
-                onChange={(ids) => servicesMutation.mutate(ids)}
+                onChange={(ids, totalSum) => {
+                  servicesMutation.mutate(ids);
+                  if (totalSum !== undefined) {
+                    updateMutation.mutate({ estimated_value: totalSum });
+                  }
+                }}
                 disabled={!canEdit || servicesMutation.isPending}
               />
             </div>

@@ -1,0 +1,19 @@
+-- 1. Garante que o usuário anônimo consiga executar a função has_role.
+-- Isso previne o erro "permission denied for function has_role" que acontece quando o banco de dados
+-- tenta avaliar as regras de segurança (RLS) para o envio de formulários públicos.
+GRANT EXECUTE ON FUNCTION public.has_role(UUID, public.app_role) TO anon, public;
+
+-- 2. Habilita a Segurança em Nível de Linha (RLS) na tabela clients, por garantia.
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+
+-- 3. Cria uma regra de segurança permitindo que formulários públicos (anônimos) insiram dados na tabela clients.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'clients' AND policyname = 'Allow public insert to clients'
+  ) THEN
+    CREATE POLICY "Allow public insert to clients" ON public.clients FOR INSERT WITH CHECK (true);
+  END IF;
+END
+$$;

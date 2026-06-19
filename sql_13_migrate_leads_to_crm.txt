@@ -1,0 +1,37 @@
+-- Migração dos leads antigos da tabela de clientes para a tabela de oportunidades no CRM Comercial
+
+DO $$
+BEGIN
+  -- 1. Insere os leads antigos na tabela de oportunidades do CRM
+  INSERT INTO public.opportunities (
+    company_name, 
+    contact_name, 
+    email, 
+    phone, 
+    whatsapp, 
+    niche, 
+    status, 
+    funnel_stage, 
+    priority, 
+    lead_origin, 
+    created_at
+  )
+  SELECT 
+    company_name, 
+    contact_name, 
+    email, 
+    phone, 
+    whatsapp, 
+    segment AS niche, 
+    'aberta' AS status, 
+    'contato' AS funnel_stage, 
+    'media' AS priority, 
+    lead_origin, 
+    created_at
+  FROM public.clients
+  WHERE status = 'lead';
+
+  -- 2. Apaga os leads antigos da tabela de clientes, limpando a visualização da aba
+  DELETE FROM public.clients WHERE status = 'lead';
+END
+$$;

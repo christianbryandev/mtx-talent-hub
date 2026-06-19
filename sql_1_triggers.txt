@@ -1,0 +1,202 @@
+CREATE OR REPLACE FUNCTION public.handle_phase_completion()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_phase_id uuid;
+  v_phase_order int;
+  v_phase_has_quiz boolean;
+  v_phase_xp int;
+  v_total_modules int;
+  v_completed_modules int;
+  v_quiz_passed boolean;
+  v_next_phase_id uuid;
+  v_already_completed boolean;
+BEGIN
+  IF NEW.completed IS NOT TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT jm.phase_id INTO v_phase_id
+    FROM public.journey_modules jm
+   WHERE jm.id = NEW.module_id;
+
+  IF v_phase_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT (ups.status = 'concluido') INTO v_already_completed
+    FROM public.user_phase_status ups
+   WHERE ups.user_id = NEW.user_id AND ups.phase_id = v_phase_id;
+
+  IF v_already_completed IS TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT pc.order_index, pc.has_quiz, COALESCE(pc.xp_reward, 0)
+    INTO v_phase_order, v_phase_has_quiz, v_phase_xp
+    FROM public.journey_phase_catalog pc
+   WHERE pc.id = v_phase_id;
+
+  SELECT COUNT(*) INTO v_total_modules
+    FROM public.journey_modules jm
+   WHERE jm.phase_id = v_phase_id;
+
+  SELECT COUNT(*) INTO v_completed_modules
+    FROM public.journey_modules jm
+    JOIN public.user_module_progress ump ON ump.module_id = jm.id
+   WHERE jm.phase_id = v_phase_id
+     AND ump.user_id = NEW.user_id
+     AND ump.completed = true;
+
+  IF v_completed_modules < v_total_modules THEN
+    RETURN NEW;
+  END IF;
+
+  IF v_phase_has_quiz IS TRUE THEN
+    SELECT EXISTS(
+      SELECT 1 FROM public.young_quiz_attempts yqa
+       WHERE yqa.young_id = NEW.user_id
+         AND yqa.passed = true
+         AND yqa.phase IN (
+           SELECT jm2.quiz_id::text
+             FROM public.journey_modules jm2
+            WHERE jm2.phase_id = v_phase_id
+              AND jm2.quiz_id IS NOT NULL
+         )
+    ) INTO v_quiz_passed;
+
+    IF v_quiz_passed IS NOT TRUE THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at, completed_at)
+  VALUES (NEW.user_id, v_phase_id, 'concluido', true, now(), now())
+  ON CONFLICT (user_id, phase_id) DO UPDATE
+    SET status = 'concluido',
+        completed_at = COALESCE(user_phase_status.completed_at, now());
+
+  SELECT pc.id INTO v_next_phase_id
+    FROM public.journey_phase_catalog pc
+   WHERE pc.order_index > v_phase_order
+   ORDER BY pc.order_index ASC
+   LIMIT 1;
+
+  IF v_next_phase_id IS NOT NULL THEN
+    INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at)
+    VALUES (NEW.user_id, v_next_phase_id, 'pendente', true, now())
+    ON CONFLICT (user_id, phase_id) DO UPDATE
+      SET unlocked = true,
+          unlocked_at = COALESCE(user_phase_status.unlocked_at, now());
+  END IF;
+
+  IF v_phase_xp > 0 THEN
+    INSERT INTO public.xp_events (user_id, event_type, reference_id, xp_amount)
+    VALUES (NEW.user_id, 'phase_completed', v_phase_id, v_phase_xp)
+    ON CONFLICT (user_id, event_type, reference_id) DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_phase_completion ON public.user_module_progress;
+CREATE TRIGGER trg_phase_completion
+  AFTER INSERT OR UPDATE ON public.user_module_progress
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_phase_completion();
+
+CREATE OR REPLACE FUNCTION public.handle_quiz_phase_completion()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_phase_id uuid;
+  v_phase_order int;
+  v_phase_xp int;
+  v_total_modules int;
+  v_completed_modules int;
+  v_next_phase_id uuid;
+  v_already_completed boolean;
+BEGIN
+  IF NEW.passed IS NOT TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT jm.phase_id INTO v_phase_id
+    FROM public.journey_modules jm
+   WHERE jm.quiz_id::text = NEW.phase
+   LIMIT 1;
+
+  IF v_phase_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT (ups.status = 'concluido') INTO v_already_completed
+    FROM public.user_phase_status ups
+   WHERE ups.user_id = NEW.young_id AND ups.phase_id = v_phase_id;
+
+  IF v_already_completed IS TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT COUNT(*) INTO v_total_modules
+    FROM public.journey_modules jm
+   WHERE jm.phase_id = v_phase_id;
+
+  SELECT COUNT(*) INTO v_completed_modules
+    FROM public.journey_modules jm
+    JOIN public.user_module_progress ump ON ump.module_id = jm.id
+   WHERE jm.phase_id = v_phase_id
+     AND ump.user_id = NEW.young_id
+     AND ump.completed = true;
+
+  IF v_completed_modules < v_total_modules THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT pc.order_index, COALESCE(pc.xp_reward, 0)
+    INTO v_phase_order, v_phase_xp
+    FROM public.journey_phase_catalog pc
+   WHERE pc.id = v_phase_id;
+
+  INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at, completed_at)
+  VALUES (NEW.young_id, v_phase_id, 'concluido', true, now(), now())
+  ON CONFLICT (user_id, phase_id) DO UPDATE
+    SET status = 'concluido',
+        completed_at = COALESCE(user_phase_status.completed_at, now());
+
+  SELECT pc.id INTO v_next_phase_id
+    FROM public.journey_phase_catalog pc
+   WHERE pc.order_index > v_phase_order
+   ORDER BY pc.order_index ASC
+   LIMIT 1;
+
+  IF v_next_phase_id IS NOT NULL THEN
+    INSERT INTO public.user_phase_status (user_id, phase_id, status, unlocked, unlocked_at)
+    VALUES (NEW.young_id, v_next_phase_id, 'pendente', true, now())
+    ON CONFLICT (user_id, phase_id) DO UPDATE
+      SET unlocked = true,
+          unlocked_at = COALESCE(user_phase_status.unlocked_at, now());
+  END IF;
+
+  IF v_phase_xp > 0 THEN
+    INSERT INTO public.xp_events (user_id, event_type, reference_id, xp_amount)
+    VALUES (NEW.young_id, 'phase_completed', v_phase_id, v_phase_xp)
+    ON CONFLICT (user_id, event_type, reference_id) DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_quiz_phase_completion ON public.young_quiz_attempts;
+CREATE TRIGGER trg_quiz_phase_completion
+  AFTER INSERT ON public.young_quiz_attempts
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_quiz_phase_completion();
