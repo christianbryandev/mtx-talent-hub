@@ -60,13 +60,18 @@ function PublicLeadPage() {
   const submit = useMutation({
     mutationFn: async (values: LeadValues) => {
       const payload = {
-        ...values,
-        status: "lead",
+        company_name: values.company_name,
+        contact_name: values.contact_name,
+        email: values.email,
+        whatsapp: values.whatsapp,
+        niche: values.segment,
+        status: "aberta",
+        funnel_stage: "contato",
+        priority: "media",
         lead_origin: "Site/Formulário Público",
-        entry_date: new Date().toISOString().slice(0, 10),
       };
 
-      const { error } = await supabase.from("clients").insert(payload as never);
+      const { error } = await supabase.from("opportunities").insert(payload as never);
       if (error) throw error;
     },
     onSuccess: () => {

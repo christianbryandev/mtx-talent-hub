@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,7 +62,7 @@ function BriefingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("clients")
-        .select("company_name, trade_name")
+        .select("company_name, trade_name, contact_name")
         .eq("id", clientId)
         .maybeSingle();
       return data;
@@ -79,6 +79,18 @@ function BriefingPage() {
       uses_crm: false,
     },
   });
+
+  useEffect(() => {
+    if (client) {
+      form.reset({
+        company_name: client.trade_name || client.company_name || "",
+        contact_name: client.contact_name || "",
+        invests_in_marketing: false,
+        has_commercial_team: false,
+        uses_crm: false,
+      });
+    }
+  }, [client, form]);
 
   const submit = useMutation({
     mutationFn: async (v: FormValues) => {
