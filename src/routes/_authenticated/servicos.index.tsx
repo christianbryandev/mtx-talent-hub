@@ -16,7 +16,6 @@ import { ServiceFormDialog } from "@/components/servicos/ServiceFormDialog";
 import { BILLING_MODELS, type Service } from "@/types/tasks";
 import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/hooks/useAuth";
 import { deleteServiceCascade } from "@/lib/cascade-delete";
 import { duplicateRow } from "@/lib/duplicate-row";
 import { logActivity } from "@/lib/activity-log";
@@ -30,9 +29,7 @@ const brl = (v: number | null) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
 
 function ServicosListPage() {
-  const { isAdmin, roles } = usePermissions();
-  const { user } = useAuth();
-  const isCliente = roles?.includes("cliente");
+  const { isAdmin } = usePermissions();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [openNew, setOpenNew] = useState(false);
@@ -42,26 +39,12 @@ function ServicosListPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: services = [], isLoading } = useQuery({
-    queryKey: ["services", isCliente, user?.id],
+    queryKey: ["services"],
     queryFn: async () => {
-      if (isCliente) {
-        // Fetch the client record
-        const { data: c } = await supabase.from("clients").select("id").eq("profile_id", user!.id).maybeSingle();
-        if (!c) return [];
-        // Fetch their services
-        const { data, error } = await supabase.from("client_services").select("*, service:services(*)").eq("client_id", c.id);
-        if (error) throw error;
-        // Merge so the UI can display it exactly like a normal service list
-        return (data ?? []).map((cs: any) => ({
-          ...cs.service,
-          status: cs.status // override status with the contract status
-        })) as Service[];
-      } else {
-        const { data, error } = await supabase
-          .from("services").select("*").order("name");
-        if (error) throw error;
-        return (data ?? []) as unknown as Service[];
-      }
+      const { data, error } = await supabase
+        .from("services").select("*").order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as Service[];
     },
   });
 
