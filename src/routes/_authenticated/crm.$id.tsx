@@ -121,10 +121,10 @@ function OpportunityDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunity_services")
-        .select("id, service_id")
+        .select("id, service_id, services(name, base_price, default_value)")
         .eq("opportunity_id", id);
       if (error) throw error;
-      return (data ?? []) as Array<{ id: string; service_id: string }>;
+      return (data ?? []) as Array<any>;
     },
   });
 
@@ -630,7 +630,7 @@ function ConvertDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   opp: Opportunity;
-  oppServices?: Array<{ id: string; service_id: string }>;
+  oppServices?: Array<any>;
   onConverted: (clientId: string) => void;
 }) {
   const [company, setCompany] = useState(opp.company_name);
@@ -661,6 +661,8 @@ function ConvertDialog({
           oppServices.map((s) => ({
             client_id: data.id,
             service_id: s.service_id,
+            service_name: s.services?.name ?? "Serviço",
+            monthly_value: s.services?.default_value ?? s.services?.base_price ?? null,
             status: "ativo"
           })) as never
         );
