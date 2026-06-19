@@ -49,7 +49,13 @@ function CreatePasswordPage() {
     setLoading(false);
     
     if (error) {
-      toast.error("Não foi possível salvar a senha", { description: error.message });
+      let msg = error.message;
+      if (msg.includes("different from the old password")) {
+        msg = "A nova senha não pode ser igual à senha provisória gerada pelo sistema. Por favor, escolha uma senha diferente.";
+      } else if (msg.includes("Password should contain")) {
+        msg = "A senha não atende aos requisitos mínimos de segurança.";
+      }
+      toast.error("Não foi possível salvar a senha", { description: msg });
       return;
     }
     
