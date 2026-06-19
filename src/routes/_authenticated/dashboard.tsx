@@ -116,8 +116,9 @@ function AdminDashboardContent() {
         upcomingTasksRes,
         logsRes,
         appsRes,
+        rolesRes,
       ] = await Promise.all([
-        supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase").limit(3000),
+        supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase, profile_id").limit(3000),
         supabase.from("clients").select("id, status, monthly_value, created_at").limit(3000),
         supabase.from("tasks").select("id, kanban_column").not("kanban_column", "in", "(concluido)").limit(3000),
         supabase.from("clients").select("created_at").gte("created_at", sixMonthsAgo).limit(3000),
@@ -127,10 +128,21 @@ function AdminDashboardContent() {
         supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
+        supabase.from("user_roles").select("user_id, role").limit(5000),
       ]);
 
-      const youngs = youngsRes.data ?? [];
+      const rawYoungs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
+      
+      const roleMap = new Map<string, string>();
+      rolesRes.data?.forEach(r => roleMap.set(r.user_id, r.role));
+
+      // Filter out users who are explicitly classified as something else (e.g. "cliente")
+      const youngs = rawYoungs.filter(y => {
+        if (!y.profile_id) return true;
+        const role = roleMap.get(y.profile_id);
+        return !role || role === "jovem_aprendiz";
+      });
 
       const activeYoungs = youngs.filter((y) => !["desligado", "reprovado", "cancelada"].includes(y.status)).length;
       const activeClients = clients.filter((c) => c.status === "ativo").length;

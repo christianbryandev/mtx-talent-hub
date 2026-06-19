@@ -76,12 +76,21 @@ function JovensListPage() {
   const { data: jovens = [], isLoading } = useQuery({
     queryKey: ["young_people"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("young_people")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const [{ data, error }, { data: roles }] = await Promise.all([
+        supabase.from("young_people").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role")
+      ]);
       if (error) throw error;
-      return (data ?? []) as YoungPerson[];
+      
+      const roleMap = new Map<string, string>();
+      roles?.forEach(r => roleMap.set(r.user_id, r.role));
+
+      const raw = (data ?? []) as YoungPerson[];
+      return raw.filter(y => {
+        if (!y.profile_id) return true;
+        const role = roleMap.get(y.profile_id);
+        return !role || role === "jovem_aprendiz";
+      });
     },
   });
 
