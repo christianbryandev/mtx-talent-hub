@@ -317,6 +317,15 @@ function OpportunityDetailPage() {
         </div>
         {opp.status === "aberta" && (
           <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                qc.invalidateQueries({ queryKey: ["opportunity", id] });
+                toast.success("Alterações salvas com sucesso!");
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Salvar Alterações
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setShowConvert(true)}>
               <UserPlus className="h-4 w-4 mr-1" /> Converter em cliente
             </Button>
