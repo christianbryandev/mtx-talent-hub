@@ -23,6 +23,7 @@ import {
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,7 @@ function ReunioesPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { isAdmin } = usePermissions();
+  useRealtimeInvalidate("meetings", [["meetings"]]);
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [open, setOpen] = useState(false);
   const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);

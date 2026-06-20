@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Check, Copy, X, Loader2, Trash2, Edit, Plus, Trash } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ function InscricoesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, loading: permissionsLoading } = usePermissions();
+  useRealtimeInvalidate("young_applications", [["young_applications"], ["pending-applications-count"]]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [detail, setDetail] = useState<YoungApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);

@@ -12,6 +12,7 @@ import {
   AlertTriangle, BookOpen, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +53,7 @@ function TarefasKanbanPage() {
   const { user } = useAuth();
   const { isAdmin, isComercial } = usePermissions();
   const canManage = isAdmin || isComercial;
+  useRealtimeInvalidate("tasks", [["tasks"]]);
   const [openNew, setOpenNew] = useState(false);
   const [newColumn, setNewColumn] = useState<KanbanColumn>("backlog");
   const [drawerId, setDrawerId] = useState<string | null>(null);

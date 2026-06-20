@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +72,9 @@ function OpportunityDetailPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { isAdmin } = usePermissions();
+  useRealtimeInvalidate("opportunities", [["opportunity", id], ["opportunities"]]);
+  useRealtimeInvalidate("opportunity_interactions", [["opp-interactions", id]]);
+  useRealtimeInvalidate("proposals", [["opp-proposals", id]]);
 
   const [showLoss, setShowLoss] = useState(false);
   const [showConvert, setShowConvert] = useState(false);

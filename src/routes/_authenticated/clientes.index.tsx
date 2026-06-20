@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Building2, CheckCircle2, DollarSign, Sparkles, Plus, Search, LinkIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ function ClientesListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  useRealtimeInvalidate("clients", [["clients"]]);
   const [open, setOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [search, setSearch] = useState("");

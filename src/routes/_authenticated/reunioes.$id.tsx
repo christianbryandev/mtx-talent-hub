@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,9 @@ function MeetingDetailPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
+  useRealtimeInvalidate("meetings", [["meeting", id], ["meetings"]]);
+  useRealtimeInvalidate("meeting_agenda_items", [["meeting-agenda", id]]);
+  useRealtimeInvalidate("meeting_participants", [["meeting-participants", id]]);
   const [editOpen, setEditOpen] = useState(false);
 
   const { data: meeting, isLoading } = useQuery({

@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,8 @@ function UsersPage() {
   const { isAdmin, isSuperAdmin, loading: permLoading } = usePermissions();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  useRealtimeInvalidate("profiles", [["all-users"]]);
+  useRealtimeInvalidate("user_invites", [["user-invites"]]);
 
   const deleteFn = useServerFn(deleteAuthUser);
   const activeFn = useServerFn(setUserActive);

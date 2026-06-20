@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Search, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ function ServicosListPage() {
   const { isAdmin } = usePermissions();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  useRealtimeInvalidate("services", [["services"], ["services-usage"]]);
   const [openNew, setOpenNew] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
   const [search, setSearch] = useState("");

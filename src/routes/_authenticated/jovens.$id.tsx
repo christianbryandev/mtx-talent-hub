@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { YoungProfileEditDialog } from "@/components/jovens/YoungProfileEditDialog";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,8 @@ function JovemDetailPage() {
   const { isAdmin, isSuperAdmin } = usePermissions();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  useRealtimeInvalidate("young_people", [["young_people", id], ["young_people"]]);
+  useRealtimeInvalidate("young_evolution", [["young_evolution", id]]);
 
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);

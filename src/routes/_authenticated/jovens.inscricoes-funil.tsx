@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/jovens/inscricoes-funil")(
 
 function PendingApplicationsPage() {
   const qc = useQueryClient();
+  useRealtimeInvalidate("applications", [["applications-pending"]]);
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
 

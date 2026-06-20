@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteClientCascade } from "@/lib/cascade-delete";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,9 @@ function ClientDetailPage() {
   const qc = useQueryClient();
   const { isAdmin, isComercial, isSuperAdmin } = usePermissions();
   const canEdit = isAdmin || isComercial;
+  useRealtimeInvalidate("clients", [["client", id], ["clients"]]);
+  useRealtimeInvalidate("client_services", [["client-services", id]]);
+  useRealtimeInvalidate("client_history", [["client-history", id]]);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const deleteMutation = useMutation({

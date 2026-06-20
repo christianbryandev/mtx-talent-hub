@@ -5,6 +5,7 @@ import { Plus, Search, Inbox, Link2, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ function JovensListPage() {
   const { user } = useAuth();
   void user;
   const qc = useQueryClient();
+  useRealtimeInvalidate("young_people", [["young_people"]]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [phaseFilter, setPhaseFilter] = useState<string>("all");

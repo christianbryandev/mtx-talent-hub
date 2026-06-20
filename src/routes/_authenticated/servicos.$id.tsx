@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, Plus, Trash2, Users, Building2, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,8 @@ function ServicoDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  useRealtimeInvalidate("services", [["service", id], ["services"]]);
+  useRealtimeInvalidate("service_young_people", [["service-youngs", id]]);
   const [editOpen, setEditOpen] = useState(false);
   const [addYoungId, setAddYoungId] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);

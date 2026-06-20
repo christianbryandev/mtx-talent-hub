@@ -29,6 +29,7 @@ import { format, parseISO, subMonths, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,6 +99,10 @@ function DashboardPage() {
 
 function AdminDashboardContent() {
   const { isAdmin } = usePermissions();
+  useRealtimeInvalidate("opportunities", [["dashboard-stats"]]);
+  useRealtimeInvalidate("tasks", [["dashboard-stats"]]);
+  useRealtimeInvalidate("clients", [["dashboard-stats"]]);
+  useRealtimeInvalidate("young_people", [["dashboard-stats"]]);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-stats"],

@@ -31,6 +31,7 @@ import {
 } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +144,8 @@ function IndicadoresPage() {
   const [range, setRange] = useState<RangeOption>("6m");
   const [area, setArea] = useState<AreaFilter>("geral");
   const [responsavelId, setResponsavelId] = useState<string | null>(null);
+  useRealtimeInvalidate("opportunities", [["indicadores", "responsaveis"]]);
+  useRealtimeInvalidate("clients", [["indicadores", "responsaveis"]]);
 
   const { data: responsaveis } = useQuery({
     queryKey: ["indicadores", "responsaveis"],
