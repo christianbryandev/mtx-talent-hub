@@ -61,7 +61,7 @@ type ClientRow = {
 };
 
 function ClientesListPage() {
-  const { isAdmin, isComercial, isJovemAprendiz } = usePermissions();
+  const { isAdmin, isComercial } = usePermissions();
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -134,7 +134,7 @@ function ClientesListPage() {
             Empresas atendidas pela operação MTX
           </p>
         </div>
-        {(isAdmin || isComercial || isJovemAprendiz) && (
+        {(isAdmin || isComercial) && (
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setLinkOpen(true)}>
               <LinkIcon className="h-4 w-4 mr-2 text-primary" />
