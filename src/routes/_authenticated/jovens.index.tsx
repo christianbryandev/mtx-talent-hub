@@ -91,7 +91,7 @@ function JovensListPage() {
       return raw.filter(y => {
         if (!y.profile_id) return true;
         const role = roleMap.get(y.profile_id);
-        return !role || role === "jovem_aprendiz";
+        return !role || role === "jovem_aprendiz" || role === "comercial";
       });
     },
   });
