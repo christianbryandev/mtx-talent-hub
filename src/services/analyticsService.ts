@@ -107,7 +107,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     .filter((o: any) => o.status === "aberta")
     .reduce((a: number, o: any) => a + Number(o.proposal_value ?? o.estimated_value ?? 0), 0);
 
-  // Funnel
+  // Funnel — only count open opportunities (same as CRM Kanban)
   const funnelCounts: Record<CanonicalStage, { qtd: number; valor: number }> = {
     prospeccao: { qtd: 0, valor: 0 },
     contato: { qtd: 0, valor: 0 },
@@ -116,7 +116,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     proposta: { qtd: 0, valor: 0 },
     fechamento: { qtd: 0, valor: 0 },
   };
-  opps.forEach((o: any) => {
+  opps.filter((o: any) => o.status === "aberta").forEach((o: any) => {
     const s = mapStage(o.funnel_stage);
     if (!s) return;
     funnelCounts[s].qtd += 1;
