@@ -184,6 +184,43 @@ function OpportunityDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  /** Auto-compute qualification_score (0-10) and closing_probability (0-100) */
+  const computeScores = (override: Partial<Opportunity> = {}) => {
+    const merged = { ...opp, ...override };
+    // Qualification score: sum of boolean criteria (each worth points)
+    let score = 0;
+    if (merged.has_demand) score += 2;
+    if (merged.has_budget) score += 2;
+    if (merged.has_urgency) score += 2;
+    if (merged.is_icp) score += 2;
+    if (merged.segment_validated) score += 1;
+    // Bonus for lead origin (known sources = +1)
+    if (merged.lead_origin && merged.lead_origin !== "Outro") score += 1;
+    const qualification_score = Math.min(score, 10);
+
+    // Probability: weighted from qualification + other factors
+    let prob = qualification_score * 7; // base: up to 70%
+    // Priority bonus
+    if (merged.priority === "alta") prob += 10;
+    else if (merged.priority === "media") prob += 5;
+    // Value bonus (having an estimated value shows maturity)
+    if (merged.estimated_value && merged.estimated_value > 0) prob += 5;
+    // Offered service bonus
+    if (merged.offered_service) prob += 5;
+    // Temperature bonus
+    if (merged.temperature === "quente") prob += 10;
+    else if (merged.temperature === "morno") prob += 5;
+    const closing_probability = Math.min(Math.round(prob / 5) * 5, 100);
+
+    return { qualification_score, closing_probability };
+  };
+
+  /** Update a field and auto-recalculate scores */
+  const updateWithScores = (patch: Partial<Opportunity>) => {
+    const scores = computeScores(patch);
+    updateMutation.mutate({ ...patch, ...scores });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -253,7 +290,7 @@ function OpportunityDetailPage() {
                     variant={active ? "default" : "outline"}
                     className="h-7 px-2 text-xs"
                     disabled={!canEdit}
-                    onClick={() => updateMutation.mutate({ temperature: t })}
+                    onClick={() => updateWithScores({ temperature: t })}
                   >
                     {emoji} {t}
                   </Button>
@@ -298,10 +335,10 @@ function OpportunityDetailPage() {
               <Label className="text-xs">Probabilidade: {opp.closing_probability ?? 0}%</Label>
               <Slider
                 value={[opp.closing_probability ?? 0]}
-                onValueChange={(v) => updateMutation.mutate({ closing_probability: v[0] })}
+                onValueChange={() => {}}
                 max={100}
                 step={5}
-                disabled={!canEdit}
+                disabled
               />
             </div>
             <Field label="Origem do lead" value={opp.lead_origin} />
@@ -314,7 +351,7 @@ function OpportunityDetailPage() {
                 onChange={(ids, totalSum) => {
                   servicesMutation.mutate(ids);
                   if (totalSum !== undefined) {
-                    updateMutation.mutate({ estimated_value: totalSum });
+                    updateWithScores({ estimated_value: totalSum });
                   }
                 }}
                 disabled={!canEdit || servicesMutation.isPending}
@@ -383,13 +420,13 @@ function OpportunityDetailPage() {
           <CardHeader><CardTitle className="text-base">Classificação</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
             <ToggleField label="ICP — Ideal Customer Profile" value={opp.is_icp} disabled={!canEdit}
-              onChange={(v) => updateMutation.mutate({ is_icp: v })} />
+              onChange={(v) => updateWithScores({ is_icp: v })} />
             <ToggleField label="Segmento validado" value={opp.segment_validated} disabled={!canEdit}
-              onChange={(v) => updateMutation.mutate({ segment_validated: v })} />
+              onChange={(v) => updateWithScores({ segment_validated: v })} />
             <div>
               <Label className="text-xs">Origem do lead</Label>
               <Select value={opp.lead_origin ?? ""} disabled={!canEdit}
-                onValueChange={(v) => updateMutation.mutate({ lead_origin: v })}>
+                onValueChange={(v) => updateWithScores({ lead_origin: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
                   {LEAD_ORIGIN_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
@@ -403,15 +440,15 @@ function OpportunityDetailPage() {
           <CardHeader><CardTitle className="text-base">Qualificação</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
             <ToggleField label="Tem demanda clara?" value={opp.has_demand} disabled={!canEdit}
-              onChange={(v) => updateMutation.mutate({ has_demand: v })} />
+              onChange={(v) => updateWithScores({ has_demand: v })} />
             <ToggleField label="Tem orçamento disponível?" value={opp.has_budget} disabled={!canEdit}
-              onChange={(v) => updateMutation.mutate({ has_budget: v })} />
+              onChange={(v) => updateWithScores({ has_budget: v })} />
             <ToggleField label="Tem urgência?" value={opp.has_urgency} disabled={!canEdit}
-              onChange={(v) => updateMutation.mutate({ has_urgency: v })} />
+              onChange={(v) => updateWithScores({ has_urgency: v })} />
             <div>
               <Label className="text-xs">Nota de qualificação: {opp.qualification_score ?? 0}/10</Label>
-              <Slider value={[opp.qualification_score ?? 0]} max={10} step={1} disabled={!canEdit}
-                onValueChange={(v) => updateMutation.mutate({ qualification_score: v[0] })} />
+              <Slider value={[opp.qualification_score ?? 0]} max={10} step={1} disabled
+                onValueChange={() => {}} />
             </div>
           </CardContent>
         </Card>
