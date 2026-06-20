@@ -146,7 +146,7 @@ function AdminDashboardContent() {
       const youngs = rawYoungs.filter(y => {
         if (!y.profile_id) return true;
         const role = roleMap.get(y.profile_id);
-        return !role || role === "jovem_aprendiz";
+        return !role || role === "jovem_aprendiz" || role === "comercial";
       });
 
       const activeYoungs = youngs.filter((y) => !["desligado", "reprovado", "cancelada"].includes(y.status)).length;
