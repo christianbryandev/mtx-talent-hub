@@ -95,7 +95,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     : data.clients;
 
   // KPIs TOP
-  const activeClients = clients.filter((c: any) => c.status === "ativo");
+  const activeClients = clients.filter((c: any) => c.status === "ativo" || c.status === "onboarding");
 
   // MRR: recurring services (full monthly_value) + pontual services (value or installment)
   const mrrByClient: Record<string, number> = {};
