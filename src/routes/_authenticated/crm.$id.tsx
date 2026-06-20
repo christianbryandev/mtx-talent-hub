@@ -174,11 +174,16 @@ function OpportunityDetailPage() {
     for (const item of info) {
       const row = oppServices.find((s) => s.service_id === item.serviceId);
       if (row) {
-        await supabase.from("opportunity_services")
+        const { error } = await supabase.from("opportunity_services")
           .update({ payment_method: item.paymentMethod, installments: item.installments } as never)
           .eq("id", row.id);
+        if (error) {
+          toast.error("Erro ao salvar forma de pagamento");
+          return;
+        }
       }
     }
+    toast.success("Forma de pagamento salva");
     qc.invalidateQueries({ queryKey: ["opp-services", id] });
   };
 
