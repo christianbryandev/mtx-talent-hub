@@ -80,6 +80,7 @@ function OpportunityDetailPage() {
   const [showConvert, setShowConvert] = useState(false);
   const [showInteraction, setShowInteraction] = useState(false);
   const [showProposal, setShowProposal] = useState(false);
+  const [localPaymentInfo, setLocalPaymentInfo] = useState<ServicePaymentInfo[]>([]);
 
   const { data: opp, isLoading } = useQuery({
     queryKey: ["opportunity", id],
@@ -166,8 +167,10 @@ function OpportunityDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const handlePaymentChange = async (info: Array<{ serviceId: string; paymentMethod: string; installments: number }>) => {
-    // Update payment info on opportunity_services
+  const handlePaymentChange = async (info: ServicePaymentInfo[]) => {
+    // Optimistic local update
+    setLocalPaymentInfo(info);
+    // Persist to database
     for (const item of info) {
       const row = oppServices.find((s) => s.service_id === item.serviceId);
       if (row) {
@@ -368,11 +371,19 @@ function OpportunityDetailPage() {
                   }
                 }}
                 disabled={!canEdit || servicesMutation.isPending}
-                paymentInfo={oppServices.filter((s) => s.payment_method).map((s) => ({
-                  serviceId: s.service_id,
-                  paymentMethod: s.payment_method ?? "unico",
-                  installments: s.installments ?? 1,
-                }))}
+                paymentInfo={(() => {
+                  // Merge server data with local optimistic state
+                  const serverInfo = oppServices.map((s) => ({
+                    serviceId: s.service_id,
+                    paymentMethod: (s.payment_method ?? "unico") as "unico" | "parcelado",
+                    installments: s.installments ?? 1,
+                  }));
+                  // Local takes priority
+                  return serverInfo.map((si) => {
+                    const local = localPaymentInfo.find((l) => l.serviceId === si.serviceId);
+                    return local ?? si;
+                  });
+                })()}
                 onPaymentChange={canEdit ? handlePaymentChange : undefined}
               />
             </div>
