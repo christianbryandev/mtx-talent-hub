@@ -736,9 +736,10 @@ function CreateMyProfile() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [creating, setCreating] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const handleCreate = async () => {
-    if (!user) return;
+    if (!user || creating) return;
     setCreating(true);
     try {
       const { data: profile } = await supabase
@@ -770,13 +771,17 @@ function CreateMyProfile() {
           trail_phase: "fase_1",
           entry_date: new Date().toISOString().split("T")[0],
           profile_id: user.id,
-          // Vincular dados da inscrição (se existir)
+          // Vincular todos os dados da inscrição (se existir)
+          birth_date: app?.birth_date ?? null,
           age: app?.age ?? null,
+          address: app?.address ?? null,
           city: app?.city ?? null,
           state: app?.state ?? null,
           whatsapp: app?.whatsapp ?? null,
           phone: app?.phone ?? null,
           education_level: app?.education_level ?? null,
+          currently_studying: app?.currently_studying ?? null,
+          currently_working: app?.currently_working ?? null,
           family_income: app?.family_income ?? null,
           interest_area: app?.interest_area ?? null,
           has_laptop: app?.has_laptop ?? false,
@@ -789,6 +794,11 @@ function CreateMyProfile() {
         .select()
         .single();
       if (error) throw error;
+
+      // Também garante que profiles.full_name esteja preenchido
+      if (!profile?.full_name && app?.full_name) {
+        await supabase.from("profiles").update({ full_name: app.full_name }).eq("id", user.id);
+      }
 
       await supabase.from("activity_logs").insert({
         user_id: user.id,
@@ -812,8 +822,17 @@ function CreateMyProfile() {
       toast.error((e as Error).message);
     } finally {
       setCreating(false);
+      setAttempted(true);
     }
   };
+
+  // Auto-create profile on first visit
+  useEffect(() => {
+    if (user && !creating && !attempted) {
+      handleCreate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -821,20 +840,31 @@ function CreateMyProfile() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gradient-mtx text-white">
           <Trophy className="h-8 w-8" />
         </div>
-        <h2 className="mt-4 text-2xl font-bold">Bem-vindo(a) à MTX 🎉</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Crie seu perfil na área de Jovens para que sua equipe te conheça melhor.
-          Você poderá preencher seus dados depois — começamos com o básico.
-        </p>
-        <Button
-          size="lg"
-          onClick={handleCreate}
-          disabled={creating}
-          className="mt-6 bg-gradient-mtx text-white"
-        >
-          {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Criar meu perfil agora
-        </Button>
+        {creating ? (
+          <>
+            <h2 className="mt-4 text-2xl font-bold">Preparando seu perfil...</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Estamos importando seus dados do formulário de inscrição.
+            </p>
+            <Loader2 className="mx-auto mt-6 h-8 w-8 animate-spin text-primary" />
+          </>
+        ) : (
+          <>
+            <h2 className="mt-4 text-2xl font-bold">Bem-vindo(a) à MTX 🎉</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Crie seu perfil na área de Jovens para que sua equipe te conheça melhor.
+              Você poderá preencher seus dados depois — começamos com o básico.
+            </p>
+            <Button
+              size="lg"
+              onClick={handleCreate}
+              disabled={creating}
+              className="mt-6 bg-gradient-mtx text-white"
+            >
+              Criar meu perfil agora
+            </Button>
+          </>
+        )}
       </Card>
     </div>
   );
