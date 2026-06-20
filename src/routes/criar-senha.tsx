@@ -47,7 +47,7 @@ function CreatePasswordPage() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    
+
     if (error) {
       let msg = error.message;
       if (msg.includes("different from the old password")) {
@@ -58,9 +58,41 @@ function CreatePasswordPage() {
       toast.error("Não foi possível salvar a senha", { description: msg });
       return;
     }
-    
+
+    // Ensure profiles.full_name is populated from the application form
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.full_name) {
+          // Try to get name from young_applications (inscription form)
+          const { data: app } = await supabase
+            .from("young_applications")
+            .select("full_name")
+            .eq("email", user.email!)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const name = app?.full_name
+            || user.user_metadata?.full_name
+            || null;
+
+          if (name) {
+            await supabase.from("profiles").update({ full_name: name }).eq("id", user.id);
+          }
+        }
+      }
+    } catch {
+      // Non-critical — don't block the user from proceeding
+    }
+
     toast.success("Senha criada com sucesso!");
-    // Redireciona para o dashboard (painel)
     navigate({ to: "/dashboard" });
   };
 
