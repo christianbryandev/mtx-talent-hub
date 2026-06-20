@@ -680,6 +680,15 @@ function ConvertDialog({
   const handle = async () => {
     setSubmitting(true);
     try {
+      const today = new Date().toISOString().slice(0, 10);
+      const endDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+      // Calculate monthly_value from services or opportunity estimated_value
+      const servicesTotal = oppServices && oppServices.length > 0
+        ? oppServices.reduce((sum, s) => sum + (s.services?.default_value ?? s.services?.base_price ?? 0), 0)
+        : null;
+      const monthlyValue = servicesTotal || opp.estimated_value || null;
+
       const { data, error } = await supabase
         .from("clients")
         .insert({
@@ -691,7 +700,13 @@ function ConvertDialog({
           niche: opp.niche,
           lead_origin: opp.lead_origin,
           status: "onboarding",
-          entry_date: new Date().toISOString().slice(0, 10),
+          entry_date: today,
+          contract_start: today,
+          contract_end: endDate,
+          monthly_value: monthlyValue,
+          setup_value: opp.proposal_value ?? opp.estimated_value ?? null,
+          active_contract: true,
+          commercial_responsible: opp.commercial_responsible ?? null,
         } as never)
         .select("id")
         .single();
