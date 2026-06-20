@@ -58,7 +58,7 @@ export async function fetchIndicadoresData(filters: IndicadoresFilters) {
       supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible").limit(3000),
       supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at").limit(3000),
       supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)).limit(1000),
-      supabase.from("client_services").select("id, monthly_value, status").limit(2000),
+      supabase.from("client_services").select("id, client_id, monthly_value, status").limit(2000),
       supabase.from("proposals").select("id, value, status, sent_at, created_at").limit(2000),
       supabase.from("meeting_participants").select("id, meeting_id, present").limit(5000),
       supabase.from("meeting_tasks").select("id, meeting_id, task_id").limit(5000),
@@ -96,7 +96,17 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
 
   // KPIs TOP
   const activeClients = clients.filter((c: any) => c.status === "ativo");
-  const mrr = activeClients.reduce((a: number, c: any) => a + Number(c.monthly_value ?? 0), 0);
+
+  // Build revenue map per client from active client_services
+  const serviceRevenueByClient: Record<string, number> = {};
+  (data.services ?? []).forEach((s: any) => {
+    if (s.status === "ativo" && s.client_id && s.monthly_value) {
+      serviceRevenueByClient[s.client_id] = (serviceRevenueByClient[s.client_id] ?? 0) + Number(s.monthly_value);
+    }
+  });
+
+  const mrr = activeClients.reduce((a: number, c: any) =>
+    a + (serviceRevenueByClient[c.id] ?? Number(c.monthly_value ?? 0)), 0);
   const newClientsMonth = clients.filter((c: any) => c.created_at && new Date(c.created_at) >= monthStart).length;
 
   const oppsClosed = opps.filter((o: any) => o.status === "ganha" || o.status === "perdida");
@@ -190,14 +200,18 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     const key = format(d, "yyyy-MM");
     buckets[key] = { month: format(d, "MMM", { locale: ptBR }), clientes: 0, oportunidades: 0, receita: 0 };
   }
+
   clients.forEach((c: any) => {
     const k = c.created_at?.slice(0, 7);
     if (buckets[k]) {
       buckets[k].clientes++;
-      if (c.status === "ativo") buckets[k].receita += Number(c.monthly_value ?? 0);
+      // Revenue: sum of active services for this client, fallback to clients.monthly_value
+      const revenue = serviceRevenueByClient[c.id] ?? Number(c.monthly_value ?? 0);
+      if (c.status === "ativo") buckets[k].receita += revenue;
     }
   });
-  opps.forEach((o: any) => {
+  // Only count open opportunities (matching CRM Kanban)
+  opps.filter((o: any) => o.status === "aberta").forEach((o: any) => {
     const k = o.created_at?.slice(0, 7);
     if (buckets[k]) buckets[k].oportunidades++;
   });
