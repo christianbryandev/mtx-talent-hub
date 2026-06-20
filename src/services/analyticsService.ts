@@ -97,16 +97,17 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
   // KPIs TOP
   const activeClients = clients.filter((c: any) => c.status === "ativo");
 
-  // Build revenue map per client from active client_services
-  const serviceRevenueByClient: Record<string, number> = {};
+  // MRR: only recurring (mensal) services count
+  const mrrByClient: Record<string, number> = {};
   (data.services ?? []).forEach((s: any) => {
-    if (s.status === "ativo" && s.client_id && s.monthly_value) {
-      serviceRevenueByClient[s.client_id] = (serviceRevenueByClient[s.client_id] ?? 0) + Number(s.monthly_value);
+    const billing = s.billing_type ?? "mensal";
+    if (s.status === "ativo" && s.client_id && s.monthly_value && billing === "mensal") {
+      mrrByClient[s.client_id] = (mrrByClient[s.client_id] ?? 0) + Number(s.monthly_value);
     }
   });
 
   const mrr = activeClients.reduce((a: number, c: any) =>
-    a + (serviceRevenueByClient[c.id] ?? Number(c.monthly_value ?? 0)), 0);
+    a + (mrrByClient[c.id] ?? Number(c.monthly_value ?? 0)), 0);
   const newClientsMonth = clients.filter((c: any) => c.created_at && new Date(c.created_at) >= monthStart).length;
 
   const oppsClosed = opps.filter((o: any) => o.status === "ganha" || o.status === "perdida");
