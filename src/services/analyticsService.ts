@@ -97,12 +97,17 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
   // KPIs TOP
   const activeClients = clients.filter((c: any) => c.status === "ativo");
 
-  // MRR: only recurring (mensal) services count
+  // MRR: recurring services (full monthly_value) + pontual services (value or installment)
   const mrrByClient: Record<string, number> = {};
   (data.services ?? []).forEach((s: any) => {
+    if (s.status !== "ativo" || !s.client_id) return;
     const billing = s.billing_type ?? "mensal";
-    if (s.status === "ativo" && s.client_id && s.monthly_value && billing === "mensal") {
-      mrrByClient[s.client_id] = (mrrByClient[s.client_id] ?? 0) + Number(s.monthly_value);
+    if (billing === "mensal") {
+      // Mensal: full monthly_value
+      mrrByClient[s.client_id] = (mrrByClient[s.client_id] ?? 0) + Number(s.monthly_value ?? 0);
+    } else {
+      // Pontual: monthly_value already contains total (à vista) or total/installments (parcelado)
+      mrrByClient[s.client_id] = (mrrByClient[s.client_id] ?? 0) + Number(s.monthly_value ?? 0);
     }
   });
 
