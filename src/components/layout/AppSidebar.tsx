@@ -22,7 +22,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { useJourney } from "@/hooks/useJourney";
 import mtxLogo from "@/assets/mtx-hub-logo.png";
 
 import {
@@ -124,8 +123,20 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, avatarUrl, signOut } = useAuth();
   const { isAdmin, isSuperAdmin, isComercial, isJovemAprendiz, role, roles } = usePermissions();
-  // XP only relevant for jovem_aprendiz (journey owner). Hook is safe-noop for others.
-  const { data: journey } = useJourney(isJovemAprendiz ? undefined : "00000000-0000-0000-0000-000000000000");
+  // XP badge: direct query from xp_events for accuracy (same source as ranking)
+  const { data: myXp = 0 } = useQuery({
+    queryKey: ["my-xp", user?.id],
+    enabled: !!user && isJovemAprendiz,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("xp_events")
+        .select("xp_amount")
+        .eq("user_id", user!.id);
+      if (error) return 0;
+      return (data ?? []).reduce((sum, e) => sum + (e.xp_amount ?? 0), 0);
+    },
+    staleTime: 30_000,
+  });
 
   const { data: pendingAppsCount = 0 } = useQuery({
     queryKey: ["pending-applications-count-combined"],
@@ -328,7 +339,7 @@ export function AppSidebar() {
             className="mx-2 mt-2 inline-flex w-fit items-center gap-1 rounded-md border border-border/60 px-1.5 py-0.5 text-[11px] font-medium text-amber-400 transition-colors hover:border-amber-400/40"
             title="Ver minha jornada"
           >
-            <Zap size={12} /> {journey?.total_xp ?? 0} XP
+            <Zap size={12} /> {myXp} XP
           </Link>
         )}
         <div className="flex items-center gap-2 p-2">
