@@ -56,7 +56,7 @@ import {
   EditRequestBanner,
   useEditRequestState,
 } from "@/components/crm/EditRequestBanner";
-import { ServiceMultiSelect } from "@/components/crm/ServiceMultiSelect";
+import { ServiceMultiSelect, type ServicePaymentInfo } from "@/components/crm/ServiceMultiSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
@@ -125,7 +125,7 @@ function OpportunityDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunity_services")
-        .select("id, service_id, services(name, base_price, default_value)")
+        .select("id, service_id, payment_method, installments, services(name, base_price, default_value, billing_model)")
         .eq("opportunity_id", id);
       if (error) throw error;
       return (data ?? []) as Array<any>;
@@ -165,6 +165,19 @@ function OpportunityDetailPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handlePaymentChange = async (info: Array<{ serviceId: string; paymentMethod: string; installments: number }>) => {
+    // Update payment info on opportunity_services
+    for (const item of info) {
+      const row = oppServices.find((s) => s.service_id === item.serviceId);
+      if (row) {
+        await supabase.from("opportunity_services")
+          .update({ payment_method: item.paymentMethod, installments: item.installments } as never)
+          .eq("id", row.id);
+      }
+    }
+    qc.invalidateQueries({ queryKey: ["opp-services", id] });
+  };
 
   const { hasActiveApproval } = useEditRequestState("opportunity", id);
 
@@ -355,6 +368,12 @@ function OpportunityDetailPage() {
                   }
                 }}
                 disabled={!canEdit || servicesMutation.isPending}
+                paymentInfo={oppServices.filter((s) => s.payment_method).map((s) => ({
+                  serviceId: s.service_id,
+                  paymentMethod: s.payment_method ?? "unico",
+                  installments: s.installments ?? 1,
+                }))}
+                onPaymentChange={canEdit ? handlePaymentChange : undefined}
               />
             </div>
             {isAdmin && (
@@ -714,13 +733,28 @@ function ConvertDialog({
 
       if (oppServices && oppServices.length > 0) {
         const { error: svcError } = await supabase.from("client_services").insert(
-          oppServices.map((s) => ({
-            client_id: data.id,
-            service_id: s.service_id,
-            service_name: s.services?.name ?? "Serviço",
-            monthly_value: s.services?.default_value ?? s.services?.base_price ?? null,
-            status: "ativo"
-          })) as never
+          oppServices.map((s) => {
+            const billingModel = s.services?.billing_model ?? "mensal";
+            const baseValue = Number(s.services?.default_value ?? s.services?.base_price ?? 0);
+            const payMethod = s.payment_method ?? "unico";
+            const numInstallments = s.installments ?? 1;
+            const isPontual = billingModel === "pontual";
+
+            return {
+              client_id: data.id,
+              service_id: s.service_id,
+              service_name: s.services?.name ?? "Serviço",
+              billing_type: billingModel,
+              payment_method: isPontual ? payMethod : "unico",
+              installments: isPontual ? numInstallments : 1,
+              total_value: isPontual ? baseValue : null,
+              monthly_value: isPontual
+                ? (payMethod === "parcelado" && numInstallments > 1 ? Math.round((baseValue / numInstallments) * 100) / 100 : baseValue)
+                : baseValue,
+              start_date: today,
+              status: "ativo",
+            };
+          }) as never
         );
         if (svcError) throw svcError;
       }

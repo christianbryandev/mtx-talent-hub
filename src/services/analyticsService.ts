@@ -58,7 +58,7 @@ export async function fetchIndicadoresData(filters: IndicadoresFilters) {
       supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible").limit(3000),
       supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at").limit(3000),
       supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)).limit(1000),
-      supabase.from("client_services").select("id, client_id, monthly_value, status").limit(2000),
+      supabase.from("client_services").select("id, client_id, monthly_value, status, billing_type, start_date, total_value, installments").limit(2000),
       supabase.from("proposals").select("id, value, status, sent_at, created_at").limit(2000),
       supabase.from("meeting_participants").select("id, meeting_id, present").limit(5000),
       supabase.from("meeting_tasks").select("id, meeting_id, task_id").limit(5000),
@@ -201,15 +201,51 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     buckets[key] = { month: format(d, "MMM", { locale: ptBR }), clientes: 0, oportunidades: 0, receita: 0 };
   }
 
+  // Count new clients per month
   clients.forEach((c: any) => {
     const k = c.created_at?.slice(0, 7);
-    if (buckets[k]) {
-      buckets[k].clientes++;
-      // Revenue: sum of active services for this client, fallback to clients.monthly_value
-      const revenue = serviceRevenueByClient[c.id] ?? Number(c.monthly_value ?? 0);
-      if (c.status === "ativo") buckets[k].receita += revenue;
-    }
+    if (buckets[k]) buckets[k].clientes++;
   });
+
+  // Revenue: for each month, sum active services revenue
+  const allServices = data.services ?? [];
+  Object.keys(buckets).forEach((monthKey) => {
+    let monthRevenue = 0;
+    allServices.forEach((s: any) => {
+      if (s.status !== "ativo" || !s.client_id) return;
+      const billing = s.billing_type ?? "mensal";
+      const sStart = s.start_date?.slice(0, 7) ?? s.created_at?.slice(0, 7) ?? monthKey;
+
+      if (billing === "mensal") {
+        // Monthly: count if service was active during this month
+        const sEnd = s.end_date?.slice(0, 7);
+        if (sStart <= monthKey && (!sEnd || sEnd >= monthKey)) {
+          monthRevenue += Number(s.monthly_value ?? 0);
+        }
+      } else {
+        // Pontual: distribute based on payment method
+        const installments = Number(s.installments ?? 1) || 1;
+        const totalVal = Number(s.total_value ?? s.monthly_value ?? 0);
+        if (installments <= 1) {
+          // À vista: full value in the start month
+          if (sStart === monthKey) monthRevenue += totalVal;
+        } else {
+          // Parcelado: one installment per month starting from start_date
+          const parcelValue = totalVal / installments;
+          const startDate = new Date(sStart + "-01");
+          for (let p = 0; p < installments; p++) {
+            const parcelMonth = format(new Date(startDate.getFullYear(), startDate.getMonth() + p, 1), "yyyy-MM");
+            if (parcelMonth === monthKey) {
+              monthRevenue += parcelValue;
+              break;
+            }
+          }
+        }
+      }
+    });
+    buckets[monthKey].receita = Math.round(monthRevenue * 100) / 100;
+  });
+
   // Only count open opportunities (matching CRM Kanban)
   opps.filter((o: any) => o.status === "aberta").forEach((o: any) => {
     const k = o.created_at?.slice(0, 7);
