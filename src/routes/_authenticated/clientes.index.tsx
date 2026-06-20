@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Building2, CheckCircle2, DollarSign, Sparkles, Plus, Search, LinkIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -60,7 +61,8 @@ type ClientRow = {
 };
 
 function ClientesListPage() {
-  const { isAdmin, isComercial } = usePermissions();
+  const { isAdmin, isComercial, isJovemAprendiz } = usePermissions();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -132,7 +134,7 @@ function ClientesListPage() {
             Empresas atendidas pela operação MTX
           </p>
         </div>
-        {(isAdmin || isComercial) && (
+        {(isAdmin || isComercial || isJovemAprendiz) && (
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setLinkOpen(true)}>
               <LinkIcon className="h-4 w-4 mr-2 text-primary" />
@@ -302,7 +304,7 @@ function ClientesListPage() {
       </div>
 
       <ClientFormDialog open={open} onOpenChange={setOpen} />
-      <CaptacaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} />
+      <CaptacaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} userId={user?.id} />
     </div>
   );
 }

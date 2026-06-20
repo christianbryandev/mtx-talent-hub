@@ -44,6 +44,12 @@ export const Route = createFileRoute("/cadastro-cliente")({
 
 function PublicLeadPage() {
   const [done, setDone] = useState(false);
+  const search = Route.useSearch() as { ref?: string };
+
+  const isValidUuid = (s: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+  const refId = search.ref && isValidUuid(search.ref) ? search.ref : null;
 
   const form = useForm<LeadValues>({
     resolver: zodResolver(leadSchema),
@@ -68,7 +74,8 @@ function PublicLeadPage() {
         status: "aberta",
         funnel_stage: "contato",
         priority: "media",
-        lead_origin: "Site/Formulário Público",
+        lead_origin: refId ? "Link de Captação" : "Site/Formulário Público",
+        ...(refId ? { commercial_responsible: refId } : {}),
       };
 
       const { error } = await supabase.from("opportunities").insert(payload as never);

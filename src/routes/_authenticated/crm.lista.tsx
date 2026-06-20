@@ -46,8 +46,8 @@ const brl = (v: number | null) =>
 function CrmListPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { isAdmin, isComercial } = usePermissions();
-  const canManage = isAdmin || isComercial;
+  const { isAdmin, isComercial, isJovemAprendiz } = usePermissions();
+  const canManage = isAdmin || isComercial || isJovemAprendiz;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

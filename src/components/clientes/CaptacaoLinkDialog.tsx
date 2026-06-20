@@ -15,16 +15,18 @@ import { Input } from "@/components/ui/input";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userId?: string;
 }
 
-export function CaptacaoLinkDialog({ open, onOpenChange }: Props) {
+export function CaptacaoLinkDialog({ open, onOpenChange, userId }: Props) {
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
+  const suffix = userId ? `?ref=${userId}` : "";
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/cadastro-cliente`
-      : "/cadastro-cliente";
+      ? `${window.location.origin}/cadastro-cliente${suffix}`
+      : `/cadastro-cliente${suffix}`;
 
   const copy = async () => {
     try {
@@ -55,7 +57,9 @@ export function CaptacaoLinkDialog({ open, onOpenChange }: Props) {
             Link de Captação de Cliente
           </DialogTitle>
           <DialogDescription>
-            Compartilhe este link para que novos clientes possam enviar os dados e cair diretamente no sistema como "Lead".
+            {userId
+              ? "Este é o seu link pessoal. Leads captados por ele serão atribuídos automaticamente a você."
+              : "Compartilhe este link para que novos clientes possam enviar os dados e cair diretamente no sistema como \"Lead\"."}
           </DialogDescription>
         </DialogHeader>
 
