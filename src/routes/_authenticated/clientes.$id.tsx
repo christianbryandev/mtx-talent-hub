@@ -119,11 +119,11 @@ function ClientDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_services")
-        .select("*")
+        .select("*, young_people:executor_id(id, full_name)")
         .eq("client_id", id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Array<any>;
     },
   });
 
@@ -246,7 +246,16 @@ function ClientDetailPage() {
               value={client.entry_date ? new Date(client.entry_date).toLocaleDateString("pt-BR") : "—"}
             />
             <InfoCard label="Contrato ativo" value={client.active_contract ? "Sim" : "Não"} />
-            <InfoCard label="Jovem responsável" value={client.young_responsible ? "Atribuído" : "—"} />
+            <InfoCard
+              label="Jovem(ns) responsável(is)"
+              value={(() => {
+                const youngs = services
+                  .filter((s: any) => s.young_people?.full_name)
+                  .map((s: any) => s.young_people.full_name);
+                const unique = [...new Set(youngs)];
+                return unique.length > 0 ? unique.join(", ") : "—";
+              })()}
+            />
           </div>
 
           <Card>
@@ -283,13 +292,26 @@ function ClientDetailPage() {
               {services.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado.</p>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {services.map((s) => (
-                    <Badge key={s.id} variant="outline">
-                      {s.service_name} {s.monthly_value ? `· ${fmtBRL(s.monthly_value)}` : ""}
-                    </Badge>
+                <ul className="divide-y divide-border/40">
+                  {services.map((s: any) => (
+                    <li key={s.id} className="py-2 text-sm">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{s.service_name}</p>
+                          {s.young_people?.full_name && (
+                            <p className="text-xs text-muted-foreground">Responsável: {s.young_people.full_name}</p>
+                          )}
+                        </div>
+                        <div className="text-right text-xs">
+                          <p className="font-medium">{fmtBRL(s.monthly_value)}{s.billing_type === "mensal" ? "/mês" : ""}</p>
+                          <p className="text-muted-foreground">
+                            {s.billing_type === "mensal" ? "Mensal" : s.billing_type === "pontual" && s.total_value && s.monthly_value < s.total_value ? `Parcelado ${s.installments}x` : "Pontual à vista"}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </CardContent>
           </Card>
@@ -580,11 +602,11 @@ function ServicesTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_services")
-        .select("*")
+        .select("*, young_people:executor_id(id, full_name)")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Array<any>;
     },
   });
 
@@ -636,12 +658,17 @@ function ServicesTab({
                     <p className="font-medium">{s.service_name}</p>
                     <p className="text-xs text-muted-foreground">
                       {s.start_date ? `Início: ${new Date(s.start_date).toLocaleDateString("pt-BR")}` : ""}
+                      {s.young_people?.full_name ? ` · Responsável: ${s.young_people.full_name}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {s.billing_type === "mensal" ? "Mensal" : s.billing_type === "pontual" && s.total_value && Number(s.monthly_value) < Number(s.total_value) ? `Pontual parcelado (${s.installments}x de ${fmtBRL(s.monthly_value)})` : `Pontual à vista`}
+                      {s.total_value && s.billing_type === "pontual" ? ` · Total: ${fmtBRL(s.total_value)}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <Badge variant="outline">{s.status}</Badge>
-                      <p className="text-xs mt-1">{fmtBRL(s.monthly_value)}</p>
+                      <p className="text-xs mt-1 font-medium">{fmtBRL(s.monthly_value)}{s.billing_type === "mensal" ? "/mês" : ""}</p>
                     </div>
                     {canEdit && s.status !== "ativo" && (
                       <Button
