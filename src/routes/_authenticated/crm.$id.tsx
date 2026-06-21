@@ -57,6 +57,7 @@ import {
   useEditRequestState,
 } from "@/components/crm/EditRequestBanner";
 import { ServiceMultiSelect, type ServicePaymentInfo } from "@/components/crm/ServiceMultiSelect";
+import { ServiceYoungResponsibleSelect } from "@/components/crm/ServiceYoungResponsibleSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 
 export const Route = createFileRoute("/_authenticated/crm/$id")({
@@ -81,6 +82,7 @@ function OpportunityDetailPage() {
   const [showInteraction, setShowInteraction] = useState(false);
   const [showProposal, setShowProposal] = useState(false);
   const [localPaymentInfo, setLocalPaymentInfo] = useState<ServicePaymentInfo[]>([]);
+  const [localYoungResponsibles, setLocalYoungResponsibles] = useState<Record<string, string | null>>({});
 
   const { data: opp, isLoading } = useQuery({
     queryKey: ["opportunity", id],
@@ -126,7 +128,7 @@ function OpportunityDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunity_services")
-        .select("id, service_id, payment_method, installments, services(name, base_price, default_value, billing_model)")
+        .select("id, service_id, payment_method, installments, young_responsible_id, services(name, base_price, default_value, billing_model)")
         .eq("opportunity_id", id);
       if (error) throw error;
       return (data ?? []) as Array<any>;
@@ -185,6 +187,23 @@ function OpportunityDetailPage() {
     }
     toast.success("Forma de pagamento salva");
     qc.invalidateQueries({ queryKey: ["opp-services", id] });
+  };
+
+  const handleYoungResponsibleChange = async (serviceId: string, youngId: string | null) => {
+    setLocalYoungResponsibles((prev) => ({ ...prev, [serviceId]: youngId }));
+    const row = oppServices.find((s) => s.service_id === serviceId);
+    if (row) {
+      const { error } = await supabase
+        .from("opportunity_services")
+        .update({ young_responsible_id: youngId } as never)
+        .eq("id", row.id);
+      if (error) {
+        toast.error("Erro ao salvar responsável");
+        return;
+      }
+      toast.success("Responsável atualizado");
+      qc.invalidateQueries({ queryKey: ["opp-services", id] });
+    }
   };
 
   const { hasActiveApproval } = useEditRequestState("opportunity", id);
@@ -400,6 +419,28 @@ function OpportunityDetailPage() {
                 })()}
                 onPaymentChange={canEdit ? handlePaymentChange : undefined}
               />
+              {oppServices.length > 0 && (
+                <div className="mt-2 space-y-1.5 p-2 bg-muted/40 rounded-md border border-border/50">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+                    Jovem responsável por serviço
+                  </p>
+                  {oppServices.map((os) => {
+                    const currentValue = localYoungResponsibles[os.service_id] !== undefined
+                      ? localYoungResponsibles[os.service_id]
+                      : os.young_responsible_id ?? null;
+                    return (
+                      <ServiceYoungResponsibleSelect
+                        key={os.service_id}
+                        serviceId={os.service_id}
+                        serviceName={os.services?.name ?? "Serviço"}
+                        value={currentValue}
+                        onChange={(youngId) => handleYoungResponsibleChange(os.service_id, youngId)}
+                        disabled={!canEdit}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
             {isAdmin && (
               <div className="pt-2 border-t mt-2">

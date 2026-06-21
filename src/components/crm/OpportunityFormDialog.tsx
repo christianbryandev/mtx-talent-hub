@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_STAGES, LEAD_ORIGIN_OPTIONS, type FunnelStage } from "@/types/crm";
 import { ServiceMultiSelect } from "./ServiceMultiSelect";
+import { ServiceYoungResponsibleSelect } from "./ServiceYoungResponsibleSelect";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
@@ -69,6 +70,34 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
   const [submitting, setSubmitting] = useState(false);
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [calculatedSum, setCalculatedSum] = useState(0);
+  const [youngResponsibles, setYoungResponsibles] = useState<Record<string, string | null>>({});
+
+  // Query para obter nomes dos serviços selecionados
+  const { data: allServices = [] } = useQuery({
+    queryKey: ["services-active-with-price"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, name, category, base_price, default_value, billing_model")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const handleServiceChange = useCallback((ids: string[], sum?: number) => {
+    setServiceIds(ids);
+    setCalculatedSum(sum || 0);
+    // Limpar responsáveis de serviços removidos
+    setYoungResponsibles((prev) => {
+      const next: Record<string, string | null> = {};
+      for (const id of ids) {
+        next[id] = prev[id] ?? null;
+      }
+      return next;
+    });
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -122,6 +151,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             serviceIds.map((sid) => ({
               opportunity_id: data.id as string,
               service_id: sid,
+              young_responsible_id: youngResponsibles[sid] || null,
             })) as never,
           );
         if (svcErr) throw svcErr;
@@ -143,6 +173,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       form.reset();
       setServiceIds([]);
       setCalculatedSum(0);
+      setYoungResponsibles({});
       onOpenChange(false);
       onCreated?.(id);
     },
@@ -250,13 +281,31 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
             </div>
             <div className="md:col-span-2">
               <Label>Serviços ofertados</Label>
-              <ServiceMultiSelect 
-                value={serviceIds} 
-                onChange={(ids, sum) => {
-                  setServiceIds(ids);
-                  setCalculatedSum(sum || 0);
-                }} 
+              <ServiceMultiSelect
+                value={serviceIds}
+                onChange={handleServiceChange}
               />
+              {serviceIds.length > 0 && (
+                <div className="mt-2 space-y-1.5 p-2 bg-muted/40 rounded-md border border-border/50">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+                    Jovem responsável por serviço
+                  </p>
+                  {serviceIds.map((sid) => {
+                    const svc = allServices.find((s) => s.id === sid);
+                    return (
+                      <ServiceYoungResponsibleSelect
+                        key={sid}
+                        serviceId={sid}
+                        serviceName={svc?.name ?? "Serviço"}
+                        value={youngResponsibles[sid] ?? null}
+                        onChange={(youngId) =>
+                          setYoungResponsibles((prev) => ({ ...prev, [sid]: youngId }))
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <Label>Valor estimado (R$) - Automático</Label>

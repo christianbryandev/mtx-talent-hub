@@ -1527,18 +1527,21 @@ export type Database = {
           id: string
           opportunity_id: string
           service_id: string
+          young_responsible_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           opportunity_id: string
           service_id: string
+          young_responsible_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           opportunity_id?: string
           service_id?: string
+          young_responsible_id?: string | null
         }
         Relationships: [
           {
@@ -1560,6 +1563,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_services_young_responsible_id_fkey"
+            columns: ["young_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
         ]
