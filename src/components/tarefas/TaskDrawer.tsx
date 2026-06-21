@@ -358,11 +358,58 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               />
             </div>
             <div className="col-span-2">
-              <Label className="text-xs">Jovem responsável</Label>
-              <YoungSearchSelect
-                value={task.young_responsible ?? null}
-                onChange={(v) => updateTask.mutate({ young_responsible: v })}
-              />
+              <Label className="text-xs">Jovem(ns) responsável(is)</Label>
+              <div className="space-y-1">
+                {/* Primary young responsible (on task itself) */}
+                <YoungSearchSelect
+                  value={task.young_responsible ?? null}
+                  onChange={(v) => updateTask.mutate({ young_responsible: v })}
+                  placeholder="Jovem principal"
+                />
+                {/* Additional young people from task_services */}
+                {taskServices
+                  .filter((ts) => !ts.service_id && ts.young_responsible)
+                  .map((ts) => (
+                    <div key={ts.id} className="flex items-center gap-1">
+                      <div className="flex-1">
+                        <YoungSearchSelect
+                          value={ts.young_responsible}
+                          onChange={async (v) => {
+                            if (v) {
+                              await supabase.from("task_services").update({ young_responsible: v } as never).eq("id", ts.id);
+                            } else {
+                              await supabase.from("task_services").delete().eq("id", ts.id);
+                            }
+                            qc.invalidateQueries({ queryKey: ["task-services", taskId] });
+                          }}
+                        />
+                      </div>
+                      <Button
+                        size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                        onClick={async () => {
+                          await supabase.from("task_services").delete().eq("id", ts.id);
+                          qc.invalidateQueries({ queryKey: ["task-services", taskId] });
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                {/* Add another young responsible */}
+                <Button
+                  size="sm" variant="outline" className="h-7 text-xs w-full"
+                  onClick={async () => {
+                    await supabase.from("task_services").insert({
+                      task_id: taskId,
+                      service_id: null,
+                      young_responsible: null,
+                    } as never);
+                    qc.invalidateQueries({ queryKey: ["task-services", taskId] });
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Adicionar jovem
+                </Button>
+              </div>
             </div>
           </div>
 

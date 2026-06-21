@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -56,6 +56,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Array<{ service_id: string; service_name: string; young_responsible: string | null }>>([]);
+  const [additionalYoungs, setAdditionalYoungs] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -169,6 +170,19 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
         if (tsError) console.error("task_services insert error:", tsError);
       }
 
+      // Insert task_services for additional young responsibles (no service)
+      const extraYoungs = additionalYoungs.filter(Boolean);
+      if (extraYoungs.length > 0) {
+        const { error: tyError } = await supabase.from("task_services").insert(
+          extraYoungs.map((youngId) => ({
+            task_id: taskId,
+            service_id: null,
+            young_responsible: youngId,
+          })) as never
+        );
+        if (tyError) console.error("task_services extra youngs error:", tyError);
+      }
+
       const items = (v.checklist_text ?? "")
         .split("\n").map((l) => l.trim()).filter(Boolean);
       if (items.length > 0) {
@@ -192,6 +206,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       form.reset({ title: "", priority: "media", kanban_column: defaultColumn ?? "backlog" });
       setSelectedServices([]);
+      setAdditionalYoungs([]);
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -262,12 +277,40 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
                 })}
               </div>
             )}
-            <div>
-              <Label>Jovem responsável</Label>
-              <YoungSearchSelect
-                value={form.watch("young_responsible") || null}
-                onChange={(v) => form.setValue("young_responsible", v ?? "")}
-              />
+            <div className="md:col-span-2">
+              <Label>Jovem(ns) responsável(is)</Label>
+              <div className="space-y-1">
+                <YoungSearchSelect
+                  value={form.watch("young_responsible") || null}
+                  onChange={(v) => form.setValue("young_responsible", v ?? "")}
+                  placeholder="Jovem principal"
+                />
+                {additionalYoungs.map((youngId, idx) => (
+                  <div key={idx} className="flex items-center gap-1">
+                    <div className="flex-1">
+                      <YoungSearchSelect
+                        value={youngId}
+                        onChange={(v) => {
+                          setAdditionalYoungs((prev) => prev.map((y, i) => i === idx ? (v ?? "") : y));
+                        }}
+                      />
+                    </div>
+                    <Button
+                      type="button" size="sm" variant="ghost"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => setAdditionalYoungs((prev) => prev.filter((_, i) => i !== idx))}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button" size="sm" variant="outline" className="h-7 text-xs w-full"
+                  onClick={() => setAdditionalYoungs((prev) => [...prev, ""])}
+                >
+                  + Adicionar jovem
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Supervisor</Label>
