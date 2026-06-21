@@ -71,6 +71,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [calculatedSum, setCalculatedSum] = useState(0);
   const [youngResponsibles, setYoungResponsibles] = useState<Record<string, string | null>>({});
+  const [paymentInfo, setPaymentInfo] = useState<Array<{ serviceId: string; paymentMethod: "unico" | "parcelado"; installments: number }>>([]);
 
   // Query para obter nomes dos serviços selecionados
   const { data: allServices = [] } = useQuery({
@@ -162,11 +163,16 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
         const { error: svcErr } = await supabase
           .from("opportunity_services")
           .insert(
-            serviceIds.map((sid) => ({
-              opportunity_id: data.id as string,
-              service_id: sid,
-              young_responsible_id: resolvedResponsibles[sid] || null,
-            })) as never,
+            serviceIds.map((sid) => {
+              const pi = paymentInfo.find((p) => p.serviceId === sid);
+              return {
+                opportunity_id: data.id as string,
+                service_id: sid,
+                young_responsible_id: resolvedResponsibles[sid] || null,
+                payment_method: pi?.paymentMethod ?? "unico",
+                installments: pi?.installments ?? 1,
+              };
+            }) as never,
           );
         if (svcErr) throw svcErr;
       }
@@ -188,6 +194,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       setServiceIds([]);
       setCalculatedSum(0);
       setYoungResponsibles({});
+      setPaymentInfo([]);
       onOpenChange(false);
       onCreated?.(id);
     },
@@ -298,6 +305,8 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
               <ServiceMultiSelect
                 value={serviceIds}
                 onChange={handleServiceChange}
+                paymentInfo={paymentInfo}
+                onPaymentChange={setPaymentInfo}
               />
               {serviceIds.length > 0 && (
                 <div className="mt-2 space-y-1.5 p-2 bg-muted/40 rounded-md border border-border/50">

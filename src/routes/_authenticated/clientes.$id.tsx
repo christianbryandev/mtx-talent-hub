@@ -317,7 +317,11 @@ function ClientDetailPage() {
                         <div className="text-right text-xs">
                           <p className="font-medium">{fmtBRL(s.monthly_value)}{s.billing_type === "mensal" ? "/mês" : ""}</p>
                           <p className="text-muted-foreground">
-                            {s.billing_type === "mensal" ? "Mensal" : s.billing_type === "pontual" && s.total_value && s.monthly_value < s.total_value ? `Parcelado ${s.installments}x` : "Pontual à vista"}
+                            {s.billing_type === "mensal"
+                              ? "Mensal"
+                              : s.payment_method === "parcelado" || (s.installments && s.installments > 1)
+                                ? `Parcelado em ${s.installments}x`
+                                : "Pontual à vista"}
                           </p>
                         </div>
                       </div>
@@ -685,7 +689,11 @@ function ServicesTab({
                       {s.executor_name ? ` · Responsável: ${s.executor_name}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {s.billing_type === "mensal" ? "Mensal" : s.billing_type === "pontual" && s.total_value && Number(s.monthly_value) < Number(s.total_value) ? `Pontual parcelado (${s.installments}x de ${fmtBRL(s.monthly_value)})` : `Pontual à vista`}
+                      {s.billing_type === "mensal"
+                        ? "Mensal"
+                        : s.payment_method === "parcelado" || (s.installments && s.installments > 1)
+                          ? `Parcelado em ${s.installments}x de ${fmtBRL(s.monthly_value)}`
+                          : "Pontual à vista"}
                       {s.total_value && s.billing_type === "pontual" ? ` · Total: ${fmtBRL(s.total_value)}` : ""}
                     </p>
                   </div>
