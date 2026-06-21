@@ -295,7 +295,32 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               <Label className="text-xs">Cliente</Label>
               <ClientSearchSelect
                 value={task.client_id ?? null}
-                onChange={(v) => updateTask.mutate({ client_id: v })}
+                onChange={async (v) => {
+                  const patch: Record<string, any> = { client_id: v };
+                  if (v) {
+                    const { data: client } = await supabase
+                      .from("clients")
+                      .select("young_responsible, commercial_responsible")
+                      .eq("id", v)
+                      .single();
+                    if (client) {
+                      if (client.young_responsible && !task.young_responsible) {
+                        patch.young_responsible = client.young_responsible;
+                      }
+                    }
+                    if (!task.service_id) {
+                      const { data: svc } = await supabase
+                        .from("client_services")
+                        .select("service_id")
+                        .eq("client_id", v)
+                        .eq("status", "ativo")
+                        .limit(1)
+                        .maybeSingle();
+                      if (svc?.service_id) patch.service_id = svc.service_id;
+                    }
+                  }
+                  updateTask.mutate(patch);
+                }}
               />
             </div>
             <div>
