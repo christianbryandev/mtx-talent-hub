@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { logActivity } from "@/lib/activity-log";
 import {
   ClientSearchSelect,
@@ -42,11 +43,14 @@ interface Props {
 
 export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
   const qc = useQueryClient();
-  const { isSuperAdmin } = usePermissions();
+  const { isSuperAdmin, isAdmin, isComercial } = usePermissions();
+  const { user } = useAuth();
+  const canSeeAll = isSuperAdmin || isAdmin || isComercial;
   const [comment, setComment] = useState("");
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
   const [editingDesc, setEditingDesc] = useState<string | null>(null);
+  const [activeServiceTab, setActiveServiceTab] = useState<string | null>(null);
 
   const { data: task } = useQuery({
     queryKey: ["task", taskId],
@@ -64,11 +68,12 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
     enabled: !!taskId && open,
     queryFn: async () => {
       const { data } = await supabase
-        .from("task_checklists").select("*").eq("task_id", taskId!)
+        .from("task_checklists").select("*, task_service_id").eq("task_id", taskId!)
         .order("position");
       return (data ?? []) as Array<{
         id: string; item: string; completed: boolean;
         completed_at: string | null; position: number;
+        task_service_id: string | null;
       }>;
     },
   });
@@ -79,12 +84,44 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
     queryFn: async () => {
       const { data } = await supabase
         .from("task_comments")
-        .select("id, content, created_at, author_id, profiles(full_name, email)")
+        .select("id, content, created_at, author_id, task_service_id, profiles(full_name, email)")
         .eq("task_id", taskId!).order("created_at");
       return (data ?? []) as Array<{
         id: string; content: string; created_at: string; author_id: string | null;
+        task_service_id: string | null;
         profiles: { full_name: string | null; email: string | null } | null;
       }>;
+    },
+  });
+
+  const { data: taskServices = [] } = useQuery({
+    queryKey: ["task-services", taskId],
+    enabled: !!taskId && open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("task_services")
+        .select("id, service_id, young_responsible, status, services(name), young_people(full_name)")
+        .eq("task_id", taskId!);
+      return (data ?? []) as Array<{
+        id: string; service_id: string | null; young_responsible: string | null;
+        status: string;
+        services: { name: string } | null;
+        young_people: { full_name: string } | null;
+      }>;
+    },
+  });
+
+  // Resolve current user's young_people.id for filtering
+  const { data: myYoungId } = useQuery({
+    queryKey: ["my-young-id", user?.id],
+    enabled: !!user?.id && !canSeeAll,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("young_people")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      return data?.id ?? null;
     },
   });
 
@@ -104,9 +141,10 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
   });
 
   const addChecklist = useMutation({
-    mutationFn: async (item: string) => {
+    mutationFn: async ({ item, taskServiceId }: { item: string; taskServiceId?: string | null }) => {
       const { error } = await supabase.from("task_checklists").insert({
         task_id: taskId, item, position: checklist.length,
+        task_service_id: taskServiceId ?? null,
       } as never);
       if (error) throw error;
     },
@@ -136,10 +174,11 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
   });
 
   const addComment = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, taskServiceId }: { content: string; taskServiceId?: string | null }) => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       const { error } = await supabase.from("task_comments").insert({
         task_id: taskId, author_id: userId, content,
+        task_service_id: taskServiceId ?? null,
       } as never);
       if (error) throw error;
     },
@@ -177,9 +216,6 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
       </Sheet>
     );
   }
-
-  const checklistDone = checklist.filter((c) => c.completed).length;
-  const checklistPct = checklist.length ? (checklistDone / checklist.length) * 100 : 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -359,46 +395,104 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
 
           <Separator />
 
+          {/* Multi-service tabs */}
+          {taskServices.length > 0 && (
+            <div>
+              <Label className="text-sm font-semibold mb-2 block">Serviços ({taskServices.length})</Label>
+              <div className="flex flex-wrap gap-1 mb-3">
+                <Button
+                  size="sm"
+                  variant={activeServiceTab === null ? "default" : "outline"}
+                  className="h-6 text-xs px-2"
+                  onClick={() => setActiveServiceTab(null)}
+                >
+                  Geral
+                </Button>
+                {taskServices
+                  .filter((ts) => canSeeAll || ts.young_responsible === myYoungId)
+                  .map((ts) => (
+                    <Button
+                      key={ts.id}
+                      size="sm"
+                      variant={activeServiceTab === ts.id ? "default" : "outline"}
+                      className="h-6 text-xs px-2"
+                      onClick={() => setActiveServiceTab(ts.id)}
+                    >
+                      {ts.services?.name ?? "Serviço"}
+                      {ts.young_people?.full_name && (
+                        <span className="ml-1 text-[10px] opacity-70">({ts.young_people.full_name.split(" ")[0]})</span>
+                      )}
+                    </Button>
+                  ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-sm font-semibold">
-                Checklist ({checklistDone}/{checklist.length})
+                Checklist ({(() => {
+                  const filtered = checklist.filter((c) =>
+                    taskServices.length === 0
+                      ? true
+                      : activeServiceTab === null
+                        ? !c.task_service_id
+                        : c.task_service_id === activeServiceTab
+                  );
+                  const done = filtered.filter((c) => c.completed).length;
+                  return `${done}/${filtered.length}`;
+                })()})
               </Label>
             </div>
-            {checklist.length > 0 && <Progress value={checklistPct} className="h-1.5 mb-2" />}
-            <div className="space-y-1">
-              {checklist.map((c) => (
-                <div key={c.id} className="flex items-center gap-2 group">
-                  <Checkbox
-                    checked={c.completed}
-                    onCheckedChange={(v) => toggleChecklist.mutate({ id: c.id, completed: !!v })}
-                  />
-                  <span className={`flex-1 text-sm ${c.completed ? "line-through text-muted-foreground" : ""}`}>
-                    {c.item}
-                  </span>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeChecklist.mutate(c.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {(() => {
+              const filtered = checklist.filter((c) =>
+                taskServices.length === 0
+                  ? true
+                  : activeServiceTab === null
+                    ? !c.task_service_id
+                    : c.task_service_id === activeServiceTab
+              );
+              const done = filtered.filter((c) => c.completed).length;
+              const pct = filtered.length ? (done / filtered.length) * 100 : 0;
+              return (
+                <>
+                  {filtered.length > 0 && <Progress value={pct} className="h-1.5 mb-2" />}
+                  <div className="space-y-1">
+                    {filtered.map((c) => (
+                      <div key={c.id} className="flex items-center gap-2 group">
+                        <Checkbox
+                          checked={c.completed}
+                          onCheckedChange={(v) => toggleChecklist.mutate({ id: c.id, completed: !!v })}
+                        />
+                        <span className={`flex-1 text-sm ${c.completed ? "line-through text-muted-foreground" : ""}`}>
+                          {c.item}
+                        </span>
+                        <button
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeChecklist.mutate(c.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
             <div className="flex gap-2 mt-2">
               <Input
                 value={newChecklistItem} placeholder="Novo item..."
                 onChange={(e) => setNewChecklistItem(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && newChecklistItem.trim()) {
-                    addChecklist.mutate(newChecklistItem.trim());
+                    addChecklist.mutate({ item: newChecklistItem.trim(), taskServiceId: activeServiceTab });
                   }
                 }}
               />
               <Button
                 size="sm" variant="outline"
                 disabled={!newChecklistItem.trim()}
-                onClick={() => addChecklist.mutate(newChecklistItem.trim())}
+                onClick={() => addChecklist.mutate({ item: newChecklistItem.trim(), taskServiceId: activeServiceTab })}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -408,9 +502,26 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
           <Separator />
 
           <div>
-            <Label className="text-sm font-semibold">Comentários ({comments.length})</Label>
+            <Label className="text-sm font-semibold">Comentários ({(() => {
+              const filtered = comments.filter((c) =>
+                taskServices.length === 0
+                  ? true
+                  : activeServiceTab === null
+                    ? !c.task_service_id
+                    : c.task_service_id === activeServiceTab
+              );
+              return filtered.length;
+            })()})</Label>
             <div className="space-y-3 mt-2 max-h-60 overflow-y-auto">
-              {comments.map((c) => {
+              {comments
+                .filter((c) =>
+                  taskServices.length === 0
+                    ? true
+                    : activeServiceTab === null
+                      ? !c.task_service_id
+                      : c.task_service_id === activeServiceTab
+                )
+                .map((c) => {
                 const name = c.profiles?.full_name || c.profiles?.email || "Usuário";
                 return (
                   <div key={c.id} className="flex gap-2">
@@ -431,7 +542,13 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
                   </div>
                 );
               })}
-              {comments.length === 0 && (
+              {comments.filter((c) =>
+                taskServices.length === 0
+                  ? true
+                  : activeServiceTab === null
+                    ? !c.task_service_id
+                    : c.task_service_id === activeServiceTab
+              ).length === 0 && (
                 <p className="text-xs text-muted-foreground">Nenhum comentário ainda.</p>
               )}
             </div>
@@ -442,7 +559,7 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               />
               <Button
                 size="sm" disabled={!comment.trim() || addComment.isPending}
-                onClick={() => addComment.mutate(comment.trim())}
+                onClick={() => addComment.mutate({ content: comment.trim(), taskServiceId: activeServiceTab })}
               >
                 {addComment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import {
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -54,6 +55,7 @@ interface Props {
 export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<Array<{ service_id: string; service_name: string; young_responsible: string | null }>>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -68,21 +70,39 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
     if (defaultColumn) form.setValue("kanban_column", defaultColumn);
   }, [defaultColumn, form]);
 
-  // Auto-fill fields when client is selected or changed
-  const handleClientChange = async (clientId: string | null) => {
-    form.setValue("client_id", clientId ?? "");
+  // Fetch client services when client is selected
+  const clientId = form.watch("client_id") || null;
+  const { data: clientServices = [] } = useQuery({
+    queryKey: ["client-services-for-task", clientId],
+    queryFn: async () => {
+      if (!clientId) return [];
+      const { data } = await supabase
+        .from("client_services")
+        .select("service_id, service_name, status, services(name)")
+        .eq("client_id", clientId)
+        .eq("status", "ativo");
+      return (data ?? []).map((s: any) => ({
+        service_id: s.service_id,
+        service_name: s.services?.name ?? s.service_name ?? "Serviço",
+      }));
+    },
+    enabled: !!clientId,
+  });
 
-    // Always clear related fields when client changes
+  // Auto-fill fields when client is selected or changed
+  const handleClientChange = async (newClientId: string | null) => {
+    form.setValue("client_id", newClientId ?? "");
     form.setValue("young_responsible", "");
     form.setValue("supervisor_id", "");
     form.setValue("service_id", "");
+    setSelectedServices([]);
 
-    if (!clientId) return;
+    if (!newClientId) return;
 
     const { data: client } = await supabase
       .from("clients")
       .select("young_responsible, commercial_responsible")
-      .eq("id", clientId)
+      .eq("id", newClientId)
       .single();
 
     if (client) {
@@ -93,6 +113,20 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
         form.setValue("supervisor_id", client.commercial_responsible);
       }
     }
+  };
+
+  const toggleService = (serviceId: string, serviceName: string) => {
+    setSelectedServices((prev) => {
+      const exists = prev.find((s) => s.service_id === serviceId);
+      if (exists) return prev.filter((s) => s.service_id !== serviceId);
+      return [...prev, { service_id: serviceId, service_name: serviceName, young_responsible: null }];
+    });
+  };
+
+  const setServiceYoung = (serviceId: string, youngId: string | null) => {
+    setSelectedServices((prev) =>
+      prev.map((s) => s.service_id === serviceId ? { ...s, young_responsible: youngId } : s)
+    );
   };
 
 
@@ -106,7 +140,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
         title: v.title,
         description: v.description || null,
         client_id: v.client_id || null,
-        service_id: v.service_id || null,
+        service_id: selectedServices.length > 0 ? selectedServices[0].service_id : (v.service_id || null),
         opportunity_id: v.opportunity_id || null,
         young_responsible: v.young_responsible || null,
         supervisor_id: v.supervisor_id || null,
@@ -122,6 +156,18 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
         .from("tasks").insert(payload as never).select("id").single();
       if (error) throw error;
       const taskId = data.id as string;
+
+      // Insert task_services for multi-service tasks
+      if (selectedServices.length > 0) {
+        const { error: tsError } = await supabase.from("task_services").insert(
+          selectedServices.map((s) => ({
+            task_id: taskId,
+            service_id: s.service_id,
+            young_responsible: s.young_responsible || null,
+          })) as never
+        );
+        if (tsError) console.error("task_services insert error:", tsError);
+      }
 
       const items = (v.checklist_text ?? "")
         .split("\n").map((l) => l.trim()).filter(Boolean);
@@ -145,6 +191,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
       toast.success("Tarefa criada");
       qc.invalidateQueries({ queryKey: ["tasks"] });
       form.reset({ title: "", priority: "media", kanban_column: defaultColumn ?? "backlog" });
+      setSelectedServices([]);
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -179,12 +226,42 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
             </div>
             <div>
               <Label>Serviço</Label>
-              <ServiceSearchSelect
-                value={form.watch("service_id") || null}
-                onChange={(v) => form.setValue("service_id", v ?? "")}
-                clientId={form.watch("client_id") || null}
-              />
+              {clientServices.length === 0 ? (
+                <ServiceSearchSelect
+                  value={form.watch("service_id") || null}
+                  onChange={(v) => form.setValue("service_id", v ?? "")}
+                  clientId={form.watch("client_id") || null}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">Selecione abaixo</p>
+              )}
             </div>
+            {clientServices.length > 0 && (
+              <div className="md:col-span-2 space-y-2 rounded-md border p-3 bg-muted/20">
+                <p className="text-xs font-medium">Serviços do cliente (selecione os desejados)</p>
+                {clientServices.map((cs) => {
+                  const selected = selectedServices.find((s) => s.service_id === cs.service_id);
+                  return (
+                    <div key={cs.service_id} className="flex items-center gap-3 py-1">
+                      <Checkbox
+                        checked={!!selected}
+                        onCheckedChange={() => toggleService(cs.service_id, cs.service_name)}
+                      />
+                      <span className="text-sm flex-1">{cs.service_name}</span>
+                      {selected && (
+                        <div className="w-48">
+                          <YoungSearchSelect
+                            value={selected.young_responsible}
+                            onChange={(v) => setServiceYoung(cs.service_id, v)}
+                            placeholder="Jovem responsável"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div>
               <Label>Jovem responsável</Label>
               <YoungSearchSelect
