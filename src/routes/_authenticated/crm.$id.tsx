@@ -787,6 +787,9 @@ function ConvertDialog({
         : null;
       const monthlyValue = servicesTotal || opp.estimated_value || null;
 
+      // Determinar o jovem responsável principal (primeiro encontrado nos serviços)
+      const youngResponsibleId = oppServices?.find((s) => s.young_responsible_id)?.young_responsible_id ?? null;
+
       const { data, error } = await supabase
         .from("clients")
         .insert({
@@ -797,7 +800,7 @@ function ConvertDialog({
           whatsapp: opp.whatsapp,
           niche: opp.niche,
           lead_origin: opp.lead_origin,
-          status: "onboarding",
+          status: "ativo",
           entry_date: today,
           contract_start: today,
           contract_end: endDate,
@@ -805,6 +808,7 @@ function ConvertDialog({
           setup_value: opp.proposal_value ?? opp.estimated_value ?? null,
           active_contract: true,
           commercial_responsible: opp.commercial_responsible ?? null,
+          young_responsible: youngResponsibleId,
         } as never)
         .select("id")
         .single();
@@ -832,10 +836,34 @@ function ConvertDialog({
                 : baseValue,
               start_date: today,
               status: "ativo",
+              executor_id: s.young_responsible_id ?? null,
             };
           }) as never
         );
         if (svcError) throw svcError;
+
+        // Marcar jovens responsáveis como remunerados e atualizar renda
+        const youngIds = [...new Set(oppServices.map((s) => s.young_responsible_id).filter(Boolean))] as string[];
+        for (const youngId of youngIds) {
+          const youngServices = oppServices.filter((s) => s.young_responsible_id === youngId);
+          const youngRevenue = youngServices.reduce((sum, s) => sum + (s.services?.default_value ?? s.services?.base_price ?? 0), 0);
+
+          // Buscar renda atual do jovem e somar
+          const { data: currentYoung } = await supabase
+            .from("young_people")
+            .select("total_income_generated")
+            .eq("id", youngId)
+            .single();
+          const currentIncome = Number(currentYoung?.total_income_generated) || 0;
+
+          await supabase
+            .from("young_people")
+            .update({
+              first_client_attended: true,
+              total_income_generated: currentIncome + youngRevenue,
+            } as never)
+            .eq("id", youngId);
+        }
       }
 
       toast.success("Cliente criado com sucesso");

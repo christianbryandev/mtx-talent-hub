@@ -150,9 +150,9 @@ function AdminDashboardContent() {
       });
 
       const activeYoungs = youngs.filter((y) => !["desligado", "reprovado", "cancelada"].includes(y.status)).length;
-      const activeClients = clients.filter((c) => c.status === "ativo").length;
+      const activeClients = clients.filter((c) => c.status === "ativo" || c.status === "onboarding").length;
       const recurringRevenue = clients
-        .filter((c) => c.status === "ativo")
+        .filter((c) => c.status === "ativo" || c.status === "onboarding")
         .reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
       const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
       const remunerated = youngs.filter((y) => y.first_client_attended).length;
