@@ -213,6 +213,7 @@ export const INTEREST_AREAS = [
   "Tecnologia",
   "Design",
   "Audiovisual",
+  "Social Media",
   "Gestão",
   "Outro",
 ] as const;
