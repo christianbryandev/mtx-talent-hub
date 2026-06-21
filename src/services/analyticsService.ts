@@ -51,24 +51,35 @@ export async function fetchIndicadoresData(filters: IndicadoresFilters) {
   const months = rangeMonths(filters.range);
   const since = startOfMonth(subMonths(new Date(), months - 1)).toISOString();
 
-  const [clients, opps, tasks, youngs, meetings, services, proposals, mParticipants, mTasks] =
+  const [clients, opps, tasks, youngs, meetings, services, proposals, mParticipants, mTasks, roles] =
     await Promise.all([
       supabase.from("clients").select("id, status, monthly_value, created_at, commercial_responsible, young_responsible").limit(3000),
       supabase.from("opportunities").select("id, status, funnel_stage, estimated_value, proposal_value, created_at, loss_reason, commercial_responsible").limit(3000),
       supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible").limit(3000),
-      supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at").limit(3000),
+      supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at, profile_id").limit(3000),
       supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)).limit(1000),
       supabase.from("client_services").select("id, client_id, monthly_value, status, billing_type, start_date, total_value, installments").limit(2000),
       supabase.from("proposals").select("id, value, status, sent_at, created_at").limit(2000),
       supabase.from("meeting_participants").select("id, meeting_id, present").limit(5000),
       supabase.from("meeting_tasks").select("id, meeting_id, task_id").limit(5000),
+      supabase.from("user_roles").select("user_id, role").limit(5000),
     ]);
+
+  // Filtrar jovens: excluir quem tem role de cliente ou super_admin (mesma lógica da aba Jovens)
+  const roleMap = new Map<string, string>();
+  (roles.data ?? []).forEach((r: any) => roleMap.set(r.user_id, r.role));
+  const filteredYoungs = (youngs.data ?? []).filter((y: any) => {
+    if (!y.profile_id) return true;
+    const role = roleMap.get(y.profile_id);
+    if (role === "cliente" || role === "super_admin") return false;
+    return true;
+  });
 
   return {
     clients: clients.data ?? [],
     opps: opps.data ?? [],
     tasks: tasks.data ?? [],
-    youngs: youngs.data ?? [],
+    youngs: filteredYoungs,
     meetings: meetings.data ?? [],
     services: services.data ?? [],
     proposals: proposals.data ?? [],
