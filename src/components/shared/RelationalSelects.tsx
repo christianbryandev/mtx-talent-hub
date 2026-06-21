@@ -40,16 +40,38 @@ export function ClientSearchSelect(props: BaseProps) {
   );
 }
 
-export function ServiceSearchSelect(props: BaseProps) {
+export function ServiceSearchSelect(props: BaseProps & { clientId?: string | null }) {
   const { data = [], isLoading } = useQuery({
-    queryKey: ["search-services"],
+    queryKey: ["search-services", props.clientId ?? "all"],
     queryFn: async () => {
+      if (props.clientId) {
+        // Show services contracted by this client
+        const { data: clientServices, error } = await supabase
+          .from("client_services")
+          .select("service_id, service_name, status")
+          .eq("client_id", props.clientId)
+          .eq("status", "ativo");
+        if (error) throw error;
+        // Also fetch all services as fallback options
+        const { data: allServices } = await supabase
+          .from("services_public")
+          .select("id, name, category, status")
+          .order("name");
+        const clientServiceIds = new Set((clientServices ?? []).map((s) => s.service_id));
+        const merged = (allServices ?? []).map((s) => ({
+          ...s,
+          isClientService: clientServiceIds.has(s.id),
+        }));
+        // Client services first, then others
+        merged.sort((a, b) => (a.isClientService === b.isClientService ? 0 : a.isClientService ? -1 : 1));
+        return merged;
+      }
       const { data, error } = await supabase
         .from("services_public")
         .select("id, name, category, status")
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((s) => ({ ...s, isClientService: false }));
     },
   });
   return (
@@ -62,7 +84,7 @@ export function ServiceSearchSelect(props: BaseProps) {
       options={data.map((s) => ({
         id: s.id ?? "",
         label: s.name ?? "",
-        hint: [s.category, s.status].filter(Boolean).join(" · ") || null,
+        hint: [(s as any).isClientService ? "★ Contratado" : null, s.category, s.status].filter(Boolean).join(" · ") || null,
       }))}
     />
   );

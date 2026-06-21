@@ -296,7 +296,7 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               <ClientSearchSelect
                 value={task.client_id ?? null}
                 onChange={async (v) => {
-                  const patch: Record<string, any> = { client_id: v };
+                  const patch: Record<string, any> = { client_id: v, young_responsible: null, service_id: null };
                   if (v) {
                     const { data: client } = await supabase
                       .from("clients")
@@ -304,19 +304,9 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
                       .eq("id", v)
                       .single();
                     if (client) {
-                      if (client.young_responsible && !task.young_responsible) {
+                      if (client.young_responsible) {
                         patch.young_responsible = client.young_responsible;
                       }
-                    }
-                    if (!task.service_id) {
-                      const { data: svc } = await supabase
-                        .from("client_services")
-                        .select("service_id")
-                        .eq("client_id", v)
-                        .eq("status", "ativo")
-                        .limit(1)
-                        .maybeSingle();
-                      if (svc?.service_id) patch.service_id = svc.service_id;
                     }
                   }
                   updateTask.mutate(patch);
@@ -328,6 +318,7 @@ export function TaskDrawer({ taskId, open, onOpenChange }: Props) {
               <ServiceSearchSelect
                 value={task.service_id ?? null}
                 onChange={(v) => updateTask.mutate({ service_id: v })}
+                clientId={task.client_id ?? null}
               />
             </div>
             <div className="col-span-2">

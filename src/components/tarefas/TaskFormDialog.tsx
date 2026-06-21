@@ -68,9 +68,15 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
     if (defaultColumn) form.setValue("kanban_column", defaultColumn);
   }, [defaultColumn, form]);
 
-  // Auto-fill fields when client is selected
+  // Auto-fill fields when client is selected or changed
   const handleClientChange = async (clientId: string | null) => {
     form.setValue("client_id", clientId ?? "");
+
+    // Always clear related fields when client changes
+    form.setValue("young_responsible", "");
+    form.setValue("supervisor_id", "");
+    form.setValue("service_id", "");
+
     if (!clientId) return;
 
     const { data: client } = await supabase
@@ -80,27 +86,11 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
       .single();
 
     if (client) {
-      // Auto-fill young responsible from client
-      if (client.young_responsible && !form.getValues("young_responsible")) {
+      if (client.young_responsible) {
         form.setValue("young_responsible", client.young_responsible);
       }
-      // Auto-fill supervisor from client's commercial responsible
-      if (client.commercial_responsible && !form.getValues("supervisor_id")) {
+      if (client.commercial_responsible) {
         form.setValue("supervisor_id", client.commercial_responsible);
-      }
-    }
-
-    // Auto-fill first active service from client
-    if (!form.getValues("service_id")) {
-      const { data: services } = await supabase
-        .from("client_services")
-        .select("service_id")
-        .eq("client_id", clientId)
-        .eq("status", "ativo")
-        .limit(1)
-        .maybeSingle();
-      if (services?.service_id) {
-        form.setValue("service_id", services.service_id);
       }
     }
   };
@@ -192,6 +182,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultColumn }: Props) {
               <ServiceSearchSelect
                 value={form.watch("service_id") || null}
                 onChange={(v) => form.setValue("service_id", v ?? "")}
+                clientId={form.watch("client_id") || null}
               />
             </div>
             <div>
