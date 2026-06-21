@@ -135,7 +135,7 @@ function AdminDashboardContent() {
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
         supabase.from("user_roles").select("user_id, role").limit(5000),
-        supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status, executor_id").eq("status", "ativo").limit(5000),
+        supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status, executor_id, start_date, created_at").eq("status", "ativo").limit(5000),
       ]);
 
       const rawYoungs = youngsRes.data ?? [];
@@ -177,15 +177,22 @@ function AdminDashboardContent() {
         })
         .reduce((sum, cs: any) => sum + (Number(cs.monthly_value) || 0), 0);
 
-      // Receita do Mês: mensais + parcela do mês vigente dos pontuais parcelados
+      // Receita do Mês: mensais + parcela do mês de parcelados + vendas à vista do mês
+      const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
       const monthlyIncome = activeServices.reduce((sum, cs: any) => {
         if (cs.billing_type !== "pontual") {
           // Serviço mensal: soma o valor mensal
           return sum + (Number(cs.monthly_value) || 0);
         }
-        // Serviço pontual parcelado: soma o valor da parcela (monthly_value = total / parcelas)
         const totalVal = Number(cs.total_value) || 0;
         const monthlyVal = Number(cs.monthly_value) || 0;
+        // Pontual à vista: soma se foi criado/iniciado no mês atual
+        if (totalVal > 0 && monthlyVal >= totalVal) {
+          const serviceMonth = (cs.start_date ?? cs.created_at ?? "").slice(0, 7);
+          if (serviceMonth === currentMonth) return sum + totalVal;
+          return sum;
+        }
+        // Pontual parcelado: soma o valor da parcela
         if (totalVal > 0 && monthlyVal > 0 && monthlyVal < totalVal) {
           return sum + monthlyVal;
         }
