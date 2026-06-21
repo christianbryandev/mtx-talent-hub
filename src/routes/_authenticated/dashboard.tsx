@@ -122,6 +122,7 @@ function AdminDashboardContent() {
         logsRes,
         appsRes,
         rolesRes,
+        clientServicesRes,
       ] = await Promise.all([
         supabase.from("young_people").select("id, status, has_cnpj, first_client_attended, total_income_generated, trail_phase, profile_id").limit(3000),
         supabase.from("clients").select("id, status, monthly_value, created_at").limit(3000),
@@ -134,6 +135,7 @@ function AdminDashboardContent() {
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
         supabase.from("user_roles").select("user_id, role").limit(5000),
+        supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status").eq("status", "ativo").limit(5000),
       ]);
 
       const rawYoungs = youngsRes.data ?? [];
@@ -151,9 +153,21 @@ function AdminDashboardContent() {
 
       const activeYoungs = youngs.filter((y) => !["desligado", "reprovado", "cancelada"].includes(y.status)).length;
       const activeClients = clients.filter((c) => c.status === "ativo" || c.status === "onboarding").length;
-      const recurringRevenue = clients
-        .filter((c) => c.status === "ativo" || c.status === "onboarding")
-        .reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
+
+      // Calcular faturamento a partir de client_services
+      const activeClientIds = new Set(clients.filter((c) => c.status === "ativo" || c.status === "onboarding").map((c) => c.id));
+      const activeServices = (clientServicesRes.data ?? []).filter((cs: any) => activeClientIds.has(cs.client_id));
+
+      // Valor Total: soma de todos os serviços ativos de clientes ativos
+      const totalRevenue = activeServices.reduce((sum, cs: any) => {
+        const value = Number(cs.monthly_value) || Number(cs.total_value) || 0;
+        return sum + value;
+      }, 0);
+
+      // Faturamento Recorrente: apenas mensais + pontuais parcelados (exclui pontual à vista)
+      const recurringRevenue = activeServices
+        .filter((cs: any) => cs.billing_type !== "pontual" || (cs.total_value && Number(cs.monthly_value) < Number(cs.total_value)))
+        .reduce((sum, cs: any) => sum + (Number(cs.monthly_value) || 0), 0);
       const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
       const remunerated = youngs.filter((y) => y.first_client_attended).length;
       const avgIncome = youngs.length
@@ -205,6 +219,7 @@ function AdminDashboardContent() {
         activeClients,
         openTasks: openTasksRes.data?.length ?? 0,
         recurringRevenue,
+        totalRevenue,
         youngsWithCnpj,
         remunerated,
         avgIncome,
@@ -242,7 +257,13 @@ function AdminDashboardContent() {
         <KpiCard label="Clientes ativos" value={isLoading || !stats ? "..." : stats.activeClients} icon={<Building2 className="h-5 w-5" />} accent="info" />
         <KpiCard label="Tarefas em aberto" value={isLoading || !stats ? "..." : stats.openTasks} icon={<ListChecks className="h-5 w-5" />} accent="warning" />
         {isAdmin && (
-          <KpiCard label="Faturamento recorrente" value={isLoading || !stats ? "..." : fmt(stats.recurringRevenue)} icon={<TrendingUp className="h-5 w-5" />} accent="success" />
+          <KpiCard
+            label="Faturamento recorrente"
+            value={isLoading || !stats ? "..." : fmt(stats.recurringRevenue)}
+            hint={isLoading || !stats ? undefined : `Valor total: ${fmt(stats.totalRevenue)}`}
+            icon={<TrendingUp className="h-5 w-5" />}
+            accent="success"
+          />
         )}
       </div>
 
