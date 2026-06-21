@@ -779,6 +779,18 @@ function ConvertDialog({
   const handle = async () => {
     setSubmitting(true);
     try {
+      // Verificar se a oportunidade já foi convertida (evitar duplicação)
+      const { data: currentOpp } = await supabase
+        .from("opportunities")
+        .select("status, converted_client_id")
+        .eq("id", opp.id)
+        .single();
+      if (currentOpp?.status === "ganha" && currentOpp?.converted_client_id) {
+        toast.info("Esta oportunidade já foi convertida em cliente.");
+        onConverted(currentOpp.converted_client_id);
+        return;
+      }
+
       const today = new Date().toISOString().slice(0, 10);
       const endDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -814,6 +826,12 @@ function ConvertDialog({
         .select("id")
         .single();
       if (error) throw error;
+
+      // Marcar oportunidade como "ganha" ANTES de inserir services (evita duplicação se services falhar)
+      await supabase
+        .from("opportunities")
+        .update({ status: "ganha", converted_client_id: data.id } as never)
+        .eq("id", opp.id);
 
       if (oppServices && oppServices.length > 0) {
         const { error: svcError } = await supabase.from("client_services").insert(
@@ -868,12 +886,6 @@ function ConvertDialog({
       }
 
       toast.success("Cliente criado com sucesso");
-
-      // Atualizar status da oportunidade para "ganha" ANTES de navegar
-      await supabase
-        .from("opportunities")
-        .update({ status: "ganha", converted_client_id: data.id } as never)
-        .eq("id", opp.id);
 
       onConverted(data.id as string);
     } catch (e) {
