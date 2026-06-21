@@ -38,7 +38,6 @@ BEGIN
       'id', ph.id,
       'title', ph.title,
       'description', ph.description,
-      'icon', ph.icon,
       'order_index', ph.order_index,
       'xp_reward', ph.xp_reward,
       'status', COALESCE(ups.status, 'pendente'),
