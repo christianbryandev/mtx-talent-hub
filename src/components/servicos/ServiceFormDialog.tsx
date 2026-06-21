@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -22,6 +23,7 @@ import {
   type Service, type ServiceTaskTemplate, type ServiceOnboardingItem,
 } from "@/types/tasks";
 import { ProfileSearchSelect } from "@/components/shared/RelationalSelects";
+import { YoungSearchSelect } from "@/components/shared/YoungSearchSelect";
 
 const schema = z.object({
   name: z.string().min(2, "Nome obrigatório").max(150),
@@ -61,6 +63,25 @@ export function ServiceFormDialog({ open, onOpenChange, service }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [templates, setTemplates] = useState<TplDraft[]>([]);
   const [checklist, setChecklist] = useState<ChkDraft[]>([]);
+  const [executorYoungs, setExecutorYoungs] = useState<Array<{ id?: string; young_id: string; name: string }>>([]);
+
+  // Load linked young executors
+  useQuery({
+    queryKey: ["service-youngs-form", service?.id, open],
+    enabled: !!service?.id && open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("service_young_people")
+        .select("id, young_id, young_people!inner(full_name)")
+        .eq("service_id", service!.id);
+      setExecutorYoungs((data ?? []).map((r: any) => ({
+        id: r.id,
+        young_id: r.young_id,
+        name: r.young_people?.full_name ?? "",
+      })));
+      return true;
+    },
+  });
 
   const defaults = useMemo<FormValues>(() => ({
     name: service?.name ?? "",
@@ -171,6 +192,19 @@ export function ServiceFormDialog({ open, onOpenChange, service }: Props) {
           checklist.map((c, i) => ({ service_id: svcId, item: c.item, position: i })) as never,
         );
       }
+
+      // Sync executor youngs (service_young_people)
+      await supabase.from("service_young_people").delete().eq("service_id", svcId);
+      if (executorYoungs.length > 0) {
+        await supabase.from("service_young_people").insert(
+          executorYoungs.map((e) => ({ service_id: svcId, young_id: e.young_id })) as never,
+        );
+      }
+      // Set default_executor_id to first one for compatibility
+      if (executorYoungs.length > 0) {
+        await supabase.from("services").update({ default_executor_id: executorYoungs[0].young_id } as never).eq("id", svcId);
+      }
+
       return svcId;
     },
     onSuccess: () => {
@@ -178,6 +212,8 @@ export function ServiceFormDialog({ open, onOpenChange, service }: Props) {
       qc.invalidateQueries({ queryKey: ["services"] });
       qc.invalidateQueries({ queryKey: ["service", service?.id] });
       qc.invalidateQueries({ queryKey: ["service-templates", service?.id] });
+      qc.invalidateQueries({ queryKey: ["service-youngs", service?.id] });
+      qc.invalidateQueries({ queryKey: ["service-youngs-form", service?.id] });
       onOpenChange(false);
       form.reset();
     },
@@ -277,12 +313,32 @@ export function ServiceFormDialog({ open, onOpenChange, service }: Props) {
                 <Input type="number" {...form.register("average_deadline")} />
               </div>
               <div className="md:col-span-2">
-                <Label>Responsável executor padrão</Label>
-                <ProfileSearchSelect
-                  value={form.watch("default_executor_id") || null}
-                  onChange={(v) => form.setValue("default_executor_id", v ?? "")}
-                  placeholder="Selecionar responsável"
-                />
+                <Label>Responsável(is) executor(es) padrão</Label>
+                <div className="space-y-1 mt-1">
+                  {executorYoungs.map((ey, idx) => (
+                    <div key={idx} className="flex items-center gap-1">
+                      <Badge variant="secondary" className="flex-1 justify-start py-1 text-xs">
+                        {ey.name || "Selecione..."}
+                      </Badge>
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setExecutorYoungs((prev) => prev.filter((_, i) => i !== idx))}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <YoungSearchSelect
+                    value={null}
+                    onChange={(id) => {
+                      if (id && !executorYoungs.some((e) => e.young_id === id)) {
+                        setExecutorYoungs((prev) => [...prev, { young_id: id, name: "" }]);
+                      }
+                    }}
+                    placeholder="Adicionar executor..."
+                  />
+                </div>
               </div>
             </div>
           </section>

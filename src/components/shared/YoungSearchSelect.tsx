@@ -48,6 +48,14 @@ export function YoungSearchSelect({
         profile_id: string | null;
       }>;
       const profileIds = rows.map((r) => r.profile_id).filter(Boolean) as string[];
+
+      // Fetch admin/super_admin roles to exclude
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "super_admin"] as never);
+      const adminIds = new Set((adminRoles ?? []).map((r: any) => r.user_id));
+
       const { data: profiles } = profileIds.length
         ? await supabase
             .from("profiles")
@@ -57,17 +65,19 @@ export function YoungSearchSelect({
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id, { avatar_url: p.avatar_url, email: p.email }]),
       );
-      return rows.map((r) => {
-        const prof = r.profile_id ? profileMap.get(r.profile_id) : undefined;
-        return {
-          id: r.id,
-          full_name: r.full_name ?? "Sem nome",
-          status: r.status ?? null,
-          trail_phase: r.trail_phase ?? null,
-          avatar_url: prof?.avatar_url ?? null,
-          email: prof?.email ?? null,
-        };
-      });
+      return rows
+        .filter((r) => !r.profile_id || !adminIds.has(r.profile_id))
+        .map((r) => {
+          const prof = r.profile_id ? profileMap.get(r.profile_id) : undefined;
+          return {
+            id: r.id,
+            full_name: r.full_name ?? "Sem nome",
+            status: r.status ?? null,
+            trail_phase: r.trail_phase ?? null,
+            avatar_url: prof?.avatar_url ?? null,
+            email: prof?.email ?? null,
+          };
+        });
     },
   });
 
