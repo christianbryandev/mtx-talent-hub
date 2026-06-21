@@ -96,7 +96,7 @@ BEGIN
                 'id', i.id,
                 'label', i.title,
                 'order_index', i.order_index,
-                'done', COALESCE(ui.done, false)
+                'done', COALESCE(ui.completed, false)
               ) ORDER BY i.order_index)
               FROM public.journey_checklist_items i
               LEFT JOIN public.user_checklist_progress ui ON ui.checklist_item_id = i.id AND ui.user_id = _user_id
