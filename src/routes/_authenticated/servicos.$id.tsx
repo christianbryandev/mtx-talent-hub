@@ -73,11 +73,20 @@ function ServicoDetailPage() {
   });
 
   const { data: allYoungs = [] } = useQuery({
-    queryKey: ["youngs-min"],
+    queryKey: ["youngs-min-filtered"],
     queryFn: async () => {
+      // Get admin/super_admin user_ids to exclude
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "super_admin"] as never);
+      const adminIds = new Set((adminRoles ?? []).map((r: any) => r.user_id));
+
       const { data } = await supabase
-        .from("young_people").select("id, full_name").order("full_name");
-      return data ?? [];
+        .from("young_people").select("id, full_name, profile_id").order("full_name");
+
+      // Exclude young_people whose profile_id is an admin/super_admin
+      return (data ?? []).filter((y: any) => !y.profile_id || !adminIds.has(y.profile_id));
     },
   });
 
