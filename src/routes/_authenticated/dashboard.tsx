@@ -159,14 +159,21 @@ function AdminDashboardContent() {
       const activeServices = (clientServicesRes.data ?? []).filter((cs: any) => activeClientIds.has(cs.client_id));
 
       // Valor Total: soma de todos os serviços ativos de clientes ativos
+      // Para pontuais, usa total_value (valor cheio); para mensais, usa monthly_value
       const totalRevenue = activeServices.reduce((sum, cs: any) => {
-        const value = Number(cs.monthly_value) || Number(cs.total_value) || 0;
+        const value = cs.billing_type === "pontual"
+          ? (Number(cs.total_value) || Number(cs.monthly_value) || 0)
+          : (Number(cs.monthly_value) || 0);
         return sum + value;
       }, 0);
 
-      // Faturamento Recorrente: apenas mensais + pontuais parcelados (exclui pontual à vista)
+      // Faturamento Recorrente: mensais + parcela mensal dos pontuais parcelados (exclui pontual à vista)
       const recurringRevenue = activeServices
-        .filter((cs: any) => cs.billing_type !== "pontual" || (cs.total_value && Number(cs.monthly_value) < Number(cs.total_value)))
+        .filter((cs: any) => {
+          if (cs.billing_type !== "pontual") return true; // mensal = sempre recorrente
+          // Pontual parcelado: monthly_value < total_value
+          return cs.total_value && Number(cs.monthly_value) < Number(cs.total_value);
+        })
         .reduce((sum, cs: any) => sum + (Number(cs.monthly_value) || 0), 0);
       const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
       const remunerated = youngs.filter((y) => y.first_client_attended).length;
