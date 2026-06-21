@@ -40,8 +40,12 @@ BEGIN
       'description', ph.description,
       'order_index', ph.order_index,
       'xp_reward', ph.xp_reward,
-      'status', COALESCE(ups.status, 'pendente'),
-      'unlocked', COALESCE(ups.unlocked, false),
+      'status', CASE
+        WHEN ups.status IS NOT NULL THEN ups.status
+        WHEN ph.order_index = (SELECT MIN(order_index) FROM public.journey_phase_catalog) THEN 'pendente'
+        ELSE 'bloqueada'
+      END,
+      'unlocked', COALESCE(ups.unlocked, ph.order_index = (SELECT MIN(order_index) FROM public.journey_phase_catalog)),
       'modules', COALESCE((
         SELECT jsonb_agg(sub.m ORDER BY (sub.m->>'order_index')::int)
         FROM (
