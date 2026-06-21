@@ -97,6 +97,20 @@ function OpportunityDetailPage() {
     },
   });
 
+  // Buscar nome de quem captou (commercial_responsible = ref do link de captação)
+  const { data: capturedByName } = useQuery({
+    queryKey: ["captured-by", opp?.commercial_responsible],
+    enabled: !!opp?.commercial_responsible,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", opp!.commercial_responsible!)
+        .single();
+      return data?.full_name ?? null;
+    },
+  });
+
   const { data: interactions = [] } = useQuery({
     queryKey: ["opp-interactions", id],
     queryFn: async () => {
@@ -316,6 +330,11 @@ function OpportunityDetailPage() {
           <p className="text-sm text-muted-foreground">
             {opp.contact_name ?? "—"} · {opp.niche ?? "Sem nicho"}
           </p>
+          {capturedByName && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Captado por: <span className="font-medium text-foreground">{capturedByName}</span>
+            </p>
+          )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant={opp.status === "ganha" ? "default" : opp.status === "perdida" ? "destructive" : "secondary"}>
               {opp.status}
