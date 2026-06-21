@@ -748,14 +748,14 @@ function CreateMyProfile() {
         .eq("id", user.id)
         .single();
 
-      const userEmail = profile?.email ?? user.email;
+      const userEmail = (profile?.email ?? user.email)?.trim().toLowerCase();
       if (!userEmail) return;
 
-      // Buscar inscrição vinculada pelo email
+      // Buscar inscrição vinculada pelo email (case-insensitive)
       const { data: app } = await supabase
         .from("young_applications")
         .select("*")
-        .eq("email", userEmail)
+        .ilike("email", userEmail)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
