@@ -116,6 +116,20 @@ function ClientDetailPage() {
     },
   });
 
+  // Buscar nome de quem captou o cliente (commercial_responsible)
+  const { data: capturedByName } = useQuery({
+    queryKey: ["captured-by-client", client?.commercial_responsible],
+    enabled: !!client?.commercial_responsible,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", client!.commercial_responsible!)
+        .single();
+      return data?.full_name ?? null;
+    },
+  });
+
   const { data: services = [] } = useQuery({
     queryKey: ["client-services", id],
     queryFn: async () => {
@@ -214,6 +228,11 @@ function ClientDetailPage() {
               </Badge>
             )}
           </div>
+          {capturedByName && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Captado por: <span className="font-medium text-foreground">{capturedByName}</span>
+            </p>
+          )}
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
