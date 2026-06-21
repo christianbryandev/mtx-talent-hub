@@ -176,6 +176,21 @@ function AdminDashboardContent() {
           return cs.total_value && Number(cs.monthly_value) < Number(cs.total_value);
         })
         .reduce((sum, cs: any) => sum + (Number(cs.monthly_value) || 0), 0);
+
+      // Receita do Mês: mensais + parcela do mês vigente dos pontuais parcelados
+      const monthlyIncome = activeServices.reduce((sum, cs: any) => {
+        if (cs.billing_type !== "pontual") {
+          // Serviço mensal: soma o valor mensal
+          return sum + (Number(cs.monthly_value) || 0);
+        }
+        // Serviço pontual parcelado: soma o valor da parcela (monthly_value = total / parcelas)
+        const totalVal = Number(cs.total_value) || 0;
+        const monthlyVal = Number(cs.monthly_value) || 0;
+        if (totalVal > 0 && monthlyVal > 0 && monthlyVal < totalVal) {
+          return sum + monthlyVal;
+        }
+        return sum;
+      }, 0);
       const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
 
       // Jovens remunerados: contar jovens que realmente têm serviços ativos vinculados a clientes existentes
@@ -246,6 +261,7 @@ function AdminDashboardContent() {
         openTasks: openTasksRes.data?.length ?? 0,
         recurringRevenue,
         totalRevenue,
+        monthlyIncome,
         youngsWithCnpj,
         remunerated,
         avgIncome,
@@ -286,7 +302,7 @@ function AdminDashboardContent() {
           <KpiCard
             label="Faturamento recorrente"
             value={isLoading || !stats ? "..." : fmt(stats.recurringRevenue)}
-            hint={isLoading || !stats ? undefined : `Valor total: ${fmt(stats.totalRevenue)}`}
+            hint={isLoading || !stats ? undefined : `Valor total: ${fmt(stats.totalRevenue)} • Receita do mês: ${fmt(stats.monthlyIncome)}`}
             icon={<TrendingUp className="h-5 w-5" />}
             accent="success"
           />
