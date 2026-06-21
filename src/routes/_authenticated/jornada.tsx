@@ -260,8 +260,8 @@ function JourneyPage() {
         </TabsContent>
       </Tabs>
       {/* Modal de Vídeo */}
-      <Dialog open={!!selectedModule} onOpenChange={(open) => !open && setSelectedModule(null)}>
-        <DialogContent className={`p-0 overflow-hidden bg-background border-none shadow-2xl sm:rounded-2xl ${selectedModule?.content_type === 'texto' ? 'max-w-3xl max-h-[90vh]' : 'max-w-4xl bg-black'}`}>
+      <Dialog open={!!selectedModule} onOpenChange={(open) => !open && setSelectedModule(null)} modal={false}>
+        <DialogContent className={`p-0 overflow-y-auto bg-background border-none shadow-2xl sm:rounded-2xl ${selectedModule?.content_type === 'texto' ? 'max-w-3xl max-h-[90vh]' : 'max-w-4xl bg-black max-h-[95vh]'}`}>
           {selectedModule && (
             <div className="flex flex-col">
               <DialogHeader className="p-4 bg-background border-b border-border/10">
