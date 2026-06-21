@@ -671,7 +671,8 @@ function OpportunityDetailPage() {
         opp={opp}
         oppServices={oppServices}
         onConverted={(clientId) => {
-          updateMutation.mutate({ status: "ganha", converted_client_id: clientId });
+          qc.invalidateQueries({ queryKey: ["opportunity", id] });
+          qc.invalidateQueries({ queryKey: ["opportunities"] });
           setShowConvert(false);
           navigate({ to: "/clientes/$id", params: { id: clientId } });
         }}
@@ -867,6 +868,13 @@ function ConvertDialog({
       }
 
       toast.success("Cliente criado com sucesso");
+
+      // Atualizar status da oportunidade para "ganha" ANTES de navegar
+      await supabase
+        .from("opportunities")
+        .update({ status: "ganha", converted_client_id: data.id } as never)
+        .eq("id", opp.id);
+
       onConverted(data.id as string);
     } catch (e) {
       toast.error((e as Error).message);
