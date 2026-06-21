@@ -119,11 +119,23 @@ function ClientDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_services")
-        .select("*, young_people:executor_id(id, full_name)")
+        .select("*")
         .eq("client_id", id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Array<any>;
+      const svcList = (data ?? []) as Array<any>;
+
+      // Buscar nomes dos jovens executores
+      const executorIds = svcList.map((s) => s.executor_id).filter(Boolean);
+      if (executorIds.length > 0) {
+        const { data: youngs } = await supabase
+          .from("young_people")
+          .select("id, full_name")
+          .in("id", executorIds);
+        const youngMap = new Map((youngs ?? []).map((y) => [y.id, y.full_name]));
+        return svcList.map((s) => ({ ...s, executor_name: youngMap.get(s.executor_id) ?? null }));
+      }
+      return svcList.map((s) => ({ ...s, executor_name: null }));
     },
   });
 
@@ -250,8 +262,8 @@ function ClientDetailPage() {
               label="Jovem(ns) responsável(is)"
               value={(() => {
                 const youngs = services
-                  .filter((s: any) => s.young_people?.full_name)
-                  .map((s: any) => s.young_people.full_name);
+                  .filter((s: any) => s.executor_name)
+                  .map((s: any) => s.executor_name);
                 const unique = [...new Set(youngs)];
                 return unique.length > 0 ? unique.join(", ") : "—";
               })()}
@@ -298,8 +310,8 @@ function ClientDetailPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium">{s.service_name}</p>
-                          {s.young_people?.full_name && (
-                            <p className="text-xs text-muted-foreground">Responsável: {s.young_people.full_name}</p>
+                          {s.executor_name && (
+                            <p className="text-xs text-muted-foreground">Responsável: {s.executor_name}</p>
                           )}
                         </div>
                         <div className="text-right text-xs">
@@ -602,11 +614,23 @@ function ServicesTab({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_services")
-        .select("*, young_people:executor_id(id, full_name)")
+        .select("*")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Array<any>;
+      const svcList = (data ?? []) as Array<any>;
+
+      // Buscar nomes dos jovens executores
+      const executorIds = svcList.map((s) => s.executor_id).filter(Boolean);
+      if (executorIds.length > 0) {
+        const { data: youngs } = await supabase
+          .from("young_people")
+          .select("id, full_name")
+          .in("id", executorIds);
+        const youngMap = new Map((youngs ?? []).map((y) => [y.id, y.full_name]));
+        return svcList.map((s) => ({ ...s, executor_name: youngMap.get(s.executor_id) ?? null }));
+      }
+      return svcList.map((s) => ({ ...s, executor_name: null }));
     },
   });
 
@@ -658,7 +682,7 @@ function ServicesTab({
                     <p className="font-medium">{s.service_name}</p>
                     <p className="text-xs text-muted-foreground">
                       {s.start_date ? `Início: ${new Date(s.start_date).toLocaleDateString("pt-BR")}` : ""}
-                      {s.young_people?.full_name ? ` · Responsável: ${s.young_people.full_name}` : ""}
+                      {s.executor_name ? ` · Responsável: ${s.executor_name}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {s.billing_type === "mensal" ? "Mensal" : s.billing_type === "pontual" && s.total_value && Number(s.monthly_value) < Number(s.total_value) ? `Pontual parcelado (${s.installments}x de ${fmtBRL(s.monthly_value)})` : `Pontual à vista`}
