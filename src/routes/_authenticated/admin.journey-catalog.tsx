@@ -628,6 +628,23 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
       if (invalidLinks) {
         throw new Error("Verifique os links: título e URL válida (http/https) são obrigatórios.");
       }
+
+      // Resolve profile_ids for assigned young people so both IDs are stored
+      let resolvedUsers = draft.assigned_users ?? [];
+      if (draft.visibility_type === "selected" && resolvedUsers.length > 0) {
+        const { data: youngRows } = await supabase
+          .from("young_people")
+          .select("id, profile_id")
+          .in("id", resolvedUsers);
+        if (youngRows) {
+          const allIds = new Set(resolvedUsers);
+          youngRows.forEach((y) => {
+            if (y.profile_id) allIds.add(y.profile_id);
+          });
+          resolvedUsers = Array.from(allIds);
+        }
+      }
+
       const { error } = await supabase
         .from("journey_modules")
         .update({
@@ -637,7 +654,7 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
           duration_minutes: draft.duration_minutes,
           links: links.map((l) => ({ label: l.label.trim(), url: l.url.trim() })),
           visibility_type: draft.visibility_type,
-          assigned_users: draft.assigned_users,
+          assigned_users: resolvedUsers,
           supplementary_text: draft.supplementary_text,
           thumbnail_url: draft.thumbnail_url,
         } as never)
