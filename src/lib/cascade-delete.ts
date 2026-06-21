@@ -10,9 +10,18 @@ export async function deleteClientCascade(clientId: string) {
   await supabase.from("client_briefings").delete().eq("client_id", clientId);
   await supabase.from("proposals").delete().eq("client_id", clientId);
   await supabase.from("tasks").update({ client_id: null }).eq("client_id", clientId);
+
+  // Reverter oportunidades "ganhas" vinculadas a esse cliente para "perdida"
   await supabase
     .from("opportunities")
-    .update({ converted_client_id: null })
+    .update({ converted_client_id: null, status: "perdida", loss_reason: "Cliente excluído" } as never)
+    .eq("converted_client_id", clientId)
+    .eq("status", "ganha");
+
+  // Limpar converted_client_id das demais (que não são "ganha")
+  await supabase
+    .from("opportunities")
+    .update({ converted_client_id: null } as never)
     .eq("converted_client_id", clientId);
 
   const { error } = await supabase.from("clients").delete().eq("id", clientId);
