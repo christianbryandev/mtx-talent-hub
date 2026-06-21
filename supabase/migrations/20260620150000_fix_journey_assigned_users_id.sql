@@ -94,7 +94,7 @@ BEGIN
             'checklist', COALESCE((
               SELECT jsonb_agg(jsonb_build_object(
                 'id', i.id,
-                'label', i.label,
+                'label', i.title,
                 'order_index', i.order_index,
                 'done', COALESCE(ui.done, false)
               ) ORDER BY i.order_index)
