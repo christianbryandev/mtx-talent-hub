@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
 
@@ -26,6 +26,10 @@ export function ServiceYoungResponsibleSelect({
   onChange,
   disabled,
 }: Props) {
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const autoFilledRef = useRef(false);
+
   const { data: youngs = [], isLoading } = useQuery({
     queryKey: ["service-youngs", serviceId],
     queryFn: async () => {
@@ -45,10 +49,16 @@ export function ServiceYoungResponsibleSelect({
 
   // Auto-preencher quando há apenas 1 jovem vinculado
   useEffect(() => {
-    if (youngs.length === 1 && !value) {
-      onChange(youngs[0].id);
+    if (youngs.length === 1 && !value && !autoFilledRef.current) {
+      autoFilledRef.current = true;
+      onChangeRef.current(youngs[0].id);
     }
-  }, [youngs, value, onChange]);
+  }, [youngs, value]);
+
+  // Reset auto-fill flag quando serviceId muda
+  useEffect(() => {
+    autoFilledRef.current = false;
+  }, [serviceId]);
 
   if (isLoading) {
     return (

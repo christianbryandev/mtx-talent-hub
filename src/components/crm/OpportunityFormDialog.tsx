@@ -145,13 +145,27 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       if (error) throw error;
 
       if (serviceIds.length > 0) {
+        // Resolver responsáveis que podem não ter sido preenchidos pelo useEffect
+        const resolvedResponsibles = { ...youngResponsibles };
+        for (const sid of serviceIds) {
+          if (!resolvedResponsibles[sid]) {
+            const { data: syp } = await supabase
+              .from("service_young_people")
+              .select("young_id")
+              .eq("service_id", sid);
+            if (syp && syp.length === 1) {
+              resolvedResponsibles[sid] = syp[0].young_id;
+            }
+          }
+        }
+
         const { error: svcErr } = await supabase
           .from("opportunity_services")
           .insert(
             serviceIds.map((sid) => ({
               opportunity_id: data.id as string,
               service_id: sid,
-              young_responsible_id: youngResponsibles[sid] || null,
+              young_responsible_id: resolvedResponsibles[sid] || null,
             })) as never,
           );
         if (svcErr) throw svcErr;

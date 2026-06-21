@@ -151,14 +151,27 @@ function OpportunityDetailPage() {
         if (error) throw error;
       }
       if (toAdd.length > 0) {
-        const { error } = await supabase
-          .from("opportunity_services")
-          .insert(
-            toAdd.map((sid) => ({
+        // Resolver automaticamente o jovem responsável para serviços com 1 jovem
+        const rows = await Promise.all(
+          toAdd.map(async (sid) => {
+            let youngId: string | null = null;
+            const { data: syp } = await supabase
+              .from("service_young_people")
+              .select("young_id")
+              .eq("service_id", sid);
+            if (syp && syp.length === 1) {
+              youngId = syp[0].young_id;
+            }
+            return {
               opportunity_id: id,
               service_id: sid,
-            })) as never,
-          );
+              young_responsible_id: youngId,
+            };
+          }),
+        );
+        const { error } = await supabase
+          .from("opportunity_services")
+          .insert(rows as never);
         if (error) throw error;
       }
     },
