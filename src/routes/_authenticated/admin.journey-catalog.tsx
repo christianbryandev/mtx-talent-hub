@@ -966,24 +966,13 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
              </div>
              
              {draft.visibility_type === "selected" && (draft.assigned_users?.length ?? 0) > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2 p-3 bg-muted/20 border border-border/60 rounded-md">
-                   {draft.assigned_users?.map((id) => (
-                      <Badge key={id} variant="secondary" className="flex items-center gap-1 py-1 px-2 text-xs">
-                         ID: {id.slice(0, 6)}...
-                         <Button 
-                           variant="ghost" 
-                           size="sm" 
-                           className="h-4 w-4 p-0 ml-1 rounded-full text-muted-foreground hover:text-destructive"
-                           onClick={() => setDraft({
-                             ...draft, 
-                             assigned_users: draft.assigned_users?.filter(uid => uid !== id)
-                           })}
-                         >
-                           <X className="h-3 w-3" />
-                         </Button>
-                      </Badge>
-                   ))}
-                </div>
+                <AssignedUsersBadges
+                  ids={draft.assigned_users ?? []}
+                  onRemove={(id) => setDraft({
+                    ...draft,
+                    assigned_users: draft.assigned_users?.filter(uid => uid !== id)
+                  })}
+                />
              )}
           </div>
 
@@ -1083,6 +1072,46 @@ function ModuleEditDialog({ module, onClose, phaseId }: { module: Module; onClos
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ----------------------- Assigned Users Badges ----------------------- */
+
+function AssignedUsersBadges({ ids, onRemove }: { ids: string[]; onRemove: (id: string) => void }) {
+  const { data: names = {} } = useQuery({
+    queryKey: ["young-names", ids],
+    queryFn: async () => {
+      if (ids.length === 0) return {};
+      const { data } = await supabase
+        .from("young_people")
+        .select("id, full_name, profile_id")
+        .or(`id.in.(${ids.join(",")}),profile_id.in.(${ids.join(",")})`);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((y) => {
+        map[y.id] = y.full_name;
+        if (y.profile_id) map[y.profile_id] = y.full_name;
+      });
+      return map;
+    },
+    enabled: ids.length > 0,
+  });
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2 p-3 bg-muted/20 border border-border/60 rounded-md">
+      {ids.map((id) => (
+        <Badge key={id} variant="secondary" className="flex items-center gap-1 py-1 px-2 text-xs">
+          {names[id] ?? `ID: ${id.slice(0, 6)}...`}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-4 w-4 p-0 ml-1 rounded-full text-muted-foreground hover:text-destructive"
+            onClick={() => onRemove(id)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </Badge>
+      ))}
+    </div>
   );
 }
 

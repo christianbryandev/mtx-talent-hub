@@ -111,8 +111,9 @@ BEGIN
           LEFT JOIN public.user_module_progress ump ON ump.module_id = jm.id AND ump.user_id = _user_id
           WHERE jm.phase_id = ph.id
             AND (
-              jm.visibility_type = 'all'
-              OR (jm.visibility_type = 'admin_only' AND (has_role(_user_id, 'admin') OR has_role(_user_id, 'super_admin')))
+              -- Admins see everything
+              has_role(_user_id, 'admin') OR has_role(_user_id, 'super_admin')
+              OR jm.visibility_type = 'all'
               OR (jm.visibility_type = 'selected' AND (v_young_id = ANY(jm.assigned_users) OR _user_id = ANY(jm.assigned_users)))
             )
         ) sub
