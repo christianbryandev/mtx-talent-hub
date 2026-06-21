@@ -13,7 +13,7 @@ FOR SELECT
 TO authenticated
 USING (
   young_responsible_id IN (
-    SELECT id FROM public.young_people WHERE profile_id = auth.uid()
+    SELECT yp.id FROM public.young_people yp WHERE yp.profile_id = auth.uid()
   )
 );
 
@@ -26,7 +26,7 @@ USING (
   EXISTS (
     SELECT 1 FROM public.opportunity_services os
     JOIN public.young_people yp ON yp.id = os.young_responsible_id
-    WHERE os.opportunity_id = id
+    WHERE os.opportunity_id = opportunities.id
     AND yp.profile_id = auth.uid()
   )
 );
