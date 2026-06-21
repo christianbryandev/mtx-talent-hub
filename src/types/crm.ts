@@ -74,6 +74,7 @@ export const LEAD_ORIGIN_OPTIONS = [
 export interface Opportunity {
   id: string;
   company_name: string;
+  trade_name: string | null;
   contact_name: string | null;
   phone: string | null;
   whatsapp: string | null;

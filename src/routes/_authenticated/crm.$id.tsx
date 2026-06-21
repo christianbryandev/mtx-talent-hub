@@ -807,11 +807,13 @@ function ConvertDialog({
         .from("clients")
         .insert({
           company_name: company,
+          trade_name: opp.trade_name ?? null,
           contact_name: opp.contact_name,
           email: opp.email,
           phone: opp.phone,
           whatsapp: opp.whatsapp,
           niche: opp.niche,
+          segment: opp.niche,
           lead_origin: opp.lead_origin,
           status: "ativo",
           entry_date: today,

@@ -67,6 +67,7 @@ function PublicLeadPage() {
     mutationFn: async (values: LeadValues) => {
       const payload = {
         company_name: values.company_name,
+        trade_name: values.trade_name || null,
         contact_name: values.contact_name,
         email: values.email,
         whatsapp: values.whatsapp,

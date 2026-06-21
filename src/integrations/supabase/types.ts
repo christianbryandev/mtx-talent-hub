@@ -1396,6 +1396,7 @@ export type Database = {
           status: string
           suggested_solution: string | null
           temperature: string | null
+          trade_name: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -1437,6 +1438,7 @@ export type Database = {
           status?: string
           suggested_solution?: string | null
           temperature?: string | null
+          trade_name?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -1478,6 +1480,7 @@ export type Database = {
           status?: string
           suggested_solution?: string | null
           temperature?: string | null
+          trade_name?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
