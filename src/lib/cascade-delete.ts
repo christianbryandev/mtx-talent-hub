@@ -3,8 +3,60 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Delete a client and its dependent records.
  * Tables without FKs are cleaned manually here.
+ * Also reverts young people income/status that originated from this client.
  */
 export async function deleteClientCascade(clientId: string) {
+  // Buscar serviços do cliente para reverter renda dos jovens
+  const { data: clientServices } = await supabase
+    .from("client_services")
+    .select("id, service_id, monthly_value, executor_id")
+    .eq("client_id", clientId);
+
+  // Reverter total_income_generated dos jovens vinculados a este cliente
+  if (clientServices && clientServices.length > 0) {
+    const revenueByYoung = new Map<string, number>();
+    for (const cs of clientServices) {
+      if (!cs.executor_id) continue;
+      const revenue = Number(cs.monthly_value) || 0;
+      revenueByYoung.set(
+        cs.executor_id,
+        (revenueByYoung.get(cs.executor_id) ?? 0) + revenue,
+      );
+    }
+
+    for (const [youngId, revenueToRemove] of revenueByYoung) {
+      const { data: young } = await supabase
+        .from("young_people")
+        .select("total_income_generated")
+        .eq("id", youngId)
+        .single();
+      const current = Number(young?.total_income_generated) || 0;
+      const newIncome = Math.max(0, current - revenueToRemove);
+      await supabase
+        .from("young_people")
+        .update({ total_income_generated: newIncome } as never)
+        .eq("id", youngId);
+    }
+
+    // Verificar se algum jovem ficou sem nenhum outro cliente ativo e reverter first_client_attended
+    const affectedYoungIds = [...revenueByYoung.keys()];
+    for (const youngId of affectedYoungIds) {
+      const { data: otherServices } = await supabase
+        .from("client_services")
+        .select("id")
+        .eq("executor_id", youngId)
+        .neq("client_id", clientId)
+        .eq("status", "ativo")
+        .limit(1);
+      if (!otherServices || otherServices.length === 0) {
+        await supabase
+          .from("young_people")
+          .update({ first_client_attended: false } as never)
+          .eq("id", youngId);
+      }
+    }
+  }
+
   await supabase.from("client_history").delete().eq("client_id", clientId);
   await supabase.from("client_services").delete().eq("client_id", clientId);
   await supabase.from("client_briefings").delete().eq("client_id", clientId);

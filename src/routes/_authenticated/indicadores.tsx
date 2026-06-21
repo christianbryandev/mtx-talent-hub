@@ -146,6 +146,7 @@ function IndicadoresPage() {
   const [responsavelId, setResponsavelId] = useState<string | null>(null);
   useRealtimeInvalidate("opportunities", [["indicadores", "responsaveis"]]);
   useRealtimeInvalidate("clients", [["indicadores", "responsaveis"]]);
+  useRealtimeInvalidate("young_people", [["indicadores"]]);
 
   const { data: responsaveis } = useQuery({
     queryKey: ["indicadores", "responsaveis"],

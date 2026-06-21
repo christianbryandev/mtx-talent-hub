@@ -135,7 +135,7 @@ function AdminDashboardContent() {
         supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
         supabase.from("user_roles").select("user_id, role").limit(5000),
-        supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status").eq("status", "ativo").limit(5000),
+        supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status, executor_id").eq("status", "ativo").limit(5000),
       ]);
 
       const rawYoungs = youngsRes.data ?? [];
@@ -177,9 +177,27 @@ function AdminDashboardContent() {
         })
         .reduce((sum, cs: any) => sum + (Number(cs.monthly_value) || 0), 0);
       const youngsWithCnpj = youngs.filter((y) => y.has_cnpj).length;
-      const remunerated = youngs.filter((y) => y.first_client_attended).length;
-      const avgIncome = youngs.length
-        ? youngs.reduce((s, y) => s + (Number(y.total_income_generated) || 0), 0) / youngs.length
+
+      // Jovens remunerados: contar jovens que realmente têm serviços ativos vinculados a clientes existentes
+      const allActiveServices = clientServicesRes.data ?? [];
+      const existingClientIds = new Set(clients.map((c) => c.id));
+      const youngIdsWithActiveClients = new Set(
+        allActiveServices
+          .filter((cs: any) => cs.executor_id && existingClientIds.has(cs.client_id))
+          .map((cs: any) => cs.executor_id),
+      );
+      const remunerated = youngs.filter((y) => youngIdsWithActiveClients.has(y.id)).length;
+
+      // Renda média: calcular a partir dos serviços ativos reais
+      const revenueByYoung = new Map<string, number>();
+      allActiveServices
+        .filter((cs: any) => cs.executor_id && existingClientIds.has(cs.client_id))
+        .forEach((cs: any) => {
+          const value = Number(cs.total_value) || Number(cs.monthly_value) || 0;
+          revenueByYoung.set(cs.executor_id, (revenueByYoung.get(cs.executor_id) ?? 0) + value);
+        });
+      const avgIncome = revenueByYoung.size > 0
+        ? [...revenueByYoung.values()].reduce((s, v) => s + v, 0) / revenueByYoung.size
         : 0;
 
       const opportunities = opportunitiesRes.data ?? [];

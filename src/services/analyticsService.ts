@@ -115,7 +115,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     a + (mrrByClient[c.id] ?? Number(c.monthly_value ?? 0)), 0);
   const newClientsMonth = clients.filter((c: any) => c.created_at && new Date(c.created_at) >= monthStart).length;
 
-  const oppsClosed = opps.filter((o: any) => o.status === "ganha" || o.status === "perdida");
+  const oppsClosed = opps.filter((o: any) => (o.status === "ganha" || o.status === "perdida") && o.loss_reason !== "Cliente excluído");
   const oppsWon = opps.filter((o: any) => o.status === "ganha");
   const conversionRate = oppsClosed.length > 0 ? (oppsWon.length / oppsClosed.length) * 100 : 0;
   const ticketMedio = activeClients.length > 0 ? mrr / activeClients.length : 0;
@@ -270,7 +270,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
     if (s.includes("confian")) return "sem_confianca";
     return "outros";
   };
-  opps.filter((o: any) => o.status === "perdida" && o.loss_reason).forEach((o: any) => {
+  opps.filter((o: any) => o.status === "perdida" && o.loss_reason && o.loss_reason !== "Cliente excluído").forEach((o: any) => {
     lossMap[normalizeLoss(o.loss_reason)]++;
   });
   const lossLabels: Record<string, string> = {

@@ -2896,6 +2896,8 @@ export type Database = {
           cpf: string | null
           created_at: string
           current_situation: string | null
+          currently_studying: boolean | null
+          currently_working: boolean | null
           dreams: string | null
           education_level: string | null
           email: string | null
@@ -2951,6 +2953,8 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           current_situation?: string | null
+          currently_studying?: boolean | null
+          currently_working?: boolean | null
           dreams?: string | null
           education_level?: string | null
           email?: string | null
@@ -3006,6 +3010,8 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           current_situation?: string | null
+          currently_studying?: boolean | null
+          currently_working?: boolean | null
           dreams?: string | null
           education_level?: string | null
           email?: string | null

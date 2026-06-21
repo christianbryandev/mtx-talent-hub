@@ -132,6 +132,8 @@ export interface YoungPerson {
   education_level: string | null;
   school: string | null;
   current_situation: string | null;
+  currently_studying: boolean | null;
+  currently_working: boolean | null;
   family_income: string | null;
   people_at_home: number | null;
   social_context: string | null;

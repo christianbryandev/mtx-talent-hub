@@ -76,6 +76,8 @@ function ClientDetailPage() {
     onSuccess: () => {
       toast.success("Cliente excluído");
       qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["indicadores"] });
       navigate({ to: "/clientes" });
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao excluir"),

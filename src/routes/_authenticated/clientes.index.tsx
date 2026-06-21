@@ -290,6 +290,8 @@ function ClientesListPage() {
                                 });
                                 toast.success("Cliente excluído");
                                 qc.invalidateQueries({ queryKey: ["clients"] });
+                                qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+                                qc.invalidateQueries({ queryKey: ["indicadores"] });
                               } catch (e) {
                                 toast.error((e as Error).message);
                               }

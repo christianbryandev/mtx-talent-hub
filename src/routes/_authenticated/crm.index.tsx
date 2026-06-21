@@ -193,7 +193,7 @@ function CrmKanbanPage() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const totalOpen = opportunities.filter((o) => o.status === "aberta").length;
   const closedThisMonth = opportunities.filter(
-    (o) => o.status !== "aberta" && (o.updated_at ?? "") >= startOfMonth,
+    (o) => o.status !== "aberta" && (o.updated_at ?? "") >= startOfMonth && o.loss_reason !== "Cliente excluído",
   );
   const wonOppsMonth = closedThisMonth.filter((o) => o.status === "ganha");
   const wonThisMonth = wonOppsMonth.length;
