@@ -72,7 +72,7 @@ const operationElements: SidebarElement[] = [
     icon: Users,
     items: [
       { title: "Jovens", url: "/jovens", icon: Users, roles: ["super_admin", "admin"] },
-      { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin"] },
+      { title: "Clientes", url: "/clientes", icon: Building2, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
       { title: "CRM Comercial", url: "/crm", icon: Target, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz"] },
     ]
   },
