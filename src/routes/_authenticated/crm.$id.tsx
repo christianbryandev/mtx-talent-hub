@@ -907,6 +907,18 @@ function ConvertDialog({
         }
       }
 
+      // Criar card no Backlog do Kanban automaticamente
+      await supabase.from("tasks").insert({
+        title: company,
+        client_id: data.id,
+        opportunity_id: opp.id,
+        young_responsible: youngResponsibleId,
+        kanban_column: "backlog",
+        created_by: user!.id,
+        auto_generated: true,
+        description: "Card gerado automaticamente na conversão de oportunidade em cliente.",
+      } as never);
+
       toast.success("Cliente criado com sucesso");
 
       onConverted(data.id as string);
