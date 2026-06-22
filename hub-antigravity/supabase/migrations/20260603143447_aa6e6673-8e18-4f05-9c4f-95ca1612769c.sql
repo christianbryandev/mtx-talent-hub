@@ -1,1 +1,0 @@
-SELECT p.proname, pg_get_function_arguments(p.oid) AS args FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE p.prosecdef = true AND n.nspname = 'public' ORDER BY p.proname;

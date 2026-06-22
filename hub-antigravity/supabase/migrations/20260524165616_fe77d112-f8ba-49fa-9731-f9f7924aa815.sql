@@ -1,1 +1,0 @@
-ALTER TABLE public.chat_canais ADD COLUMN icon_url TEXT;
