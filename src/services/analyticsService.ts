@@ -58,7 +58,7 @@ export async function fetchIndicadoresData(filters: IndicadoresFilters) {
       supabase.from("tasks").select("id, status, kanban_column, created_at, completed_at, due_date, young_responsible").limit(3000),
       supabase.from("young_people").select("id, status, trail_phase, has_cnpj, total_income_generated, first_client_attended, created_at, last_progress_at, profile_id").limit(3000),
       supabase.from("meetings").select("id, type, status, date").gte("date", since.slice(0, 10)).limit(1000),
-      supabase.from("client_services").select("id, client_id, monthly_value, status, billing_type, start_date, total_value, installments").limit(2000),
+      supabase.from("client_services").select("id, client_id, executor_id, monthly_value, status, billing_type, start_date, total_value, installments").limit(2000),
       supabase.from("proposals").select("id, value, status, sent_at, created_at").limit(2000),
       supabase.from("meeting_participants").select("id, meeting_id, present").limit(5000),
       supabase.from("meeting_tasks").select("id, meeting_id, task_id").limit(5000),
@@ -204,11 +204,20 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
 
   // Impacto Social
   const youngsAtivos = data.youngs.filter((y: any) => y.status === "ativo").length;
-  const phaseCount = (p: string) => data.youngs.filter((y: any) => y.trail_phase === p).length;
-  const gerandoRenda = data.youngs.filter((y: any) => Number(y.total_income_generated ?? 0) > 0);
-  const rendaTotal = data.youngs.reduce((a: number, y: any) => a + Number(y.total_income_generated ?? 0), 0);
-  const rendaMedia = gerandoRenda.length > 0 ? rendaTotal / gerandoRenda.length : 0;
+  const phaseCount = (p: string) => data.youngs.filter((y: any) => y.trail_phase === p && y.status === "ativo").length;
   const primeiroCliente = data.youngs.filter((y: any) => y.first_client_attended).length;
+
+  // Renda Total: calcular a partir dos serviços ativos de clientes ativos (fonte confiável)
+  const activeClientIds = new Set(clients.filter((c: any) => c.status === "ativo").map((c: any) => c.id));
+  const activeServicesForIncome = data.services.filter((s: any) => s.status === "ativo" && s.executor_id && activeClientIds.has(s.client_id));
+  const revenueByYoung = new Map<string, number>();
+  activeServicesForIncome.forEach((cs: any) => {
+    const value = Number(cs.monthly_value) || 0;
+    revenueByYoung.set(cs.executor_id, (revenueByYoung.get(cs.executor_id) ?? 0) + value);
+  });
+  const rendaTotal = [...revenueByYoung.values()].reduce((s, v) => s + v, 0);
+  const gerandoRenda = revenueByYoung.size;
+  const rendaMedia = gerandoRenda > 0 ? rendaTotal / gerandoRenda : 0;
 
   // Evolução
   const buckets: Record<string, { month: string; clientes: number; oportunidades: number; receita: number }> = {};
@@ -329,7 +338,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
       ativos: youngsAtivos,
       formacao: phaseCount("fase_1") + phaseCount("fase_2"),
       pratica: phaseCount("fase_3") + phaseCount("fase_4"),
-      gerandoRenda: gerandoRenda.length,
+      gerandoRenda,
       rendaTotal,
       rendaMedia,
       primeiroCliente,
