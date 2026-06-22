@@ -62,7 +62,7 @@ function BriefingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("clients")
-        .select("company_name, trade_name, contact_name")
+        .select("company_name, trade_name, contact_name, segment")
         .eq("id", clientId)
         .maybeSingle();
       return data;
@@ -85,6 +85,7 @@ function BriefingPage() {
       form.reset({
         company_name: client.trade_name || client.company_name || "",
         contact_name: client.contact_name || "",
+        segment: client.segment || "",
         invests_in_marketing: false,
         has_commercial_team: false,
         uses_crm: false,
