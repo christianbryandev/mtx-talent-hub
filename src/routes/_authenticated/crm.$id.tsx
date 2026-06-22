@@ -216,7 +216,8 @@ function OpportunityDetailPage() {
   };
 
   const handleYoungResponsibleChange = async (serviceId: string, youngId: string | null) => {
-    setLocalYoungResponsibles((prev) => ({ ...prev, [serviceId]: youngId }));
+    const prev = localYoungResponsibles[serviceId] ?? null;
+    setLocalYoungResponsibles((p) => ({ ...p, [serviceId]: youngId }));
     const row = oppServices.find((s) => s.service_id === serviceId);
     if (row) {
       const { error } = await supabase
@@ -224,6 +225,7 @@ function OpportunityDetailPage() {
         .update({ young_responsible_id: youngId } as never)
         .eq("id", row.id);
       if (error) {
+        setLocalYoungResponsibles((p) => ({ ...p, [serviceId]: prev }));
         toast.error("Erro ao salvar responsável");
         return;
       }
