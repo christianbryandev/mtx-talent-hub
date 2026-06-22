@@ -681,6 +681,21 @@ function OptionItem({ option, questionId, quizId }: { option: Option; questionId
   const save = async (patch: Partial<Option>) => {
     try {
       if (patch.is_correct === true) {
+        // Optimistic update: atualiza cache local instantaneamente
+        qc.setQueryData<Question[]>(["admin-quiz-questions", quizId], (old) => {
+          if (!old) return old;
+          return old.map((q) => {
+            if (q.id !== questionId) return q;
+            return {
+              ...q,
+              options: q.options.map((o) => ({
+                ...o,
+                is_correct: o.id === option.id,
+              })),
+            };
+          });
+        });
+        // Persiste no banco em background
         await supabase.from("quiz_options").update({ is_correct: false }).eq("question_id", questionId);
       }
       const { error } = await supabase.from("quiz_options").update(patch).eq("id", option.id);
@@ -688,6 +703,8 @@ function OptionItem({ option, questionId, quizId }: { option: Option; questionId
       qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
     } catch (e: any) {
       toast.error(e.message);
+      // Reverte em caso de erro
+      qc.invalidateQueries({ queryKey: ["admin-quiz-questions", quizId] });
     }
   };
 
