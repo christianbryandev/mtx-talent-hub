@@ -203,8 +203,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
   const projetosRisco = clients.filter((c: any) => c.status === "ativo" && !c.monthly_value).length;
 
   // Impacto Social
-  const youngsAtivos = data.youngs.filter((y: any) => y.status === "ativo").length;
-  const phaseCount = (p: string) => data.youngs.filter((y: any) => y.trail_phase === p && y.status === "ativo").length;
+  const youngsAtivos = data.youngs.filter((y: any) => y.status === "ativo");
   const primeiroCliente = data.youngs.filter((y: any) => y.first_client_attended).length;
 
   // Renda Total: calcular a partir dos serviços ativos de clientes ativos (fonte confiável)
@@ -218,6 +217,11 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
   const rendaTotal = [...revenueByYoung.values()].reduce((s, v) => s + v, 0);
   const gerandoRenda = revenueByYoung.size;
   const rendaMedia = gerandoRenda > 0 ? rendaTotal / gerandoRenda : 0;
+
+  // Em Formação vs Em Prática: baseado em ter serviço/cliente atribuído
+  const youngsComServico = new Set(data.services.filter((s: any) => s.executor_id).map((s: any) => s.executor_id));
+  const emPratica = youngsAtivos.filter((y: any) => youngsComServico.has(y.id)).length;
+  const emFormacao = youngsAtivos.length - emPratica;
 
   // Evolução
   const buckets: Record<string, { month: string; clientes: number; oportunidades: number; receita: number }> = {};
@@ -335,9 +339,9 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
       projetosRisco,
     },
     social: {
-      ativos: youngsAtivos,
-      formacao: phaseCount("fase_1") + phaseCount("fase_2"),
-      pratica: phaseCount("fase_3") + phaseCount("fase_4"),
+      ativos: youngsAtivos.length,
+      formacao: emFormacao,
+      pratica: emPratica,
       gerandoRenda,
       rendaTotal,
       rendaMedia,
