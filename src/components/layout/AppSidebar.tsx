@@ -80,7 +80,7 @@ const operationElements: SidebarElement[] = [
     title: "Fluxo de Trabalho",
     icon: Briefcase,
     items: [
-      { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin", "cliente"] },
+      { title: "Serviços", url: "/servicos", icon: Briefcase, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
       { title: "Tarefas / Kanban", url: "/tarefas", icon: ListChecks, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
       { title: "Reuniões", url: "/reunioes", icon: CalendarDays, roles: ["super_admin", "admin", "comercial", "jovem_aprendiz", "cliente"] },
     ]
