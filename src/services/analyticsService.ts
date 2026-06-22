@@ -203,7 +203,7 @@ export function computeAnalytics(data: RawData, filters: IndicadoresFilters) {
   const projetosRisco = clients.filter((c: any) => c.status === "ativo" && !c.monthly_value).length;
 
   // Impacto Social
-  const youngsAtivos = data.youngs.filter((y: any) => y.status === "ativo");
+  const youngsAtivos = data.youngs.filter((y: any) => y.status !== "desligado");
   const primeiroCliente = data.youngs.filter((y: any) => y.first_client_attended).length;
 
   // Renda Total: calcular a partir dos serviços ativos de clientes ativos (fonte confiável)
