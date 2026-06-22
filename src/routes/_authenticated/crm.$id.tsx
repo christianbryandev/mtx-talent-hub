@@ -589,7 +589,7 @@ function OpportunityDetailPage() {
           <CardHeader><CardTitle className="text-base">Proposta</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3 text-sm">
             <div>
-              <Label className="text-xs">Valor da proposta (R$)</Label>
+              <Label className="text-xs">Valor da proposta (Setup)</Label>
               <Input type="number" step="0.01" defaultValue={opp.proposal_value ?? ""} disabled={!canEdit}
                 onBlur={(e) => updateMutation.mutate({ proposal_value: e.target.value ? Number(e.target.value) : null })} />
             </div>
