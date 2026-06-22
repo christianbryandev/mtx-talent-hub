@@ -1,18 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { 
-  Search, 
-  Users, 
-  Building2, 
-  Target, 
-  Briefcase, 
-  ListChecks, 
-  Route as RouteIcon, 
-  GraduationCap, 
-  Bell, 
-  CalendarDays, 
-  UserCircle, 
-  FileText, 
-  ClipboardList,
+import {
+  Search,
+  Users,
+  Building2,
+  Target,
+  ListChecks,
+  Route as RouteIcon,
+  UserCircle,
   Clock,
   ArrowRight,
   Loader2,
@@ -359,17 +353,4 @@ export function GlobalSearch() {
       </CommandDialog>
     </>
   );
-}
-
-function itemToCategoryUrl(cat: SearchCategory): string {
-  switch (cat) {
-    case "jovens": return "/jovens";
-    case "clientes": return "/clientes";
-    case "crm": return "/crm";
-    case "jornada": return "/jornada";
-    case "admin": return "/admin/journey-catalog";
-    case "configuracoes": return "/settings";
-    case "perfil": return "/meu-perfil";
-    default: return "/dashboard";
-  }
 }

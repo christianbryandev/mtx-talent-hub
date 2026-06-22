@@ -1,7 +1,6 @@
 import { Circle, Lock, FileText, Play, HelpCircle, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
 
 export type ContentType = "video" | "quiz" | "texto" | "text";
 
@@ -33,7 +32,6 @@ export function ContentItemCard({
   thumbnailUrl,
   onClick
 }: ContentItemCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const itemNumber = orderIndex.toString().padStart(2, "0");
 
   const getTypeLabel = () => {
@@ -79,8 +77,6 @@ export function ContentItemCard({
 
   return (
     <Card
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className={`relative flex flex-col overflow-hidden transition-all duration-300 border-[1px] border-border bg-card rounded-[16px] group ${
         isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30"
       }`}

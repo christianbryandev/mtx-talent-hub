@@ -7,20 +7,15 @@ import {
   Circle,
   Sparkles,
   XCircle,
-  HelpCircle,
   Loader2,
   ExternalLink,
-  Paperclip,
   BookOpen,
-  Target,
   Trophy,
   Award,
   Zap,
   GraduationCap,
   ArrowRight,
   Rocket,
-  ChevronRight,
-  ChevronDown,
   Link as LinkIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -29,7 +24,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useJourney } from "@/hooks/useJourney";
 import { usePermissions } from "@/hooks/usePermissions";
-import { startUserJourney } from "@/utils/journeySeed";
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";

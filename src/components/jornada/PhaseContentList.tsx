@@ -1,12 +1,8 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { JourneyPhase, journeyService } from "@/services/journeyService";
+import { JourneyPhase } from "@/services/journeyService";
 import { ContentItemCard } from "./ContentItemCard";
-import { Badge } from "@/components/ui/badge";
 import { usePermissions } from "@/hooks/usePermissions";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
 interface PhaseContentListProps {
@@ -18,7 +14,6 @@ interface PhaseContentListProps {
 export function PhaseContentList({ phase, onBack, onSelectItem }: PhaseContentListProps) {
   const { isAdmin } = usePermissions();
   const { user } = useAuth();
-  const qc = useQueryClient();
   const phaseNumber = phase.order_index.toString().padStart(2, "0");
 
   // Modules are the main content units now. We filter them based on visibility access.

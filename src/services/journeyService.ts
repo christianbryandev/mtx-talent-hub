@@ -161,11 +161,7 @@ export const journeyService = {
         .from("journey_checklist_items")
         .select("id, module_id")
         .filter("card_id", "in", `(SELECT id FROM journey_cards WHERE phase_id = '${phaseId}')`);
-      
-      // Since Supabase doesn't support subqueries in filters directly like this easily via client, 
-      // we'll fetch them normally or use an RPC if needed. 
-      // Actually, we can just fetch all checklist items for the phase.
-      
+
       const { data: cards } = await supabase.from("journey_cards").select("id").eq("phase_id", phaseId);
       if (!cards || cards.length === 0) return [];
       
@@ -213,11 +209,7 @@ export const journeyService = {
         _phase_id: module.phase_id,
         _start_index: module.order_index + 1
       });
-      
-      // If RPC doesn't exist yet, we'll handle it manually in a migration if needed, 
-      // but let's try to do it via a simple update first if we can.
-      // For now, let's just insert it right after.
-      
+
       const newModule = {
         ...moduleData,
         title: `${module.title} (Cópia)`,
