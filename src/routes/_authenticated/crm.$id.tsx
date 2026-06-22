@@ -71,7 +71,7 @@ function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isJovemAprendiz } = usePermissions();
   useRealtimeInvalidate("opportunities", [["opportunity", id], ["opportunities"]]);
   useRealtimeInvalidate("opportunity_interactions", [["opp-interactions", id]]);
   useRealtimeInvalidate("proposals", [["opp-proposals", id]]);
@@ -468,7 +468,7 @@ function OpportunityDetailPage() {
                 </div>
               )}
             </div>
-            {isAdmin && (
+            {isJovemAprendiz && (
               <div className="pt-2 border-t mt-2">
                 <Label className="text-xs mb-1 block">Responsável comercial</Label>
                 <ProfileSearchSelect
