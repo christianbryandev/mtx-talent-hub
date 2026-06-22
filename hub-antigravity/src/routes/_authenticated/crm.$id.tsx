@@ -52,7 +52,6 @@ import {
 } from "@/types/crm";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
-  EditRequestBanner,
   useEditRequestState,
 } from "@/components/crm/EditRequestBanner";
 import { ServiceMultiSelect } from "@/components/crm/ServiceMultiSelect";
@@ -207,13 +206,6 @@ function OpportunityDetailPage() {
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link to="/crm"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link>
       </Button>
-
-      <EditRequestBanner
-        entityType="opportunity"
-        entityId={id}
-        entityLabel={`oportunidade "${opp.company_name}"`}
-        locked={isClosed}
-      />
 
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
