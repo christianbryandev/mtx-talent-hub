@@ -813,14 +813,21 @@ function ConvertDialog({
       const today = new Date().toISOString().slice(0, 10);
       const endDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+      // Re-buscar oppServices frescos para garantir young_responsible_id atualizado
+      const { data: freshServices } = await supabase
+        .from("opportunity_services")
+        .select("id, service_id, payment_method, installments, young_responsible_id, services(name, base_price, default_value, billing_model)")
+        .eq("opportunity_id", opp.id);
+      const currentServices = (freshServices ?? oppServices) as Array<any>;
+
       // Calculate monthly_value from services or opportunity estimated_value
-      const servicesTotal = oppServices && oppServices.length > 0
-        ? oppServices.reduce((sum, s) => sum + (s.services?.default_value ?? s.services?.base_price ?? 0), 0)
+      const servicesTotal = currentServices && currentServices.length > 0
+        ? currentServices.reduce((sum, s) => sum + (s.services?.default_value ?? s.services?.base_price ?? 0), 0)
         : null;
       const monthlyValue = servicesTotal || opp.estimated_value || null;
 
       // Determinar o jovem responsável principal (primeiro encontrado nos serviços)
-      const youngResponsibleId = oppServices?.find((s) => s.young_responsible_id)?.young_responsible_id ?? null;
+      const youngResponsibleId = currentServices?.find((s) => s.young_responsible_id)?.young_responsible_id ?? null;
 
       const { data, error } = await supabase
         .from("clients")
@@ -854,9 +861,9 @@ function ConvertDialog({
         .update({ status: "ganha", converted_client_id: data.id } as never)
         .eq("id", opp.id);
 
-      if (oppServices && oppServices.length > 0) {
+      if (currentServices && currentServices.length > 0) {
         const { error: svcError } = await supabase.from("client_services").insert(
-          oppServices.map((s) => {
+          currentServices.map((s) => {
             const billingModel = s.services?.billing_model ?? "mensal";
             const baseValue = Number(s.services?.default_value ?? s.services?.base_price ?? 0);
             const payMethod = s.payment_method ?? "unico";
@@ -883,9 +890,9 @@ function ConvertDialog({
         if (svcError) throw svcError;
 
         // Marcar jovens responsáveis como remunerados e atualizar renda
-        const youngIds = [...new Set(oppServices.map((s) => s.young_responsible_id).filter(Boolean))] as string[];
+        const youngIds = [...new Set(currentServices.map((s) => s.young_responsible_id).filter(Boolean))] as string[];
         for (const youngId of youngIds) {
-          const youngServices = oppServices.filter((s) => s.young_responsible_id === youngId);
+          const youngServices = currentServices.filter((s) => s.young_responsible_id === youngId);
           const youngRevenue = youngServices.reduce((sum, s) => sum + (s.services?.default_value ?? s.services?.base_price ?? 0), 0);
 
           // Buscar renda atual do jovem e somar
