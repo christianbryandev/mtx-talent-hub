@@ -22,9 +22,6 @@ import {
   AlertTriangle,
   List as ListIcon,
   LinkIcon,
-  Copy,
-  Check,
-  QrCode,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +51,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { deleteOpportunityCascade } from "@/lib/cascade-delete";
 import { duplicateRow } from "@/lib/duplicate-row";
 import { logActivity } from "@/lib/activity-log";
-import { QRCodeCanvas } from "qrcode.react";
+import { CaptacaoLinkDialog } from "@/components/clientes/CaptacaoLinkDialog";
 
 export const Route = createFileRoute("/_authenticated/crm/")({
   head: () => ({ meta: [{ title: "CRM Comercial — MTX Hub" }] }),
@@ -86,24 +83,7 @@ function CrmKanbanPage() {
   const [temperatureFilter, setTemperatureFilter] = useState("all");
   const [nicheFilter, setNicheFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [showQr, setShowQr] = useState(false);
-
-  const captureLink =
-    typeof window !== "undefined" && user
-      ? `${window.location.origin}/cadastro-cliente?ref=${user.id}`
-      : "";
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(captureLink);
-      setLinkCopied(true);
-      toast.success("Link copiado!");
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch {
-      toast.error("Não foi possível copiar o link");
-    }
-  };
+  const [linkOpen, setLinkOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const clearFilters = () => {
@@ -304,30 +284,13 @@ function CrmKanbanPage() {
 
       {/* Link de Captação Pessoal */}
       {user && canManage && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2 text-sm font-medium text-primary shrink-0">
-              <LinkIcon className="h-4 w-4" />
-              <span>Meu Link de Captação</span>
-            </div>
-            <div className="flex flex-1 gap-2 w-full sm:w-auto">
-              <Input value={captureLink} readOnly className="font-mono text-xs flex-1" />
-              <Button variant="outline" size="icon" onClick={handleCopyLink} title="Copiar link">
-                {linkCopied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => setShowQr(!showQr)} title="QR Code">
-                <QrCode className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-          {showQr && (
-            <div className="flex justify-center pb-4">
-              <div className="rounded-lg border bg-white p-3">
-                <QRCodeCanvas value={captureLink} size={160} level="H" includeMargin />
-              </div>
-            </div>
-          )}
-        </Card>
+        <>
+          <Button variant="outline" onClick={() => setLinkOpen(true)}>
+            <LinkIcon className="h-4 w-4 mr-2 text-primary" />
+            Link de Captação
+          </Button>
+          <CaptacaoLinkDialog open={linkOpen} onOpenChange={setLinkOpen} userId={user?.id} />
+        </>
       )}
 
       <div className="flex flex-wrap gap-2">
