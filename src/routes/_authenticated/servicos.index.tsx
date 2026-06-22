@@ -43,9 +43,8 @@ function ServicosListPage() {
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
-      const table = isAdmin || isComercial ? "services" : "services_public";
       const { data, error } = await supabase
-        .from(table).select("*").order("name");
+        .from("services").select("*").order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Service[];
     },
@@ -87,9 +86,11 @@ function ServicosListPage() {
             Catálogo de serviços oferecidos pela MTX
           </p>
         </div>
-        <Button size="sm" onClick={() => setOpenNew(true)}>
-          <Plus className="h-4 w-4 mr-1" /> Novo serviço
-        </Button>
+        {isAdmin && (
+          <Button size="sm" onClick={() => setOpenNew(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Novo serviço
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
