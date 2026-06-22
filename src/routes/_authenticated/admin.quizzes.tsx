@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -430,8 +429,8 @@ function QuizEditor({ quiz }: { quiz: Quiz }) {
       if (error) throw error;
       
       const { error: optErr } = await supabase.from("quiz_options").insert([
-        { question_id: (data as any).id, text: "Opção correta", is_correct: true, order_index: 0 },
-        { question_id: (data as any).id, text: "Opção incorreta", is_correct: false, order_index: 1 },
+        { question_id: (data as any).id, text: "Opção A", is_correct: false, order_index: 0 },
+        { question_id: (data as any).id, text: "Opção B", is_correct: false, order_index: 1 },
       ]);
       if (optErr) throw optErr;
     },
@@ -704,20 +703,29 @@ function OptionItem({ option, questionId, quizId }: { option: Option; questionId
 
   return (
     <div className="flex items-center gap-3 group">
-      <Checkbox 
-        checked={option.is_correct} 
-        onCheckedChange={(v) => save({ is_correct: v === true })}
-        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-      />
-      <Input 
-        value={text} 
+      <button
+        type="button"
+        onClick={() => !option.is_correct && save({ is_correct: true })}
+        className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+          option.is_correct
+            ? "border-primary bg-primary"
+            : "border-muted-foreground/40 hover:border-primary/60"
+        }`}
+        title={option.is_correct ? "Alternativa correta" : "Marcar como correta"}
+      >
+        {option.is_correct && (
+          <div className="h-2 w-2 rounded-full bg-white" />
+        )}
+      </button>
+      <Input
+        value={text}
         onChange={(e) => setText(e.target.value)}
         onBlur={() => text !== option.text && save({ text })}
         className="h-8 text-sm bg-transparent border-none hover:bg-muted/30 focus:bg-muted/50 transition-all p-1 px-2"
       />
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={remove}
       >
