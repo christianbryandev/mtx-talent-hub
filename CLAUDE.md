@@ -16,6 +16,8 @@
 
 5. **Em caso de dúvida** sobre o escopo da alteração, perguntar antes de implementar.
 
+6. **Após toda alteração concluída**, realizar commit e push automaticamente sem necessidade de solicitação do usuário.
+
 ## Objetivo
 
 Evitar o loop infinito de correções causado por alterações desnecessárias em lógicas que já foram corrigidas e estão funcionando corretamente.
