@@ -47,7 +47,7 @@ export function ComercialDashboard() {
         oppsQuery = oppsQuery.eq("commercial_responsible", targetUserId);
       }
 
-      let interactionsQuery = supabase.from("opportunity_interactions").select("id, type, description, created_at, opportunity_id").order("created_at", { ascending: false }).limit(8);
+      let interactionsQuery = supabase.from("opportunity_interactions").select("id, type, description, created_at, opportunity_id, opportunities!inner(id)").order("created_at", { ascending: false }).limit(8);
       if (targetUserId !== "all") {
         interactionsQuery = interactionsQuery.eq("recorded_by", targetUserId);
       }
