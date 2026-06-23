@@ -427,46 +427,58 @@ export type Database = {
       }
       client_services: {
         Row: {
+          billing_type: string
           client_id: string
           created_at: string
           end_date: string | null
           executor_id: string | null
           id: string
+          installments: number | null
           monthly_value: number | null
           notes: string | null
+          payment_method: string | null
           recurrence_paused: boolean
           service_id: string | null
           service_name: string | null
           start_date: string | null
           status: string
+          total_value: number | null
         }
         Insert: {
+          billing_type?: string
           client_id: string
           created_at?: string
           end_date?: string | null
           executor_id?: string | null
           id?: string
+          installments?: number | null
           monthly_value?: number | null
           notes?: string | null
+          payment_method?: string | null
           recurrence_paused?: boolean
           service_id?: string | null
           service_name?: string | null
           start_date?: string | null
           status?: string
+          total_value?: number | null
         }
         Update: {
+          billing_type?: string
           client_id?: string
           created_at?: string
           end_date?: string | null
           executor_id?: string | null
           id?: string
+          installments?: number | null
           monthly_value?: number | null
           notes?: string | null
+          payment_method?: string | null
           recurrence_paused?: boolean
           service_id?: string | null
           service_name?: string | null
           start_date?: string | null
           status?: string
+          total_value?: number | null
         }
         Relationships: [
           {
@@ -474,6 +486,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_services_executor_id_fkey"
+            columns: ["executor_id"]
+            isOneToOne: false
+            referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
           {
@@ -1528,21 +1547,27 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          installments: number | null
           opportunity_id: string
+          payment_method: string | null
           service_id: string
           young_responsible_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          installments?: number | null
           opportunity_id: string
+          payment_method?: string | null
           service_id: string
           young_responsible_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          installments?: number | null
           opportunity_id?: string
+          payment_method?: string | null
           service_id?: string
           young_responsible_id?: string | null
         }
@@ -2199,6 +2224,7 @@ export type Database = {
           item: string
           position: number
           task_id: string
+          task_service_id: string | null
         }
         Insert: {
           completed?: boolean
@@ -2208,6 +2234,7 @@ export type Database = {
           item: string
           position?: number
           task_id: string
+          task_service_id?: string | null
         }
         Update: {
           completed?: boolean
@@ -2217,6 +2244,7 @@ export type Database = {
           item?: string
           position?: number
           task_id?: string
+          task_service_id?: string | null
         }
         Relationships: [
           {
@@ -2224,6 +2252,13 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_checklists_task_service_id_fkey"
+            columns: ["task_service_id"]
+            isOneToOne: false
+            referencedRelation: "task_services"
             referencedColumns: ["id"]
           },
         ]
@@ -2235,6 +2270,7 @@ export type Database = {
           created_at: string
           id: string
           task_id: string
+          task_service_id: string | null
         }
         Insert: {
           author_id?: string | null
@@ -2242,6 +2278,7 @@ export type Database = {
           created_at?: string
           id?: string
           task_id: string
+          task_service_id?: string | null
         }
         Update: {
           author_id?: string | null
@@ -2249,6 +2286,7 @@ export type Database = {
           created_at?: string
           id?: string
           task_id?: string
+          task_service_id?: string | null
         }
         Relationships: [
           {
@@ -2270,6 +2308,69 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_service_id_fkey"
+            columns: ["task_service_id"]
+            isOneToOne: false
+            referencedRelation: "task_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_services: {
+        Row: {
+          created_at: string
+          id: string
+          service_id: string | null
+          status: string
+          task_id: string
+          young_responsible: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          service_id?: string | null
+          status?: string
+          task_id: string
+          young_responsible?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          service_id?: string | null
+          status?: string
+          task_id?: string
+          young_responsible?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_services_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_services_young_responsible_fkey"
+            columns: ["young_responsible"]
+            isOneToOne: false
+            referencedRelation: "young_people"
             referencedColumns: ["id"]
           },
         ]
@@ -3283,6 +3384,14 @@ export type Database = {
       increment_module_indices: {
         Args: { _phase_id: string; _start_index: number }
         Returns: undefined
+      }
+      is_user_client_captador: {
+        Args: { client_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_user_client_executor: {
+        Args: { client_uuid: string; user_uuid: string }
+        Returns: boolean
       }
       log_system_event: {
         Args: {
