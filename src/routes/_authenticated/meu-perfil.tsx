@@ -568,7 +568,7 @@ function ClientProfileManager() {
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
       if (!clientData?.client) throw new Error("Cliente não encontrado");
-      const isNew = !clientData.briefing.id;
+      const isNew = !clientData.briefing?.id;
       if (isNew) {
         const { error } = await supabase.from("client_briefings").insert({
           client_id: clientData.client.id,
