@@ -65,7 +65,7 @@ interface Props {
 
 export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCreated }: Props) {
   const qc = useQueryClient();
-  const { isComercial, isAdmin } = usePermissions();
+  const { isComercial, isAdmin, isJovemAprendiz } = usePermissions();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [serviceIds, setServiceIds] = useState<string[]>([]);
@@ -106,7 +106,7 @@ export function OpportunityFormDialog({ open, onOpenChange, defaultStage, onCrea
       company_name: "",
       funnel_stage: defaultStage ?? "prospeccao",
       priority: "media",
-      commercial_responsible: isComercial && !isAdmin && user ? user.id : "",
+      commercial_responsible: (isComercial || isJovemAprendiz) && !isAdmin && user ? user.id : "",
     },
   });
 

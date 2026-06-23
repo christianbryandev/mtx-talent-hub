@@ -18,6 +18,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,7 +72,8 @@ function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { isAdmin, isJovemAprendiz } = usePermissions();
+  const { user } = useAuth();
+  const { roles = [], isAdmin, isJovemAprendiz } = usePermissions();
   useRealtimeInvalidate("opportunities", [["opportunity", id], ["opportunities"]]);
   useRealtimeInvalidate("opportunity_interactions", [["opp-interactions", id]]);
   useRealtimeInvalidate("proposals", [["opp-proposals", id]]);
@@ -82,6 +84,22 @@ function OpportunityDetailPage() {
   const [showProposal, setShowProposal] = useState(false);
   const [localPaymentInfo, setLocalPaymentInfo] = useState<ServicePaymentInfo[]>([]);
   const [localYoungResponsibles, setLocalYoungResponsibles] = useState<Record<string, string | null>>({});
+
+  const isRestrictedJovem = roles.includes("jovem_aprendiz") && !roles.includes("comercial") && !isAdmin;
+
+  const { data: youngPerson, isLoading: isLoadingYoung } = useQuery({
+    queryKey: ["current-young-person", user?.id],
+    enabled: !!user && isRestrictedJovem,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("young_people")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: opp, isLoading } = useQuery({
     queryKey: ["opportunity", id],
@@ -289,7 +307,9 @@ function OpportunityDetailPage() {
     updateMutation.mutate({ ...patch, ...scores });
   };
 
-  if (isLoading) {
+  const isPageLoading = isLoading || (isRestrictedJovem && isLoadingYoung);
+
+  if (isPageLoading) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-12 w-64" />
@@ -297,10 +317,13 @@ function OpportunityDetailPage() {
       </div>
     );
   }
-  if (!opp) {
+
+  const isAuthorized = !isRestrictedJovem || opp?.commercial_responsible === user?.id || oppServices?.some((s) => s.young_responsible_id === youngPerson?.id);
+
+  if (!opp || !isAuthorized) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Oportunidade não encontrada.</p>
+        <p className="text-muted-foreground">Oportunidade não encontrada ou sem permissão de acesso.</p>
         <Button asChild variant="link"><Link to="/crm">Voltar ao CRM</Link></Button>
       </div>
     );

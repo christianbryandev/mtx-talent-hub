@@ -71,11 +71,17 @@ const brl = (v: number | null) =>
     maximumFractionDigits: 0,
   }).format(v ?? 0);
 
+interface OpportunityWithServices extends Opportunity {
+  opportunity_services?: {
+    young_responsible_id: string | null;
+  }[];
+}
+
 function CrmKanbanPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isAdmin, isComercial, isJovemAprendiz } = usePermissions();
+  const { roles = [], isAdmin, isComercial, isJovemAprendiz } = usePermissions();
   const canManage = isAdmin || isComercial || isJovemAprendiz;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
@@ -86,6 +92,8 @@ function CrmKanbanPage() {
   const [linkOpen, setLinkOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
+  const isRestrictedJovem = roles.includes("jovem_aprendiz") && !roles.includes("comercial") && !isAdmin;
+
   const clearFilters = () => {
     setSearch("");
     setResponsibleFilter("all");
@@ -94,15 +102,29 @@ function CrmKanbanPage() {
     setMonthFilter("all");
   };
 
+  const { data: youngPerson, isLoading: isLoadingYoung } = useQuery({
+    queryKey: ["current-young-person", user?.id],
+    enabled: !!user && isRestrictedJovem,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("young_people")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ["opportunities"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunities")
-        .select("*")
+        .select("*, opportunity_services(young_responsible_id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Opportunity[];
+      return (data ?? []) as OpportunityWithServices[];
     },
   });
 
@@ -134,20 +156,34 @@ function CrmKanbanPage() {
     };
   }, [qc]);
 
+  const myOpportunities = useMemo(() => {
+    if (!isRestrictedJovem) return opportunities;
+    return opportunities.filter((o) => {
+      if (o.commercial_responsible === user?.id) return true;
+      const hasService = o.opportunity_services?.some(
+        (os) => os.young_responsible_id === youngPerson?.id
+      );
+      if (hasService) return true;
+      return false;
+    });
+  }, [opportunities, isRestrictedJovem, user?.id, youngPerson?.id]);
+
+  const isPageLoading = isLoading || (isRestrictedJovem && isLoadingYoung);
+
   const niches = useMemo(
-    () => Array.from(new Set(opportunities.map((o) => o.niche).filter(Boolean))) as string[],
-    [opportunities],
+    () => Array.from(new Set(myOpportunities.map((o) => o.niche).filter(Boolean))) as string[],
+    [myOpportunities],
   );
 
   const months = useMemo(() => {
     const set = new Set<string>();
-    opportunities.forEach((o) => set.add(o.created_at.slice(0, 7)));
+    myOpportunities.forEach((o) => set.add(o.created_at.slice(0, 7)));
     return Array.from(set).sort().reverse();
-  }, [opportunities]);
+  }, [myOpportunities]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return opportunities.filter((o) => {
+    return myOpportunities.filter((o) => {
       if (q && !`${o.company_name} ${o.contact_name ?? ""}`.toLowerCase().includes(q))
         return false;
       if (responsibleFilter !== "all" && o.commercial_responsible !== responsibleFilter)
@@ -157,7 +193,7 @@ function CrmKanbanPage() {
       if (monthFilter !== "all" && o.created_at.slice(0, 7) !== monthFilter) return false;
       return true;
     });
-  }, [opportunities, search, responsibleFilter, temperatureFilter, nicheFilter, monthFilter]);
+  }, [myOpportunities, search, responsibleFilter, temperatureFilter, nicheFilter, monthFilter]);
 
   const open = filtered.filter((o) => o.status === "aberta");
 
@@ -171,8 +207,8 @@ function CrmKanbanPage() {
   // KPIs
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  const totalOpen = opportunities.filter((o) => o.status === "aberta").length;
-  const closedThisMonth = opportunities.filter(
+  const totalOpen = myOpportunities.filter((o) => o.status === "aberta").length;
+  const closedThisMonth = myOpportunities.filter(
     (o) => o.status !== "aberta" && (o.updated_at ?? "") >= startOfMonth && o.loss_reason !== "Cliente excluído",
   );
   const wonOppsMonth = closedThisMonth.filter((o) => o.status === "ganha");
@@ -192,7 +228,7 @@ function CrmKanbanPage() {
       }, 0) / wonOppsMonth.length
     : 0;
   const todayIso = now.toISOString().slice(0, 10);
-  const lateFollowups = opportunities.filter(
+  const lateFollowups = myOpportunities.filter(
     (o) => o.status === "aberta" && o.next_followup_date && o.next_followup_date < todayIso,
   ).length;
 
@@ -217,8 +253,8 @@ function CrmKanbanPage() {
     },
     onMutate: async ({ id, stage }) => {
       await qc.cancelQueries({ queryKey: ["opportunities"] });
-      const prev = qc.getQueryData<Opportunity[]>(["opportunities"]);
-      qc.setQueryData<Opportunity[]>(["opportunities"], (old) =>
+      const prev = qc.getQueryData<OpportunityWithServices[]>(["opportunities"]);
+      qc.setQueryData<OpportunityWithServices[]>(["opportunities"], (old) =>
         (old ?? []).map((o) => (o.id === id ? { ...o, funnel_stage: stage } : o)),
       );
       return { prev };
@@ -237,12 +273,12 @@ function CrmKanbanPage() {
     const id = String(e.active.id);
     const overId = e.over?.id ? String(e.over.id) : null;
     if (!overId) return;
-    const opp = opportunities.find((o) => o.id === id);
+    const opp = myOpportunities.find((o) => o.id === id);
     if (!opp || opp.funnel_stage === overId) return;
     updateStageMutation.mutate({ id, stage: overId as FunnelStage });
   };
 
-  const draggingOpp = draggingId ? opportunities.find((o) => o.id === draggingId) : null;
+  const draggingOpp = draggingId ? myOpportunities.find((o) => o.id === draggingId) : null;
 
   return (
     <div className="space-y-6">
@@ -344,7 +380,7 @@ function CrmKanbanPage() {
         <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
       </div>
 
-      {isLoading ? (
+      {isPageLoading ? (
         <div className="flex gap-3 overflow-x-auto">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-[400px] w-[280px] shrink-0" />

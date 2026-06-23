@@ -327,7 +327,6 @@ function JovensListPage() {
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <StatusBadge status={y.status as YoungStatus} />
-                      <StuckBadge lastProgressAt={y.last_progress_at} entryDate={y.entry_date} createdAt={y.created_at} />
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -413,33 +412,6 @@ function JovensListPage() {
   );
 }
 
-function StuckBadge({ lastProgressAt, entryDate, createdAt }: { lastProgressAt: string | null | undefined, entryDate: string | null | undefined, createdAt: string | null | undefined }) {
-  if (!lastProgressAt) return null;
-
-  let referenceDate = new Date(lastProgressAt).getTime();
-  
-  if (createdAt && entryDate) {
-    const createdTime = new Date(createdAt).getTime();
-    if (Math.abs(referenceDate - createdTime) < 5000) {
-      referenceDate = new Date(entryDate).getTime();
-    }
-  }
-
-  const days = Math.floor((Date.now() - referenceDate) / 86_400_000);
-  if (days >= 14)
-    return (
-      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400">
-        🔴 Inativo ({days}d)
-      </span>
-    );
-  if (days >= 7)
-    return (
-      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-        ⚠️ Travado ({days}d)
-      </span>
-    );
-  return null;
-}
 
 function ProgressMini({ youngId, profileId }: { youngId: string; profileId?: string | null; phase?: string | null }) {
   // profile_id é o auth.users.id — sem ele não há como buscar progresso

@@ -31,6 +31,7 @@ import {
 } from "@/types/crm";
 import { RowActionsMenu } from "@/components/shared/RowActionsMenu";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/hooks/useAuth";
 import { deleteOpportunityCascade } from "@/lib/cascade-delete";
 import { duplicateRow } from "@/lib/duplicate-row";
 import { logActivity } from "@/lib/activity-log";
@@ -43,25 +44,48 @@ export const Route = createFileRoute("/_authenticated/crm/lista")({
 const brl = (v: number | null) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
 
+interface OpportunityWithServices extends Opportunity {
+  opportunity_services?: {
+    young_responsible_id: string | null;
+  }[];
+}
+
 function CrmListPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { isAdmin, isComercial, isJovemAprendiz } = usePermissions();
+  const { user } = useAuth();
+  const { roles = [], isAdmin, isComercial, isJovemAprendiz } = usePermissions();
   const canManage = isAdmin || isComercial || isJovemAprendiz;
   const [openNew, setOpenNew] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
+  const isRestrictedJovem = roles.includes("jovem_aprendiz") && !roles.includes("comercial") && !isAdmin;
+
+  const { data: youngPerson, isLoading: isLoadingYoung } = useQuery({
+    queryKey: ["current-young-person", user?.id],
+    enabled: !!user && isRestrictedJovem,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("young_people")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ["opportunities"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunities")
-        .select("*")
+        .select("*, opportunity_services(young_responsible_id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Opportunity[];
+      return (data ?? []) as OpportunityWithServices[];
     },
   });
 
@@ -92,16 +116,30 @@ function CrmListPage() {
     };
   }, [qc]);
 
+  const myOpportunities = useMemo(() => {
+    if (!isRestrictedJovem) return opportunities;
+    return opportunities.filter((o) => {
+      if (o.commercial_responsible === user?.id) return true;
+      const hasService = o.opportunity_services?.some(
+        (os) => os.young_responsible_id === youngPerson?.id
+      );
+      if (hasService) return true;
+      return false;
+    });
+  }, [opportunities, isRestrictedJovem, user?.id, youngPerson?.id]);
+
+  const isPageLoading = isLoading || (isRestrictedJovem && isLoadingYoung);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return opportunities.filter((o) => {
+    return myOpportunities.filter((o) => {
       if (q && !`${o.company_name} ${o.contact_name ?? ""}`.toLowerCase().includes(q))
         return false;
       if (statusFilter !== "all" && o.status !== statusFilter) return false;
       if (priorityFilter !== "all" && o.priority !== priorityFilter) return false;
       return true;
     });
-  }, [opportunities, search, statusFilter, priorityFilter]);
+  }, [myOpportunities, search, statusFilter, priorityFilter]);
 
   return (
     <div className="space-y-6">
@@ -153,7 +191,7 @@ function CrmListPage() {
       </div>
 
       <div className="rounded-lg border bg-card">
-        {isLoading ? (
+        {isPageLoading ? (
           <div className="p-4 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full" />

@@ -92,7 +92,7 @@ export function ServiceSearchSelect(props: BaseProps & { clientId?: string | nul
 
 export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) {
   const { data = [], isLoading } = useQuery({
-    queryKey: ["search-profiles", props.roleFilter],
+    queryKey: ["search-profiles", props.roleFilter, props.value],
     queryFn: async () => {
       let query = supabase
         .from("profiles")
@@ -102,6 +102,12 @@ export function ProfileSearchSelect(props: BaseProps & { roleFilter?: string }) 
       if (props.roleFilter) {
         const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", props.roleFilter as any);
         const userIds = roles?.map((r: any) => r.user_id) || [];
+        
+        // Always include the current value if it is defined and not already in userIds
+        if (props.value && !userIds.includes(props.value)) {
+          userIds.push(props.value);
+        }
+
         if (userIds.length > 0) {
           query = query.in("id", userIds);
         } else {
