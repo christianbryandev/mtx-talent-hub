@@ -576,7 +576,7 @@ function ClientProfileManager() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("client_briefings").update(payload).eq("id", clientData.briefing.id);
+        const { error } = await supabase.from("client_briefings").update(payload).eq("id", clientData.briefing!.id);
         if (error) throw error;
       }
     },
