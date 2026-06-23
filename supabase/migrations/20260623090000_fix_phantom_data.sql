@@ -59,6 +59,32 @@ WHERE (entity_type = 'opportunity' AND entity_id IS NOT NULL AND NOT EXISTS (SEL
    OR (entity_type IN ('user', 'profiles') AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = entity_id))
    OR (entity_type = 'service' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.services WHERE id = entity_id));
 
+-- Deletar jovens órfãos (onde o perfil foi deletado, deixando profile_id como NULL)
+-- Nós os identificamos porque eles possuem logs de atualização de perfil próprio (ação que exige ter conta),
+-- mas o user_id/perfil desse log agora é nulo (indicando que o usuário/perfil foi excluído).
+DELETE FROM public.young_people yp
+WHERE yp.profile_id IS NULL
+  AND EXISTS (
+    SELECT 1 FROM public.activity_logs al
+    WHERE al.entity_id = yp.id
+      AND al.entity_type = 'young_people'
+      AND (al.action = 'young_self_profile_updated' OR al.description = 'Jovem atualizou o próprio perfil')
+      AND al.user_id IS NULL
+  );
+
+-- Deletar logs de jovem atualizando o próprio perfil onde o jovem correspondente já foi excluído
+DELETE FROM public.activity_logs
+WHERE (action = 'young_self_profile_updated' OR description = 'Jovem atualizou o próprio perfil')
+  AND (
+    user_id IS NULL
+    OR NOT EXISTS (
+      SELECT 1 FROM public.young_people yp
+      WHERE yp.profile_id = activity_logs.user_id
+    )
+  );
+
+
+
 
 -- =========================================================================
 -- 2. READEQUAÇÃO DAS FUNÇÕES RPC DE ANALYTICS (Analytics Jornada)
@@ -441,3 +467,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER trg_clean_service_logs
 AFTER DELETE ON public.services
 FOR EACH ROW EXECUTE FUNCTION public.trg_clean_service_logs_fn();
+
+-- I. Exclusão automática de jovem aprendiz ao deletar seu perfil
+CREATE OR REPLACE FUNCTION public.trg_clean_young_people_on_profile_delete_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM public.young_people
+  WHERE profile_id = OLD.id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER trg_clean_young_people_on_profile_delete
+BEFORE DELETE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.trg_clean_young_people_on_profile_delete_fn();
+

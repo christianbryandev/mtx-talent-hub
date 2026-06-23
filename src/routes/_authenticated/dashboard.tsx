@@ -132,12 +132,11 @@ function AdminDashboardContent() {
         supabase.from("tasks").select("id").lt("due_date", today).not("kanban_column", "in", "(concluido)").limit(3000),
         supabase.from("meetings").select("*").eq("status", "agendada").gte("date", today).order("date").limit(5),
         supabase.from("tasks").select("id, title, due_date, kanban_column").not("kanban_column", "in", "(concluido)").not("due_date", "is", null).order("due_date").limit(5),
-        supabase.from("activity_logs").select("id, action, description, created_at, user_id").order("created_at", { ascending: false }).limit(10),
+        supabase.from("activity_logs").select("id, action, description, created_at, user_id, entity_type, entity_id").order("created_at", { ascending: false }).limit(10),
         supabase.from("young_applications").select("status").limit(2000),
         supabase.from("user_roles").select("user_id, role").limit(5000),
         supabase.from("client_services").select("client_id, billing_type, monthly_value, total_value, status, executor_id, start_date, created_at").eq("status", "ativo").limit(5000),
       ]);
-
       const rawYoungs = youngsRes.data ?? [];
       const clients = clientsRes.data ?? [];
       
