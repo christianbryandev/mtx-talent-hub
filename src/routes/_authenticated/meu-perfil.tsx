@@ -555,7 +555,7 @@ function ClientProfileManager() {
         .maybeSingle();
       if (bErr) throw bErr;
 
-      return { client, briefing: briefing || {} };
+      return { client, briefing: (briefing || {}) as typeof briefing };
     },
   });
 
@@ -568,7 +568,7 @@ function ClientProfileManager() {
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
       if (!clientData?.client) throw new Error("Cliente não encontrado");
-      const isNew = !clientData.briefing.id;
+      const isNew = !clientData.briefing?.id;
       if (isNew) {
         const { error } = await supabase.from("client_briefings").insert({
           client_id: clientData.client.id,
@@ -576,7 +576,7 @@ function ClientProfileManager() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("client_briefings").update(payload).eq("id", clientData.briefing.id);
+        const { error } = await supabase.from("client_briefings").update(payload).eq("id", clientData.briefing!.id);
         if (error) throw error;
       }
     },
