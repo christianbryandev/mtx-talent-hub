@@ -341,17 +341,17 @@ export function ClientFormDialog({ open, onOpenChange, onCreated }: Props) {
 
           <DialogFooter className="gap-2">
             {step > 1 && (
-              <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+              <Button key="btn-back" type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
                 Voltar
               </Button>
             )}
             {step < 3 && (
-              <Button type="button" onClick={next}>
+              <Button key="btn-next" type="button" onClick={next}>
                 Avançar
               </Button>
             )}
             {step === 3 && (
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button key="btn-submit" type="submit" disabled={mutation.isPending}>
                 {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Criar cliente
               </Button>

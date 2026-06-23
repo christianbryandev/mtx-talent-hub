@@ -278,14 +278,14 @@ function BriefingPage() {
 
               <div className="flex justify-between pt-4">
                 {step > 1 ? (
-                  <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+                  <Button key="btn-back" type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
                     Voltar
                   </Button>
                 ) : <span />}
                 {step < total ? (
-                  <Button type="button" onClick={next}>Avançar</Button>
+                  <Button key="btn-next" type="button" onClick={next}>Avançar</Button>
                 ) : (
-                  <Button type="submit" disabled={submit.isPending}>
+                  <Button key="btn-submit" type="submit" disabled={submit.isPending}>
                     {submit.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     Enviar briefing
                   </Button>
