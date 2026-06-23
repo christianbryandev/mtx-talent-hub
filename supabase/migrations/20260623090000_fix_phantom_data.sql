@@ -55,7 +55,8 @@ WHERE (entity_type = 'opportunity' AND entity_id IS NOT NULL AND NOT EXISTS (SEL
    OR (entity_type = 'client' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.clients WHERE id = entity_id))
    OR (entity_type = 'young_person' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.young_people WHERE id = entity_id))
    OR (entity_type = 'task' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.tasks WHERE id = entity_id))
-   OR (entity_type = 'meeting' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.meetings WHERE id = entity_id));
+   OR (entity_type = 'meeting' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.meetings WHERE id = entity_id))
+   OR (entity_type = 'user' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = entity_id));
 
 
 -- =========================================================================
@@ -409,3 +410,18 @@ CREATE OR REPLACE TRIGGER trg_client_services_first_client_cleanup
 AFTER DELETE OR UPDATE OF status, executor_id ON public.client_services
 FOR EACH ROW
 EXECUTE FUNCTION public.check_young_first_client_on_service_delete_fn();
+
+
+-- G. Limpeza de logs de usuário/perfil deletado
+CREATE OR REPLACE FUNCTION public.trg_clean_profile_logs_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM public.activity_logs
+  WHERE entity_type = 'user' AND entity_id = OLD.id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER trg_clean_profile_logs
+AFTER DELETE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.trg_clean_profile_logs_fn();
