@@ -545,8 +545,24 @@ function ModuleDeleteButton({ moduleId, phaseId }: { moduleId: string; phaseId: 
   const qc = useQueryClient();
   const remove = useMutation({
     mutationFn: async () => {
+      // Busca arquivos vinculados ao módulo para apagá-los do armazenamento
+      const { data: mod } = await supabase
+        .from("journey_modules")
+        .select("content_body, thumbnail_url")
+        .eq("id", moduleId)
+        .single();
+
+      const filesToRemove = [mod?.content_body, mod?.thumbnail_url]
+        .filter((u): u is string => typeof u === "string" && u.includes("/journey-videos/"))
+        .map((u) => u.split("/journey-videos/")[1].split("?")[0])
+        .filter(Boolean);
+
       const { error } = await supabase.from("journey_modules").delete().eq("id", moduleId);
       if (error) throw error;
+
+      if (filesToRemove.length > 0) {
+        await supabase.storage.from("journey-videos").remove(filesToRemove);
+      }
     },
     onSuccess: () => {
       toast.success("Módulo removido");
