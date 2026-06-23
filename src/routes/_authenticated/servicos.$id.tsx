@@ -169,9 +169,11 @@ function ServicoDetailPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Editar
-          </Button>
+          {isSuperAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar
+            </Button>
+          )}
           {isSuperAdmin && (
             <Button
               size="sm"
@@ -231,19 +233,21 @@ function ServicoDetailPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
             <h3 className="font-semibold text-sm">Jovens aptos ({youngLinks.length})</h3>
           </div>
-          <div className="flex gap-2">
-            <Select value={addYoungId} onValueChange={setAddYoungId}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Selecionar jovem" /></SelectTrigger>
-              <SelectContent>
-                {availableYoungs.map((y) => (
-                  <SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button size="sm" disabled={!addYoungId} onClick={() => addYoung.mutate(addYoungId)}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          {isSuperAdmin && (
+            <div className="flex gap-2">
+              <Select value={addYoungId} onValueChange={setAddYoungId}>
+                <SelectTrigger className="w-[220px]"><SelectValue placeholder="Selecionar jovem" /></SelectTrigger>
+                <SelectContent>
+                  {availableYoungs.map((y) => (
+                    <SelectItem key={y.id} value={y.id}>{y.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" disabled={!addYoungId} onClick={() => addYoung.mutate(addYoungId)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
         {youngLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">Nenhum jovem vinculado.</p>
@@ -257,12 +261,14 @@ function ServicoDetailPage() {
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-xs">{l.young_people.full_name}</span>
-                <button
-                  onClick={() => removeYoung.mutate(l.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => removeYoung.mutate(l.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             ))}
           </div>

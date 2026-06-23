@@ -30,7 +30,7 @@ const brl = (v: number | null) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v ?? 0);
 
 function ServicosListPage() {
-  const { isAdmin } = usePermissions();
+  const { isSuperAdmin } = usePermissions();
   const qc = useQueryClient();
   const navigate = useNavigate();
   useRealtimeInvalidate("services", [["services"], ["services-usage"]]);
@@ -86,7 +86,7 @@ function ServicosListPage() {
             Catálogo de serviços oferecidos pela MTX
           </p>
         </div>
-        {isAdmin && (
+        {isSuperAdmin && (
           <Button size="sm" onClick={() => setOpenNew(true)}>
             <Plus className="h-4 w-4 mr-1" /> Novo serviço
           </Button>
@@ -138,9 +138,9 @@ function ServicosListPage() {
                   <RowActionsMenu
                     label={s.name}
                     onView={() => navigate({ to: "/servicos/$id", params: { id: s.id } })}
-                    onEdit={isAdmin ? () => setEditService(s) : undefined}
+                    onEdit={isSuperAdmin ? () => setEditService(s) : undefined}
                     onDuplicate={
-                      isAdmin
+                      isSuperAdmin
                         ? async () => {
                             try {
                               const copy = await duplicateRow<{ id: string }>(
@@ -163,7 +163,7 @@ function ServicosListPage() {
                         : undefined
                     }
                     onDelete={
-                      isAdmin
+                      isSuperAdmin
                         ? async () => {
                             try {
                               await deleteServiceCascade(s.id);
