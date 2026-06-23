@@ -555,7 +555,7 @@ function ClientProfileManager() {
         .maybeSingle();
       if (bErr) throw bErr;
 
-      return { client, briefing: briefing || {} };
+      return { client, briefing: (briefing || {}) as typeof briefing };
     },
   });
 
