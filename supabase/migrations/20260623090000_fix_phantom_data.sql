@@ -53,10 +53,11 @@ WHERE yp.first_client_attended = true
 DELETE FROM public.activity_logs
 WHERE (entity_type = 'opportunity' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.opportunities WHERE id = entity_id))
    OR (entity_type = 'client' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.clients WHERE id = entity_id))
-   OR (entity_type = 'young_person' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.young_people WHERE id = entity_id))
+   OR (entity_type IN ('young_person', 'young_people') AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.young_people WHERE id = entity_id))
    OR (entity_type = 'task' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.tasks WHERE id = entity_id))
    OR (entity_type = 'meeting' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.meetings WHERE id = entity_id))
-   OR (entity_type = 'user' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = entity_id));
+   OR (entity_type IN ('user', 'profiles') AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = entity_id))
+   OR (entity_type = 'service' AND entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.services WHERE id = entity_id));
 
 
 -- =========================================================================
@@ -327,7 +328,7 @@ CREATE OR REPLACE FUNCTION public.trg_clean_young_people_logs_fn()
 RETURNS TRIGGER AS $$
 BEGIN
   DELETE FROM public.activity_logs
-  WHERE entity_type = 'young_person' AND entity_id = OLD.id;
+  WHERE entity_type IN ('young_person', 'young_people') AND entity_id = OLD.id;
   RETURN OLD;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -417,7 +418,7 @@ CREATE OR REPLACE FUNCTION public.trg_clean_profile_logs_fn()
 RETURNS TRIGGER AS $$
 BEGIN
   DELETE FROM public.activity_logs
-  WHERE entity_type = 'user' AND entity_id = OLD.id;
+  WHERE entity_type IN ('user', 'profiles') AND entity_id = OLD.id;
   RETURN OLD;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -425,3 +426,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER trg_clean_profile_logs
 AFTER DELETE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.trg_clean_profile_logs_fn();
+
+
+-- H. Limpeza de logs de serviço deletado
+CREATE OR REPLACE FUNCTION public.trg_clean_service_logs_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM public.activity_logs
+  WHERE entity_type = 'service' AND entity_id = OLD.id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER trg_clean_service_logs
+AFTER DELETE ON public.services
+FOR EACH ROW EXECUTE FUNCTION public.trg_clean_service_logs_fn();
